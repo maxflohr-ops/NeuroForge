@@ -19,6 +19,12 @@ Modes:
     funnel     — Run Funnel Agent on existing brief
     full       — Run all agents in sequence (production mode)
     qa         — Run QA Agent on an existing file (specify --file)
+
+Flags:
+    --resume   Skip steps whose output already exists and load from disk instead.
+               Use after a partial run to pick up where you left off.
+               Scripts and funnel will always be anchored to chapter 1 voice.
+    --no-qa    Skip the QA agent after each step (~50%% token savings).
 """
 
 import anthropic
@@ -81,6 +87,20 @@ FACULTY_PROFILES = {
 # ─────────────────────────────────────────────
 # HELPERS
 # ─────────────────────────────────────────────
+
+def find_latest_output(topic: str, prefix: str) -> Path:
+    """Return the most-recent output file matching prefix for a topic, or None."""
+    safe_topic = re.sub(r"[^a-zA-Z0-9_]", "_", topic.lower())
+    topic_dir = OUTPUT_DIR / safe_topic
+    if not topic_dir.exists():
+        return None
+    # Exclude QA reports (suffix contains _QA_)
+    matches = sorted(
+        (p for p in topic_dir.glob(f"{prefix}_*.md") if "_QA_" not in p.name),
+        reverse=True,
+    )
+    return matches[0] if matches else None
+
 
 def load_prompt(filename: str) -> str:
     """Load a system prompt from the prompts directory."""
@@ -229,11 +249,20 @@ Produce the full book blueprint now, following the output format exactly.
     return output
 
 
-def run_manuscript_agent(blueprint: str, chapter_num: int, faculty: str, chapter_word_count: str = "2,500–3,500") -> str:
-    """Agent 3: Manuscript Chapter"""
+def run_manuscript_agent(blueprint: str, chapter_num: int, faculty: str,
+                         chapter_word_count: str = "2,500–3,500",
+                         prior_chapters: list = None) -> str:
+    """Agent 3: Manuscript Chapter. Pass prior_chapters for style/continuity context."""
     print(f"\n✍️  MANUSCRIPT AGENT — Chapter {chapter_num}")
 
     system_prompt = load_prompt("03_manuscript_agent.md")
+
+    prior_context = ""
+    if prior_chapters:
+        sections = "\n\n".join(
+            f"--- CHAPTER {i} ---\n{ch}" for i, ch in enumerate(prior_chapters, 1)
+        )
+        prior_context = f"\n\n---\n\nPREVIOUSLY WRITTEN CHAPTERS (maintain voice, tone, and continuity — do not repeat concepts already covered):\n\n{sections}"
 
     user_message = f"""
 Please write Chapter {chapter_num} of the book based on the blueprint below.
@@ -243,6 +272,7 @@ Please write Chapter {chapter_num} of the book based on the blueprint below.
 **Target Word Count:** {chapter_word_count} words
 
 Write the full chapter now as flowing prose. Remember: do not start with "In this chapter..." and do not end with a bullet-point summary. Follow the output format in your instructions exactly.
+{prior_context}
 
 ---
 
@@ -254,11 +284,17 @@ BOOK BLUEPRINT:
     return output
 
 
-def run_shorts_agent(research_brief: str, faculty: str, num_scripts: int = 20, cta: str = "link in bio") -> str:
-    """Agent 4: Short-Form Scripts"""
+def run_shorts_agent(research_brief: str, faculty: str, num_scripts: int = 20,
+                     cta: str = "link in bio", chapter_sample: str = "") -> str:
+    """Agent 4: Short-Form Scripts. Pass chapter_sample to anchor voice in established writing."""
     print(f"\n🎬 SHORTS SCRIPT AGENT — {num_scripts} scripts")
 
     system_prompt = load_prompt("04_shorts_script_agent.md")
+
+    style_context = (
+        f"\n\n---\n\nWRITING STYLE REFERENCE (match the voice, vocabulary, and tone of this excerpt when writing scripts):\n\n{chapter_sample[:3000]}\n\n---"
+        if chapter_sample else ""
+    )
 
     user_message = f"""
 Please produce {num_scripts} short-form video scripts based on the research brief below.
@@ -270,6 +306,7 @@ Please produce {num_scripts} short-form video scripts based on the research brie
 
 Follow the batch output structure in your instructions (hooks, mechanism, counterintuitive, tool, story, objection scripts in sequence).
 Also include the 10 quote graphics and 5 carousel concepts at the end.
+{style_context}
 
 ---
 
@@ -281,11 +318,17 @@ RESEARCH BRIEF:
     return output
 
 
-def run_funnel_agent(research_brief: str, blueprint: str, faculty: str, price: str = "$17", cta_url: str = "[LANDING_PAGE_URL]") -> str:
+def run_funnel_agent(research_brief: str, blueprint: str, faculty: str, price: str = "$17",
+                     cta_url: str = "[LANDING_PAGE_URL]", chapter_sample: str = "") -> str:
     """Agent 5: Funnel Copy"""
     print("\n💰 FUNNEL AGENT — Starting")
 
     system_prompt = load_prompt("05_funnel_agent.md")
+
+    style_context = (
+        f"\n\n---\n\nWRITING STYLE REFERENCE (match voice and tone in all copy):\n\n{chapter_sample[:3000]}\n\n---"
+        if chapter_sample else ""
+    )
 
     user_message = f"""
 Please produce the complete funnel copy package for this topic.
@@ -295,6 +338,7 @@ Please produce the complete funnel copy package for this topic.
 **CTA URL:** {cta_url}
 
 Produce all five sections: landing page, thank you page + book offer, 5-email sequence, Google Ads copy, and the quality check.
+{style_context}
 
 ---
 
@@ -384,44 +428,63 @@ def pipeline_full(args):
     def qa(content, content_type, save_prefix):
         return maybe_qa(content, content_type, save_prefix, args.topic, args.faculty, args.no_qa)
 
-    # Step 1: Research
-    brief = run_research_agent(args.topic, args.pillar, args.faculty, args.audience_notes)
-    brief_path = save_output(args.topic, "01_research_brief", brief)
-    brief_score = qa(brief, CT_RESEARCH, "01_research_brief_QA")
-    log_to_db(args.topic, "Research Agent", brief_path, brief_score)
+    def load_or_run(prefix, label, run_fn):
+        """If --resume and an existing file is found, load it. Otherwise run the agent."""
+        if args.resume:
+            existing = find_latest_output(args.topic, prefix)
+            if existing:
+                print(f"  ↩ Resuming {label} from: {existing.name}")
+                return existing.read_text(encoding="utf-8"), None  # (content, score=None)
+        return None, None  # sentinel: must run
 
-    if brief_score and brief_score < 35:
-        print(f"\n⚠️  Research brief failed QA ({brief_score}/50). Review before continuing.")
-        print("    Output saved. Stopping pipeline. Fix the brief and re-run from --mode blueprint.")
-        return
+    # Step 1: Research
+    brief, brief_score = load_or_run("01_research_brief", "Research Brief", None)
+    if brief is None:
+        brief = run_research_agent(args.topic, args.pillar, args.faculty, args.audience_notes)
+        brief_path = save_output(args.topic, "01_research_brief", brief)
+        brief_score = qa(brief, CT_RESEARCH, "01_research_brief_QA")
+        log_to_db(args.topic, "Research Agent", brief_path, brief_score)
+
+        if brief_score and brief_score < 35:
+            print(f"\n⚠️  Research brief failed QA ({brief_score}/50). Review before continuing.")
+            print("    Output saved. Stopping pipeline. Fix the brief and re-run from --mode blueprint.")
+            return
 
     # Step 2: Blueprint
-    blueprint = run_book_architect_agent(brief, args.faculty)
-    bp_path = save_output(args.topic, "02_book_blueprint", blueprint)
-    bp_score = qa(blueprint, CT_BLUEPRINT, "02_book_blueprint_QA")
-    log_to_db(args.topic, "Book Architect Agent", bp_path, bp_score)
+    blueprint, bp_score = load_or_run("02_book_blueprint", "Book Blueprint", None)
+    if blueprint is None:
+        blueprint = run_book_architect_agent(brief, args.faculty)
+        bp_path = save_output(args.topic, "02_book_blueprint", blueprint)
+        bp_score = qa(blueprint, CT_BLUEPRINT, "02_book_blueprint_QA")
+        log_to_db(args.topic, "Book Architect Agent", bp_path, bp_score)
 
-    if bp_score and bp_score < 35:
-        print(f"\n⚠️  Blueprint failed QA ({bp_score}/50). Review before continuing.")
-        return
+        if bp_score and bp_score < 35:
+            print(f"\n⚠️  Blueprint failed QA ({bp_score}/50). Review before continuing.")
+            return
 
     # Step 3: Chapter 1
-    chapter = run_manuscript_agent(blueprint, 1, args.faculty)
-    ch_path = save_output(args.topic, "03_chapter_01", chapter)
-    ch_score = qa(chapter, CT_CHAPTER, "03_chapter_01_QA")
-    log_to_db(args.topic, "Manuscript Agent Ch1", ch_path, ch_score)
+    chapter, ch_score = load_or_run("03_chapter_01", "Chapter 1", None)
+    if chapter is None:
+        chapter = run_manuscript_agent(blueprint, 1, args.faculty)
+        ch_path = save_output(args.topic, "03_chapter_01", chapter)
+        ch_score = qa(chapter, CT_CHAPTER, "03_chapter_01_QA")
+        log_to_db(args.topic, "Manuscript Agent Ch1", ch_path, ch_score)
 
-    # Step 4: Scripts (20 scripts)
-    scripts = run_shorts_agent(brief, args.faculty, num_scripts=20)
-    sc_path = save_output(args.topic, "04_shorts_scripts", scripts)
-    sc_score = qa(scripts, CT_SCRIPTS, "04_shorts_scripts_QA")
-    log_to_db(args.topic, "Shorts Script Agent", sc_path, sc_score)
+    # Step 4: Scripts — anchored to chapter 1 voice
+    scripts, sc_score = load_or_run("04_shorts_scripts", "Shorts Scripts", None)
+    if scripts is None:
+        scripts = run_shorts_agent(brief, args.faculty, num_scripts=20, chapter_sample=chapter)
+        sc_path = save_output(args.topic, "04_shorts_scripts", scripts)
+        sc_score = qa(scripts, CT_SCRIPTS, "04_shorts_scripts_QA")
+        log_to_db(args.topic, "Shorts Script Agent", sc_path, sc_score)
 
-    # Step 5: Funnel
-    funnel = run_funnel_agent(brief, blueprint, args.faculty)
-    fn_path = save_output(args.topic, "05_funnel_copy", funnel)
-    fn_score = qa(funnel, CT_FUNNEL, "05_funnel_copy_QA")
-    log_to_db(args.topic, "Funnel Agent", fn_path, fn_score)
+    # Step 5: Funnel — anchored to chapter 1 voice
+    funnel, fn_score = load_or_run("05_funnel_copy", "Funnel Copy", None)
+    if funnel is None:
+        funnel = run_funnel_agent(brief, blueprint, args.faculty, chapter_sample=chapter)
+        fn_path = save_output(args.topic, "05_funnel_copy", funnel)
+        fn_score = qa(funnel, CT_FUNNEL, "05_funnel_copy_QA")
+        log_to_db(args.topic, "Funnel Agent", fn_path, fn_score)
 
     # Summary
     scores = {CT_RESEARCH: brief_score, CT_BLUEPRINT: bp_score,
@@ -471,6 +534,8 @@ def main():
     parser.add_argument("--content_type", default="", help="Content type for qa mode")
     parser.add_argument("--no-qa", action="store_true", dest="no_qa",
                         help="Skip QA agent after each step (saves ~50%% of tokens)")
+    parser.add_argument("--resume", action="store_true",
+                        help="Skip steps whose output already exists; load from disk instead")
 
     args = parser.parse_args()
 
