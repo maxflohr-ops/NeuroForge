@@ -69,31 +69,31 @@ FACULTY_HEYGEN_CONFIG = {
         "avatar_id":  _env("HEYGEN_AVATAR_ID_DR_NOVA_VALE"),
         "voice_id":   _env("HEYGEN_VOICE_ID_DR_NOVA_VALE"),
         "background": {"type": "color", "value": "#F5F0EB"},  # warm off-white
-        "dimension":  {"width": 720, "height": 1280},
+        "dimension":  {"width": 1080, "height": 1920},         # 1080p vertical
     },
     "Kai Ren": {
         "avatar_id":  _env("HEYGEN_AVATAR_ID_KAI_REN"),
         "voice_id":   _env("HEYGEN_VOICE_ID_KAI_REN"),
         "background": {"type": "color", "value": "#0D0D0D"},  # near-black
-        "dimension":  {"width": 720, "height": 1280},
+        "dimension":  {"width": 1080, "height": 1920},
     },
     "Marcus Voss": {
         "avatar_id":  _env("HEYGEN_AVATAR_ID_MARCUS_VOSS"),
         "voice_id":   _env("HEYGEN_VOICE_ID_MARCUS_VOSS"),
         "background": {"type": "color", "value": "#1A1A1A"},
-        "dimension":  {"width": 720, "height": 1280},
+        "dimension":  {"width": 1080, "height": 1920},
     },
     "Luna Hart": {
         "avatar_id":  _env("HEYGEN_AVATAR_ID_LUNA_HART"),
         "voice_id":   _env("HEYGEN_VOICE_ID_LUNA_HART"),
         "background": {"type": "color", "value": "#FDF6F0"},  # warm cream
-        "dimension":  {"width": 720, "height": 1280},
+        "dimension":  {"width": 1080, "height": 1920},
     },
     "Dr. Orion Hale": {
         "avatar_id":  _env("HEYGEN_AVATAR_ID_DR_ORION_HALE"),
         "voice_id":   _env("HEYGEN_VOICE_ID_DR_ORION_HALE"),
         "background": {"type": "color", "value": "#F0F4F8"},  # clean blue-grey
-        "dimension":  {"width": 720, "height": 1280},
+        "dimension":  {"width": 1080, "height": 1920},
     },
 }
 
@@ -120,40 +120,41 @@ def submit_video(script: dict, faculty: str, dry_run: bool = False) -> str:
         print(f"      HEYGEN_VOICE_ID_{env_key}")
         sys.exit(1)
 
-    # Build the spoken text — hook bold at the start, then body
+    # Build the spoken text — hook first, then body
     spoken_text = f"{script['hook']}\n\n{script['body']}"
+    title = f"{faculty} — Script {script['number']:02d}"
 
+    # Avatar IV payload (higher quality, more expressive motion)
     payload = {
-        "video_inputs": [
-            {
-                "character": {
-                    "type": "avatar",
-                    "avatar_id": config["avatar_id"],
-                    "avatar_style": "normal",
-                },
-                "voice": {
-                    "type": "text",
-                    "input_text": spoken_text,
-                    "voice_id": config["voice_id"],
-                    "speed": 0.95,  # slightly slower = more composed delivery
-                },
-                "background": config["background"],
-            }
-        ],
+        "video_title": title,
+        "avatar_id": config["avatar_id"],
+        "script": {
+            "type": "text",
+            "input": spoken_text,
+            "voice_id": config["voice_id"],
+            "voice_settings": {
+                "speed": 0.95,  # slightly slower = more composed delivery
+                "emotion": "Friendly",
+            },
+        },
         "dimension": config["dimension"],
+        "background": config["background"],
+        # Motion prompt derived from visual direction notes
+        "custom_motion_prompt": _motion_prompt(script.get("visual_direction", "")),
+        "enhance_custom_motion_prompt": True,
         "caption": False,  # captions added in post via CapCut
-        "title": f"{faculty} — Script {script['number']:02d}",
     }
 
     if dry_run:
-        print(f"  [DRY RUN] Script {script['number']:02d} payload:")
-        print(f"    Title:  {payload['title']}")
-        print(f"    Length: ~{len(spoken_text)} chars")
-        print(f"    Hook:   {script['hook'][:60]}...")
+        print(f"  [DRY RUN] Script {script['number']:02d}:")
+        print(f"    Title:   {title}")
+        print(f"    Length:  ~{len(spoken_text)} chars")
+        print(f"    Hook:    {script['hook'][:60]}...")
+        print(f"    Motion:  {payload['custom_motion_prompt'][:80]}")
         return f"dry_run_{script['number']:02d}"
 
     resp = requests.post(
-        f"{HEYGEN_API_BASE}/v2/video/generate",
+        f"{HEYGEN_API_BASE}/v2/video/av4/generate",
         headers=_headers(),
         json=payload,
         timeout=30,
@@ -163,6 +164,16 @@ def submit_video(script: dict, faculty: str, dry_run: bool = False) -> str:
     video_id = data["data"]["video_id"]
     print(f"  → Submitted script {script['number']:02d}: video_id={video_id}")
     return video_id
+
+
+def _motion_prompt(visual_direction: str) -> str:
+    """Convert the script's VISUAL DIRECTION note into an Avatar IV motion prompt."""
+    if not visual_direction:
+        return "Calm, still presence. Direct eye contact. Minimal movement. Composed delivery."
+    # Strip formatting and keep first sentence as the motion cue
+    clean = visual_direction.replace("**", "").strip()
+    # Take up to first 150 chars as the motion prompt
+    return clean[:150]
 
 
 def poll_until_complete(video_id: str, timeout_s: int = 600) -> str:
