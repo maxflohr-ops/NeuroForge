@@ -1,0 +1,208 @@
+{
+  "topic": "Stop Overthinking",
+  "modules": [
+    {
+      "module_number": 1,
+      "title": "Understanding the Overthinking Mind",
+      "description": "Explore the psychology behind overthinking, its root causes, and how it manifests in daily life. Dr. Nova Vale introduces the neuroscience of rumination and why our brains fall into repetitive thought loops.",
+      "lessons": [
+        {
+          "lesson_number": 1,
+          "title": "What Is Overthinking and Why Do We Do It?",
+          "learning_objectives": [
+            "Define overthinking and distinguish it from healthy analytical thinking",
+            "Identify the neurological mechanisms that trigger rumination and worry cycles",
+            "Recognize the evolutionary basis for overthinking as a survival mechanism",
+            "Describe the difference between productive reflection and destructive over-analysis"
+          ],
+          "duration_minutes": 35
+        },
+        {
+          "lesson_number": 2,
+          "title": "Recognizing Your Personal Overthinking Patterns",
+          "learning_objectives": [
+            "Identify your unique triggers that initiate overthinking episodes",
+            "Categorize common overthinking patterns such as catastrophizing, analysis paralysis, and rumination",
+            "Use a self-assessment framework to measure the frequency and intensity of your overthinking",
+            "Distinguish between past-focused rumination and future-focused anxiety as distinct thought patterns"
+          ],
+          "duration_minutes": 40
+        },
+        {
+          "lesson_number": 3,
+          "title": "The Hidden Costs of Overthinking",
+          "learning_objectives": [
+            "Explain the psychological and physical health consequences of chronic overthinking",
+            "Analyze how overthinking impacts decision-making quality and speed",
+            "Assess the toll overthinking takes on personal relationships and professional performance",
+            "Connect emotional exhaustion and mental fatigue to sustained overthinking habits"
+          ],
+          "duration_minutes": 30
+        }
+      ]
+    },
+    {
+      "module_number": 2,
+      "title": "Cognitive Tools to Interrupt the Thought Spiral",
+      "description": "Dr. Nova Vale presents evidence-based cognitive techniques drawn from CBT, mindfulness, and behavioral psychology to help learners break free from thought spirals in real time.",
+      "lessons": [
+        {
+          "lesson_number": 4,
+          "title": "Thought Challenging and Cognitive Restructuring",
+          "learning_objectives": [
+            "Apply the ABC model (Activating event, Belief, Consequence) to analyze overthinking episodes",
+            "Practice identifying cognitive distortions embedded in overthinking thoughts",
+            "Reframe negative or irrational thoughts using structured cognitive restructuring techniques",
+            "Develop personalized counter-statements to replace habitual overthinking narratives"
+          ],
+          "duration_minutes": 50
+        },
+        {
+          "lesson_number": 5,
+          "title": "The Power of Mindful Awareness",
+          "learning_objectives": [
+            "Define mindfulness and explain its role in reducing overthinking",
+            "Practice a foundational breath-based mindfulness exercise to anchor attention in the present",
+            "Use the observe-and-label technique to detach from intrusive thoughts without judgment",
+            "Integrate brief mindfulness micro-practices into a daily routine to preempt thought spirals"
+          ],
+          "duration_minutes": 45
+        },
+        {
+          "lesson_number": 6,
+          "title": "Scheduled Worry Time and Thought Containment",
+          "learning_objectives": [
+            "Explain the psychological rationale behind scheduled worry time as a containment strategy",
+            "Implement a structured worry journaling practice to externalize and limit rumination",
+            "Use the postponement technique to defer intrusive thoughts outside designated worry windows",
+            "Evaluate personal progress in reducing unscheduled overthinking episodes over one week"
+          ],
+          "duration_minutes": 40
+        }
+      ]
+    },
+    {
+      "module_number": 3,
+      "title": "Decision-Making Without Paralysis",
+      "description": "This module tackles analysis paralysis head-on. Dr. Nova Vale provides practical frameworks for making confident, timely decisions even in the face of uncertainty and imperfect information.",
+      "lessons": [
+        {
+          "lesson_number": 7,
+          "title": "Understanding Analysis Paralysis",
+          "learning_objectives": [
+            "Define analysis paralysis and identify its behavioral and emotional symptoms",
+            "Explain how perfectionism and fear of regret fuel indecision and overthinking",
+            "Differentiate between decisions that warrant careful deliberation and those requiring prompt action",
+            "Recognize the paradox of choice and its contribution to decision fatigue"
+          ],
+          "duration_minutes": 35
+        },
+        {
+          "lesson_number": 8,
+          "title": "Practical Frameworks for Confident Decision-Making",
+          "learning_objectives": [
+            "Apply the 10/10/10 rule to evaluate the long-term impact of decisions",
+            "Use a simple decision matrix to weigh options objectively and reduce emotional bias",
+            "Set personal decision deadlines to prevent prolonged deliberation and second-guessing",
+            "Practice the good-enough principle to overcome perfectionism in low-stakes decisions",
+            "Build tolerance for ambiguity by reframing uncertainty as a normal part of decision-making"
+          ],
+          "duration_minutes": 55
+        },
+        {
+          "lesson_number": 9,
+          "title": "Trusting Your Intuition Alongside Logic",
+          "learning_objectives": [
+            "Explain the neuroscience of intuitive decision-making and its legitimate role in judgment",
+            "Distinguish between fear-based impulses and genuine gut instincts",
+            "Develop a personal protocol for integrating rational analysis with intuitive signals",
+            "Reflect on past decisions to calibrate and strengthen trust in your own judgment"
+          ],
+          "duration_minutes": 40
+        }
+      ]
+    },
+    {
+      "module_number": 4,
+      "title": "Emotional Regulation and Mental Resilience",
+      "description": "Dr. Nova Vale guides learners through emotional regulation strategies that address the anxiety and stress fueling overthinking, building long-term psychological resilience.",
+      "lessons": [
+        {
+          "lesson_number": 10,
+          "title": "Managing the Anxiety Behind Overthinking",
+          "learning_objectives": [
+            "Explain the bidirectional relationship between anxiety and overthinking",
+            "Apply diaphragmatic breathing and progressive muscle relaxation to reduce physiological arousal",
+            "Use grounding techniques such as the 5-4-3-2-1 method to interrupt anxiety-driven thought loops",
+            "Identify personal anxiety thresholds and early warning signs before full overthinking onset"
+          ],
+          "duration_minutes": 50
+        },
+        {
+          "lesson_number": 11,
+          "title": "Self-Compassion as an Antidote to Rumination",
+          "learning_objectives": [
+            "Define self-compassion and contrast it with self-criticism and self-pity",
+            "Explain Dr. Kristin Neff's three components of self-compassion and their relevance to overthinking",
+            "Practice a self-compassion break exercise to soften harsh self-judgment during difficult moments",
+            "Reframe past mistakes and perceived failures through a compassionate, growth-oriented lens"
+          ],
+          "duration_minutes": 45
+        },
+        {
+          "lesson_number": 12,
+          "title": "Building Long-Term Mental Resilience",
+          "learning_objectives": [
+            "Define psychological resilience and its protective role against chronic overthinking",
+            "Identify daily habits and lifestyle factors that strengthen mental resilience over time",
+            "Develop a personalized resilience-building plan incorporating sleep, movement, and social connection",
+            "Apply a growth mindset framework to reinterpret setbacks as learning opportunities rather than threats"
+          ],
+          "duration_minutes": 50
+        }
+      ]
+    },
+    {
+      "module_number": 5,
+      "title": "Building a Life Beyond Overthinking",
+      "description": "In the final module, Dr. Nova Vale helps learners consolidate their skills, design sustainable anti-overthinking habits, and create a personalized action plan for lasting mental freedom.",
+      "lessons": [
+        {
+          "lesson_number": 13,
+          "title": "Designing Your Anti-Overthinking Daily Routine",
+          "learning_objectives": [
+            "Integrate key techniques from previous modules into a coherent daily mental hygiene routine",
+            "Identify environmental and behavioral cues that can serve as anchors for healthy thinking habits",
+            "Create a morning and evening routine specifically designed to minimize overthinking triggers",
+            "Develop a personal relapse prevention plan for high-stress periods or overthinking relapses"
+          ],
+          "duration_minutes": 45
+        },
+        {
+          "lesson_number": 14,
+          "title": "Taking Action Despite Uncertainty",
+          "learning_objectives": [
+            "Adopt an action-oriented mindset that values progress over perfection",
+            "Use implementation intentions to translate decisions into concrete, scheduled actions",
+            "Practice tolerating discomfort during the transition from overthinking to decisive action",
+            "Celebrate small wins to reinforce new patterns of confident, action-focused thinking"
+          ],
+          "duration_minutes": 40
+        },
+        {
+          "lesson_number": 15,
+          "title": "Your Personal Freedom Plan and Course Recap",
+          "learning_objectives": [
+            "Synthesize all course concepts into a cohesive personal freedom-from-overthinking plan",
+            "Set three specific, measurable goals for continued growth beyond the course",
+            "Identify accountability strategies and support systems to sustain long-term change",
+            "Reflect on personal transformation across the course and articulate key breakthroughs achieved"
+          ],
+          "duration_minutes": 55
+        }
+      ]
+    }
+  ],
+  "total_modules": 5,
+  "total_lessons": 15
+}
