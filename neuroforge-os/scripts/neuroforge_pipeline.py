@@ -34,11 +34,14 @@ from pathlib import Path
 # CONFIG
 # ─────────────────────────────────────────────
 
-MODEL = "claude-sonnet-4-20250514"
-MAX_TOKENS = 8000
-OUTPUT_DIR = Path("./output")
-PROMPT_DIR = Path("./prompts")
-DB_FILE = Path("./neuroforge_db.json")
+MODEL = "claude-sonnet-4-6"
+MAX_TOKENS = 16000
+SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_DIR = SCRIPT_DIR.parent
+OUTPUT_DIR = PROJECT_DIR / "output"
+PROMPT_DIR = PROJECT_DIR / "prompts"
+DB_FILE = PROJECT_DIR / "neuroforge_db.json"
+SESSION_TOKEN_FILE = Path("/home/claude/.claude/remote/.session_ingress_token")
 
 FACULTY_PROFILES = {
     "Dr. Nova Vale": {
@@ -126,9 +129,20 @@ def extract_qa_score(qa_output: str) -> int:
     return None
 
 
+def _get_client() -> anthropic.Anthropic:
+    """Create Anthropic client with best available auth."""
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if api_key:
+        return anthropic.Anthropic(api_key=api_key)
+    if SESSION_TOKEN_FILE.exists():
+        token = SESSION_TOKEN_FILE.read_text().strip()
+        return anthropic.Anthropic(auth_token=token)
+    return anthropic.Anthropic()
+
+
 def call_claude(system_prompt: str, user_message: str, label: str = "") -> str:
     """Single Claude API call. Returns text content."""
-    client = anthropic.Anthropic()  # uses ANTHROPIC_API_KEY env var
+    client = _get_client()
 
     print(f"\n{'─'*50}")
     print(f"  Calling: {label}")
@@ -458,10 +472,10 @@ def main():
     if not args.pillar and args.faculty in FACULTY_PROFILES:
         args.pillar = FACULTY_PROFILES[args.faculty]["pillar"]
 
-    # Check API key
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        print("\nError: ANTHROPIC_API_KEY environment variable not set.")
-        print("Set it with: export ANTHROPIC_API_KEY=your_key_here")
+    # Check API key or session token
+    if not os.environ.get("ANTHROPIC_API_KEY") and not SESSION_TOKEN_FILE.exists():
+        print("\nError: No authentication found.")
+        print("Set ANTHROPIC_API_KEY or ensure session token is available.")
         sys.exit(1)
 
     # Route to correct mode
