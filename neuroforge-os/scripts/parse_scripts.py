@@ -55,6 +55,8 @@ def parse_batch_file(text: str) -> list[dict]:
         visual_direction = _extract_field(body_raw, "VISUAL DIRECTION")
         text_overlay = _extract_field(body_raw, "TEXT OVERLAY")
         caption_hook = _extract_field(body_raw, "Caption Hook")
+        hashtags = _extract_field(body_raw, "Hashtags")
+        tiktok_caption = _extract_field(body_raw, "TikTok Caption")
 
         # Script body = text between the first --- separator and the VISUAL DIRECTION block
         # The structure is: metadata lines, ---, [body], ---, VISUAL DIRECTION...
@@ -70,6 +72,8 @@ def parse_batch_file(text: str) -> list[dict]:
             "visual_direction": visual_direction,
             "text_overlay": text_overlay,
             "caption_hook": caption_hook,
+            "hashtags": hashtags,
+            "tiktok_caption": tiktok_caption,
         })
 
     return scripts

@@ -83,6 +83,8 @@ Each script must follow this exact structure:
 **VISUAL DIRECTION:** [2–3 sentences on how the avatar should look, any text overlays to add, B-roll or graphic suggestions]
 **TEXT OVERLAY:** [if any — the key phrase to display on screen mid-script]
 **Caption Hook:** [the first line of the caption for posting — should match or extend the video hook]
+**Hashtags:** [5–8 hashtags — mix of niche (#overthinking, #anxietytips) and broad (#mentalhealth, #psychology, #selfimprovement). No spaces. No punctuation between them except a space separator. Total with caption must stay under 2,200 chars.]
+**TikTok Caption:** [Full ready-to-paste caption: Caption Hook sentence + 1–2 short follow-up lines max + line break + Hashtags. Under 300 characters total. Do not include a CTA here — the CTA is in the video.]
 
 ---
 

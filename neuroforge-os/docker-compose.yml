@@ -45,6 +45,23 @@ services:
       - ./output:/app/output
 
   # ─────────────────────────────────────────
+  # TikTok publisher — post videos to TikTok
+  # Usage:
+  #   docker compose run --rm tiktok-publisher \
+  #     --topic "Stop Overthinking" \
+  #     --privacy SELF_ONLY --dry-run
+  #
+  #   Remove --dry-run and change --privacy PUBLIC_TO_EVERYONE to go live.
+  #   TikTok cap: 15 posts per creator per 24h.
+  # ─────────────────────────────────────────
+  tiktok-publisher:
+    build: .
+    entrypoint: ["python", "scripts/tiktok_publisher.py"]
+    env_file: .env
+    volumes:
+      - ./output:/app/output
+
+  # ─────────────────────────────────────────
   # Script parser — splits batch MD into JSONs
   # Usage:
   #   docker compose run --rm parse-scripts \
