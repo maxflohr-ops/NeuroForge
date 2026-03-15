@@ -18,16 +18,11 @@ import argparse
 import sys
 from pathlib import Path
 
-# Reuse all agents/helpers from the main pipeline
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from neuroforge_pipeline import (
-    run_manuscript_agent,
-    run_shorts_agent,
-    run_funnel_agent,
-    run_qa_agent,
-    save_output,
-    log_to_db,
-    FACULTY_PROFILES,
+    CT_CHAPTER, CT_FUNNEL, CT_SCRIPTS,
+    log_to_db, maybe_qa, run_funnel_agent,
+    run_manuscript_agent, run_shorts_agent, save_output,
 )
 
 
@@ -44,12 +39,8 @@ def main():
     brief = Path(args.brief).read_text(encoding="utf-8")
     blueprint = Path(args.blueprint).read_text(encoding="utf-8")
 
-    def maybe_qa(content, content_type, save_prefix):
-        if args.no_qa:
-            return None
-        qa_report, score = run_qa_agent(content, content_type, args.faculty, args.topic)
-        save_output(args.topic, save_prefix, qa_report)
-        return score
+    def qa(content, content_type, save_prefix):
+        return maybe_qa(content, content_type, save_prefix, args.topic, args.faculty, args.no_qa)
 
     print(f"\n{'='*60}")
     print(f"  NEUROFORGE — COMPLETING TOPIC")
@@ -62,28 +53,28 @@ def main():
     # Step 3: Chapter 1
     chapter = run_manuscript_agent(blueprint, 1, args.faculty)
     ch_path = save_output(args.topic, "03_chapter_01", chapter)
-    ch_score = maybe_qa(chapter, "Manuscript Chapter", "03_chapter_01_QA")
+    ch_score = qa(chapter, CT_CHAPTER, "03_chapter_01_QA")
     log_to_db(args.topic, "Manuscript Agent Ch1", ch_path, ch_score)
 
     # Step 4: Scripts
     scripts = run_shorts_agent(brief, args.faculty, num_scripts=20)
     sc_path = save_output(args.topic, "04_shorts_scripts", scripts)
-    sc_score = maybe_qa(scripts, "Short-Form Scripts", "04_shorts_scripts_QA")
+    sc_score = qa(scripts, CT_SCRIPTS, "04_shorts_scripts_QA")
     log_to_db(args.topic, "Shorts Script Agent", sc_path, sc_score)
 
     # Step 5: Funnel
     funnel = run_funnel_agent(brief, blueprint, args.faculty)
     fn_path = save_output(args.topic, "05_funnel_copy", funnel)
-    fn_score = maybe_qa(funnel, "Funnel Copy", "05_funnel_copy_QA")
+    fn_score = qa(funnel, CT_FUNNEL, "05_funnel_copy_QA")
     log_to_db(args.topic, "Funnel Agent", fn_path, fn_score)
 
     print(f"\n{'='*60}")
     print(f"  COMPLETE — {args.topic}")
     print(f"{'='*60}")
     if not args.no_qa:
-        print(f"  Chapter 1 QA:    {ch_score}/50" if ch_score else "  Chapter 1 QA:    N/A")
-        print(f"  Scripts QA:      {sc_score}/50" if sc_score else "  Scripts QA:      N/A")
-        print(f"  Funnel Copy QA:  {fn_score}/50" if fn_score else "  Funnel Copy QA:  N/A")
+        scores = {CT_CHAPTER: ch_score, CT_SCRIPTS: sc_score, CT_FUNNEL: fn_score}
+        for label, score in scores.items():
+            print(f"  {label:<20} {score}/50" if score else f"  {label:<20} N/A")
     else:
         print("  QA skipped.")
     print(f"{'='*60}\n")

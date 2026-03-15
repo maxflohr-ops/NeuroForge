@@ -43,6 +43,13 @@ PROMPT_DIR = PROJECT_DIR / "prompts"
 DB_FILE = PROJECT_DIR / "neuroforge_db.json"
 SESSION_TOKEN_FILE = Path("/home/claude/.claude/remote/.session_ingress_token")
 
+# Content type labels used by QA agent
+CT_RESEARCH  = "Research Brief"
+CT_BLUEPRINT = "Book Blueprint"
+CT_CHAPTER   = "Manuscript Chapter"
+CT_SCRIPTS   = "Short-Form Scripts"
+CT_FUNNEL    = "Funnel Copy"
+
 FACULTY_PROFILES = {
     "Dr. Nova Vale": {
         "domain": "Anxiety, overthinking, intrusive thoughts, emotional regulation",
@@ -127,6 +134,16 @@ def extract_qa_score(qa_output: str) -> int:
     if match:
         return int(match.group(1))
     return None
+
+
+def maybe_qa(content: str, content_type: str, save_prefix: str,
+             topic: str, faculty: str, no_qa: bool) -> int:
+    """Run QA agent and save report unless no_qa is set. Returns score or None."""
+    if no_qa:
+        return None
+    qa_report, score = run_qa_agent(content, content_type, faculty, topic)
+    save_output(topic, save_prefix, qa_report)
+    return score
 
 
 def _get_client() -> anthropic.Anthropic:
@@ -326,12 +343,7 @@ def pipeline_research_only(args):
     """Run Research Agent only."""
     brief = run_research_agent(args.topic, args.pillar, args.faculty, args.audience_notes)
     path = save_output(args.topic, "01_research_brief", brief)
-
-    score = None
-    if not args.no_qa:
-        qa_report, score = run_qa_agent(brief, "Research Brief", args.faculty, args.topic)
-        save_output(args.topic, "01_research_brief_QA", qa_report)
-
+    score = maybe_qa(brief, CT_RESEARCH, "01_research_brief_QA", args.topic, args.faculty, args.no_qa)
     log_to_db(args.topic, "Research Agent", path, score)
     print(f"\n✅ Research brief complete. QA Score: {score}/50" if score else "\n✅ Research brief complete. (QA skipped)")
     return brief
@@ -340,15 +352,9 @@ def pipeline_research_only(args):
 def pipeline_blueprint(args):
     """Run Research + Book Architect."""
     brief = pipeline_research_only(args)
-
     blueprint = run_book_architect_agent(brief, args.faculty)
     path = save_output(args.topic, "02_book_blueprint", blueprint)
-
-    score = None
-    if not args.no_qa:
-        qa_report, score = run_qa_agent(blueprint, "Book Blueprint", args.faculty, args.topic)
-        save_output(args.topic, "02_book_blueprint_QA", qa_report)
-
+    score = maybe_qa(blueprint, CT_BLUEPRINT, "02_book_blueprint_QA", args.topic, args.faculty, args.no_qa)
     log_to_db(args.topic, "Book Architect Agent", path, score)
     print(f"\n✅ Blueprint complete. QA Score: {score}/50" if score else "\n✅ Blueprint complete. (QA skipped)")
     return brief, blueprint
@@ -357,16 +363,10 @@ def pipeline_blueprint(args):
 def pipeline_manuscript(args):
     """Run full pipeline up to one manuscript chapter."""
     brief, blueprint = pipeline_blueprint(args)
-
     chapter_num = args.chapter if args.chapter else 1
     chapter = run_manuscript_agent(blueprint, chapter_num, args.faculty)
     path = save_output(args.topic, f"03_chapter_{chapter_num:02d}", chapter)
-
-    score = None
-    if not args.no_qa:
-        qa_report, score = run_qa_agent(chapter, "Manuscript Chapter", args.faculty, args.topic)
-        save_output(args.topic, f"03_chapter_{chapter_num:02d}_QA", qa_report)
-
+    score = maybe_qa(chapter, CT_CHAPTER, f"03_chapter_{chapter_num:02d}_QA", args.topic, args.faculty, args.no_qa)
     log_to_db(args.topic, f"Manuscript Agent Ch{chapter_num}", path, score)
     print(f"\n✅ Chapter {chapter_num} complete. QA Score: {score}/50" if score else f"\n✅ Chapter {chapter_num} complete. (QA skipped)")
     return brief, blueprint, chapter
@@ -381,17 +381,13 @@ def pipeline_full(args):
     print(f"  QA:      {'disabled' if args.no_qa else 'enabled'}")
     print(f"{'='*60}")
 
-    def maybe_qa(content, content_type, save_prefix):
-        if args.no_qa:
-            return None
-        qa_report, score = run_qa_agent(content, content_type, args.faculty, args.topic)
-        save_output(args.topic, save_prefix, qa_report)
-        return score
+    def qa(content, content_type, save_prefix):
+        return maybe_qa(content, content_type, save_prefix, args.topic, args.faculty, args.no_qa)
 
     # Step 1: Research
     brief = run_research_agent(args.topic, args.pillar, args.faculty, args.audience_notes)
     brief_path = save_output(args.topic, "01_research_brief", brief)
-    brief_score = maybe_qa(brief, "Research Brief", "01_research_brief_QA")
+    brief_score = qa(brief, CT_RESEARCH, "01_research_brief_QA")
     log_to_db(args.topic, "Research Agent", brief_path, brief_score)
 
     if brief_score and brief_score < 35:
@@ -402,7 +398,7 @@ def pipeline_full(args):
     # Step 2: Blueprint
     blueprint = run_book_architect_agent(brief, args.faculty)
     bp_path = save_output(args.topic, "02_book_blueprint", blueprint)
-    bp_score = maybe_qa(blueprint, "Book Blueprint", "02_book_blueprint_QA")
+    bp_score = qa(blueprint, CT_BLUEPRINT, "02_book_blueprint_QA")
     log_to_db(args.topic, "Book Architect Agent", bp_path, bp_score)
 
     if bp_score and bp_score < 35:
@@ -412,24 +408,24 @@ def pipeline_full(args):
     # Step 3: Chapter 1
     chapter = run_manuscript_agent(blueprint, 1, args.faculty)
     ch_path = save_output(args.topic, "03_chapter_01", chapter)
-    ch_score = maybe_qa(chapter, "Manuscript Chapter", "03_chapter_01_QA")
+    ch_score = qa(chapter, CT_CHAPTER, "03_chapter_01_QA")
     log_to_db(args.topic, "Manuscript Agent Ch1", ch_path, ch_score)
 
     # Step 4: Scripts (20 scripts)
     scripts = run_shorts_agent(brief, args.faculty, num_scripts=20)
     sc_path = save_output(args.topic, "04_shorts_scripts", scripts)
-    sc_score = maybe_qa(scripts, "Short-Form Scripts", "04_shorts_scripts_QA")
+    sc_score = qa(scripts, CT_SCRIPTS, "04_shorts_scripts_QA")
     log_to_db(args.topic, "Shorts Script Agent", sc_path, sc_score)
 
     # Step 5: Funnel
     funnel = run_funnel_agent(brief, blueprint, args.faculty)
     fn_path = save_output(args.topic, "05_funnel_copy", funnel)
-    fn_score = maybe_qa(funnel, "Funnel Copy", "05_funnel_copy_QA")
+    fn_score = qa(funnel, CT_FUNNEL, "05_funnel_copy_QA")
     log_to_db(args.topic, "Funnel Agent", fn_path, fn_score)
 
     # Summary
-    scores = {"Research Brief": brief_score, "Book Blueprint": bp_score,
-              "Chapter 1": ch_score, "Scripts": sc_score, "Funnel Copy": fn_score}
+    scores = {CT_RESEARCH: brief_score, CT_BLUEPRINT: bp_score,
+              CT_CHAPTER: ch_score, CT_SCRIPTS: sc_score, CT_FUNNEL: fn_score}
     print(f"\n{'='*60}")
     print(f"  PIPELINE COMPLETE — {args.topic}")
     print(f"{'='*60}")
@@ -451,7 +447,7 @@ def pipeline_qa_file(args):
         print("Error: --file required for qa mode")
         sys.exit(1)
     content = Path(args.file).read_text(encoding="utf-8")
-    qa_report, score = run_qa_agent(content, args.content_type or "Manuscript Chapter", args.faculty, args.topic)
+    qa_report, score = run_qa_agent(content, args.content_type or CT_CHAPTER, args.faculty, args.topic)
     save_output(args.topic, "qa_review", qa_report)
     print(f"\n✅ QA complete. Score: {score}/50")
 
