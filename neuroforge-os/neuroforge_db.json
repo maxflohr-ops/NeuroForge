@@ -1,0 +1,37 @@
+[
+  {
+    "timestamp": "2026-03-15T03:28:26.889714",
+    "topic": "Stop Overthinking",
+    "agent": "Research Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/stop_overthinking/01_research_brief_20260315_032712.md",
+    "qa_score": 42
+  },
+  {
+    "timestamp": "2026-03-15T03:34:00.474194",
+    "topic": "Stop Overthinking",
+    "agent": "Book Architect Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/stop_overthinking/02_book_blueprint_20260315_033246.md",
+    "qa_score": 43
+  },
+  {
+    "timestamp": "2026-03-15T03:36:30.906621",
+    "topic": "Stop Overthinking",
+    "agent": "Manuscript Agent Ch1",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/stop_overthinking/03_chapter_01_20260315_033514.md",
+    "qa_score": 38
+  },
+  {
+    "timestamp": "2026-03-15T03:42:19.298518",
+    "topic": "Stop Overthinking",
+    "agent": "Shorts Script Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/stop_overthinking/04_shorts_scripts_20260315_034048.md",
+    "qa_score": 37
+  },
+  {
+    "timestamp": "2026-03-15T03:46:34.183738",
+    "topic": "Stop Overthinking",
+    "agent": "Funnel Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/stop_overthinking/05_funnel_copy_20260315_034515.md",
+    "qa_score": 42
+  }
+]
