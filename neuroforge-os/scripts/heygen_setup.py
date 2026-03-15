@@ -93,7 +93,7 @@ def fetch_avatars() -> list[dict]:
 
 def fetch_voices() -> list[dict]:
     """Fetch all available voices from HeyGen."""
-    resp = requests.get(f"{HEYGEN_API_BASE}/v1/voice.list", headers=_headers(), timeout=15)
+    resp = requests.get(f"{HEYGEN_API_BASE}/v2/voices", headers=_headers(), timeout=15)
     resp.raise_for_status()
     data = resp.json()
     voices = data.get("data", {}).get("voices", [])
