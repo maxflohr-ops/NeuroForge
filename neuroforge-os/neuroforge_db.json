@@ -68,5 +68,12 @@
     "agent": "Shorts Script Agent",
     "output_file": "/home/user/NeuroForge/neuroforge-os/output/dopamine_detox/04_shorts_scripts_20260315_040639.md",
     "qa_score": 37
+  },
+  {
+    "timestamp": "2026-03-15T04:12:31.421198",
+    "topic": "Dopamine Detox",
+    "agent": "Funnel Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/dopamine_detox/05_funnel_copy_20260315_041120.md",
+    "qa_score": 42
   }
 ]
