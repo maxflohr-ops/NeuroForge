@@ -33,5 +33,40 @@
     "agent": "Funnel Agent",
     "output_file": "/home/user/NeuroForge/neuroforge-os/output/stop_overthinking/05_funnel_copy_20260315_034515.md",
     "qa_score": 42
+  },
+  {
+    "timestamp": "2026-03-15T03:54:42.783463",
+    "topic": "Dopamine Detox",
+    "agent": "Research Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/dopamine_detox/01_research_brief_20260315_035344.md",
+    "qa_score": 40
+  },
+  {
+    "timestamp": "2026-03-15T04:00:15.505141",
+    "topic": "Dopamine Detox",
+    "agent": "Book Architect Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/dopamine_detox/02_book_blueprint_20260315_035855.md",
+    "qa_score": 42
+  },
+  {
+    "timestamp": "2026-03-15T04:02:40.726434",
+    "topic": "Dopamine Detox",
+    "agent": "Manuscript Agent Ch1",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/dopamine_detox/03_chapter_01_20260315_040133.md",
+    "qa_score": 41
+  },
+  {
+    "timestamp": "2026-03-15T04:07:33.126665",
+    "topic": "Stop Procrastinating",
+    "agent": "Research Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/stop_procrastinating/01_research_brief_20260315_040628.md",
+    "qa_score": 40
+  },
+  {
+    "timestamp": "2026-03-15T04:08:08.734100",
+    "topic": "Dopamine Detox",
+    "agent": "Shorts Script Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/dopamine_detox/04_shorts_scripts_20260315_040639.md",
+    "qa_score": 37
   }
 ]
