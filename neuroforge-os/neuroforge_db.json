@@ -75,5 +75,75 @@
     "agent": "Funnel Agent",
     "output_file": "/home/user/NeuroForge/neuroforge-os/output/dopamine_detox/05_funnel_copy_20260315_041120.md",
     "qa_score": 42
+  },
+  {
+    "timestamp": "2026-03-15T04:13:17.597316",
+    "topic": "Stop Procrastinating",
+    "agent": "Book Architect Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/stop_procrastinating/02_book_blueprint_20260315_041155.md",
+    "qa_score": 43
+  },
+  {
+    "timestamp": "2026-03-15T04:15:25.703084",
+    "topic": "Stop Procrastinating",
+    "agent": "Manuscript Agent Ch1",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/stop_procrastinating/03_chapter_01_20260315_041427.md",
+    "qa_score": 42
+  },
+  {
+    "timestamp": "2026-03-15T04:20:52.561781",
+    "topic": "Stop Procrastinating",
+    "agent": "Shorts Script Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/stop_procrastinating/04_shorts_scripts_20260315_041922.md",
+    "qa_score": 40
+  },
+  {
+    "timestamp": "2026-03-15T04:25:25.341783",
+    "topic": "Stop Procrastinating",
+    "agent": "Funnel Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/stop_procrastinating/05_funnel_copy_20260315_042354.md",
+    "qa_score": 42
+  },
+  {
+    "timestamp": "2026-03-15T04:27:50.971594",
+    "topic": "The Confidence Code",
+    "agent": "Research Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/the_confidence_code/01_research_brief_20260315_042653.md",
+    "qa_score": 44
+  },
+  {
+    "timestamp": "2026-03-15T04:34:32.981025",
+    "topic": "The Confidence Code",
+    "agent": "Book Architect Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/the_confidence_code/02_book_blueprint_20260315_043307.md",
+    "qa_score": 41
+  },
+  {
+    "timestamp": "2026-03-15T04:36:40.646648",
+    "topic": "The Confidence Code",
+    "agent": "Manuscript Agent Ch1",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/the_confidence_code/03_chapter_01_20260315_043547.md",
+    "qa_score": 43
+  },
+  {
+    "timestamp": "2026-03-15T04:41:45.510995",
+    "topic": "The Confidence Code",
+    "agent": "Shorts Script Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/the_confidence_code/04_shorts_scripts_20260315_044033.md",
+    "qa_score": 42
+  },
+  {
+    "timestamp": "2026-03-15T04:45:47.361916",
+    "topic": "The Confidence Code",
+    "agent": "Funnel Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/the_confidence_code/05_funnel_copy_20260315_044432.md",
+    "qa_score": 42
+  },
+  {
+    "timestamp": "2026-03-15T04:48:29.874734",
+    "topic": "Beat Phone Addiction",
+    "agent": "Research Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/beat_phone_addiction/01_research_brief_20260315_044716.md",
+    "qa_score": 39
   }
 ]
