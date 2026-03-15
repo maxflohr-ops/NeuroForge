@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.env
+.heygen.env
+output/
+neuroforge_db.json
+*.zip

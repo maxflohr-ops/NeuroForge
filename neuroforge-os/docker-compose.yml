@@ -1,0 +1,59 @@
+services:
+
+  # ─────────────────────────────────────────
+  # Main pipeline — run one topic at a time
+  # Usage:
+  #   docker compose run --rm pipeline \
+  #     --topic "Stop Overthinking" \
+  #     --faculty "Dr. Nova Vale" \
+  #     --mode full --no-qa
+  # ─────────────────────────────────────────
+  pipeline:
+    build: .
+    env_file: .env
+    volumes:
+      - ./output:/app/output
+      - ./neuroforge_db.json:/app/neuroforge_db.json
+
+  # ─────────────────────────────────────────
+  # HeyGen setup — find avatar/voice IDs
+  # Usage:
+  #   docker compose run --rm heygen-setup \
+  #     --faculty "Dr. Nova Vale" --save
+  # ─────────────────────────────────────────
+  heygen-setup:
+    build: .
+    entrypoint: ["python", "scripts/heygen_setup.py"]
+    env_file: .env
+    volumes:
+      - ./output:/app/output
+      - ./.heygen.env:/app/.heygen.env
+
+  # ─────────────────────────────────────────
+  # HeyGen producer — generate videos
+  # Usage:
+  #   docker compose run --rm heygen-producer \
+  #     --topic "Stop Overthinking" \
+  #     --faculty "Dr. Nova Vale" \
+  #     --scripts "1-5" --dry-run
+  # ─────────────────────────────────────────
+  heygen-producer:
+    build: .
+    entrypoint: ["python", "scripts/heygen_producer.py"]
+    env_file: .env
+    volumes:
+      - ./output:/app/output
+
+  # ─────────────────────────────────────────
+  # Script parser — splits batch MD into JSONs
+  # Usage:
+  #   docker compose run --rm parse-scripts \
+  #     --file output/stop_overthinking/04_shorts_scripts_*.md \
+  #     --topic "Stop Overthinking"
+  # ─────────────────────────────────────────
+  parse-scripts:
+    build: .
+    entrypoint: ["python", "scripts/parse_scripts.py"]
+    env_file: .env
+    volumes:
+      - ./output:/app/output
