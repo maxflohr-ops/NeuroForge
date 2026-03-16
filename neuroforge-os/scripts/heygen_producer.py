@@ -66,34 +66,49 @@ def _env(key: str, default: str = "") -> str:
 
 FACULTY_HEYGEN_CONFIG = {
     "Dr. Nova Vale": {
-        "avatar_id":  _env("HEYGEN_AVATAR_ID_DR_NOVA_VALE"),
-        "voice_id":   _env("HEYGEN_VOICE_ID_DR_NOVA_VALE"),
-        "background": {"type": "color", "value": "#F5F0EB"},  # warm off-white
-        "dimension":  {"width": 1080, "height": 1920},         # 1080p vertical
+        "avatar_id":      _env("HEYGEN_AVATAR_ID_DR_NOVA_VALE"),
+        "voice_id":       _env("HEYGEN_VOICE_ID_DR_NOVA_VALE"),
+        "background":     {"type": "color", "value": "#F5F0EB"},  # warm off-white
+        "dimension":      {"width": 1080, "height": 1920},
+        "voice_speed":    0.90,       # measured and composed
+        "voice_emotion":  "Friendly",
+        "default_motion": "Calm, still presence. Warm eye contact. Measured delivery. Minimal movement.",
     },
     "Kai Ren": {
-        "avatar_id":  _env("HEYGEN_AVATAR_ID_KAI_REN"),
-        "voice_id":   _env("HEYGEN_VOICE_ID_KAI_REN"),
-        "background": {"type": "color", "value": "#0D0D0D"},  # near-black
-        "dimension":  {"width": 1080, "height": 1920},
+        "avatar_id":      _env("HEYGEN_AVATAR_ID_KAI_REN"),
+        "voice_id":       _env("HEYGEN_VOICE_ID_KAI_REN"),
+        "background":     {"type": "color", "value": "#0D0D0D"},  # near-black
+        "dimension":      {"width": 1080, "height": 1920},
+        "voice_speed":    1.00,       # sharp, no wasted time
+        "voice_emotion":  "Serious",
+        "default_motion": "Direct eye contact. Confident, minimal movement. Sharp and purposeful delivery.",
     },
     "Marcus Voss": {
-        "avatar_id":  _env("HEYGEN_AVATAR_ID_MARCUS_VOSS"),
-        "voice_id":   _env("HEYGEN_VOICE_ID_MARCUS_VOSS"),
-        "background": {"type": "color", "value": "#1A1A1A"},
-        "dimension":  {"width": 1080, "height": 1920},
+        "avatar_id":      _env("HEYGEN_AVATAR_ID_MARCUS_VOSS"),
+        "voice_id":       _env("HEYGEN_VOICE_ID_MARCUS_VOSS"),
+        "background":     {"type": "color", "value": "#1A1A1A"},
+        "dimension":      {"width": 1080, "height": 1920},
+        "voice_speed":    0.85,       # deliberate — every word has weight
+        "voice_emotion":  "Serious",
+        "default_motion": "Still, commanding presence. Sustained eye contact. No unnecessary movement. Maximum weight in delivery.",
     },
     "Luna Hart": {
-        "avatar_id":  _env("HEYGEN_AVATAR_ID_LUNA_HART"),
-        "voice_id":   _env("HEYGEN_VOICE_ID_LUNA_HART"),
-        "background": {"type": "color", "value": "#FDF6F0"},  # warm cream
-        "dimension":  {"width": 1080, "height": 1920},
+        "avatar_id":      _env("HEYGEN_AVATAR_ID_LUNA_HART"),
+        "voice_id":       _env("HEYGEN_VOICE_ID_LUNA_HART"),
+        "background":     {"type": "color", "value": "#FDF6F0"},  # warm cream
+        "dimension":      {"width": 1080, "height": 1920},
+        "voice_speed":    0.95,       # warm and measured
+        "voice_emotion":  "Friendly",
+        "default_motion": "Warm, approachable delivery. Natural eye contact. Conversational, gently expressive.",
     },
     "Dr. Orion Hale": {
-        "avatar_id":  _env("HEYGEN_AVATAR_ID_DR_ORION_HALE"),
-        "voice_id":   _env("HEYGEN_VOICE_ID_DR_ORION_HALE"),
-        "background": {"type": "color", "value": "#F0F4F8"},  # clean blue-grey
-        "dimension":  {"width": 1080, "height": 1920},
+        "avatar_id":      _env("HEYGEN_AVATAR_ID_DR_ORION_HALE"),
+        "voice_id":       _env("HEYGEN_VOICE_ID_DR_ORION_HALE"),
+        "background":     {"type": "color", "value": "#F0F4F8"},  # clean blue-grey
+        "dimension":      {"width": 1080, "height": 1920},
+        "voice_speed":    0.95,       # precise and clear
+        "voice_emotion":  "Serious",
+        "default_motion": "Precise, engaged delivery. Direct eye contact. Minimal but natural movement. Scientific composure.",
     },
 }
 
@@ -133,14 +148,14 @@ def submit_video(script: dict, faculty: str, dry_run: bool = False) -> str:
             "input": spoken_text,
             "voice_id": config["voice_id"],
             "voice_settings": {
-                "speed": 0.95,  # slightly slower = more composed delivery
-                "emotion": "Friendly",
+                "speed":   config["voice_speed"],
+                "emotion": config["voice_emotion"],
             },
         },
         "dimension": config["dimension"],
         "background": config["background"],
-        # Motion prompt derived from visual direction notes
-        "custom_motion_prompt": _motion_prompt(script.get("visual_direction", "")),
+        # Motion prompt: use script's VISUAL DIRECTION if present, else faculty default
+        "custom_motion_prompt": _motion_prompt(script.get("visual_direction", ""), config),
         "enhance_custom_motion_prompt": True,
         "caption": False,  # captions added in post via CapCut
     }
@@ -166,10 +181,11 @@ def submit_video(script: dict, faculty: str, dry_run: bool = False) -> str:
     return video_id
 
 
-def _motion_prompt(visual_direction: str) -> str:
-    """Convert the script's VISUAL DIRECTION note into an Avatar IV motion prompt."""
+def _motion_prompt(visual_direction: str, config: dict) -> str:
+    """Convert the script's VISUAL DIRECTION note into an Avatar IV motion prompt.
+    Falls back to the faculty-specific default if no visual direction is provided."""
     if not visual_direction:
-        return "Calm, still presence. Direct eye contact. Minimal movement. Composed delivery."
+        return config["default_motion"]
     # Strip formatting and keep first sentence as the motion cue
     clean = visual_direction.replace("**", "").strip()
     # Take up to first 150 chars as the motion prompt

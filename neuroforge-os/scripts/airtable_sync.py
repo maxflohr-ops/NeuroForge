@@ -150,16 +150,27 @@ def _create_table(key: str, base: str, name: str, fields: list) -> str:
 # Data builders
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Agent label → friendly stage name
+# Agent label → friendly stage name (static entries)
 AGENT_STAGE = {
     "Research Agent":       "Research",
     "Book Architect Agent": "Blueprint",
-    "Manuscript Agent Ch1": "Chapter 1",
     "Shorts Script Agent":  "Shorts Scripts",
     "Funnel Agent":         "Funnel Copy",
 }
 
+# Core stages used for completion tracking (chapters tracked separately)
 STAGE_ORDER = ["Research", "Blueprint", "Chapter 1", "Shorts Scripts", "Funnel Copy"]
+
+
+def _agent_to_stage(agent: str) -> str:
+    """Resolve an agent label to a friendly stage name.
+    Handles dynamic 'Manuscript Agent Ch1', 'Manuscript Agent Ch2', etc."""
+    if agent in AGENT_STAGE:
+        return AGENT_STAGE[agent]
+    match = re.match(r"Manuscript Agent Ch(\d+)", agent)
+    if match:
+        return f"Chapter {match.group(1)}"
+    return agent
 
 
 def _load_db() -> list[dict]:
@@ -191,7 +202,7 @@ def _project_records(db: list[dict], filter_topic: str | None) -> list[dict]:
                 "last_run": entry["timestamp"],
             }
 
-        stage = AGENT_STAGE.get(entry["agent"], entry["agent"])
+        stage = _agent_to_stage(entry["agent"])
         by_topic[topic]["stages_done"].append(stage)
 
         if entry.get("qa_score") is not None:
@@ -244,7 +255,7 @@ def _pipeline_run_records(db: list[dict], filter_topic: str | None,
         fields: dict = {
             "Topic":      topic,
             "Agent":      entry["agent"],
-            "Stage":      AGENT_STAGE.get(entry["agent"], entry["agent"]),
+            "Stage":      _agent_to_stage(entry["agent"]),
             "Timestamp":  entry["timestamp"][:10],
             "Output File": Path(entry["output_file"]).name,
         }
