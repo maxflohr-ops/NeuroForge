@@ -45,6 +45,21 @@ services:
       - ./output:/app/output
 
   # ─────────────────────────────────────────
+  # Airtable sync — push project data to Florra
+  # Usage:
+  #   docker compose run --rm airtable-sync
+  #   docker compose run --rm airtable-sync --dry-run
+  #   docker compose run --rm airtable-sync --topic "Stop Overthinking"
+  # ─────────────────────────────────────────
+  airtable-sync:
+    build: .
+    entrypoint: ["python", "scripts/airtable_sync.py"]
+    env_file: .env
+    volumes:
+      - ./output:/app/output
+      - ./neuroforge_db.json:/app/neuroforge_db.json
+
+  # ─────────────────────────────────────────
   # TikTok publisher — post videos to TikTok
   # Usage:
   #   docker compose run --rm tiktok-publisher \
