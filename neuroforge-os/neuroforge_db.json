@@ -432,5 +432,12 @@
     "agent": "Manuscript Agent Ch1",
     "output_file": "/home/user/NeuroForge/neuroforge-os/output/clear_brain_fog/03_chapter_01_20260316_132702.md",
     "qa_score": 50
+  },
+  {
+    "timestamp": "2026-03-16T19:21:13.850697",
+    "topic": "Clear Brain Fog",
+    "agent": "Funnel Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/clear_brain_fog/05_funnel_copy_20260316_191947.md",
+    "qa_score": 50
   }
 ]
