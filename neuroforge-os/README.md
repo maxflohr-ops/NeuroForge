@@ -152,7 +152,7 @@ python optimize_prompts.py --threshold 45 --apply
 
 ---
 
-## First 10 Topics (with Faculty)
+## First 13 Topics (with Faculty)
 
 | # | Topic | Faculty |
 |---|-------|---------|
@@ -166,6 +166,9 @@ python optimize_prompts.py --threshold 45 --apply
 | 8 | The Discipline Blueprint | Marcus Voss |
 | 9 | The Charisma Blueprint | Luna Hart |
 | 10 | Beat Anxiety Fast | Dr. Nova Vale |
+| 11 | Optimize Your Sleep | Dr. Orion Hale |
+| 12 | Clear Brain Fog | Dr. Orion Hale |
+| 13 | The Attention Protocol | Dr. Orion Hale |
 
 ---
 

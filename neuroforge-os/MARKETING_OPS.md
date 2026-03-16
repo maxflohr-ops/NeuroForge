@@ -97,7 +97,7 @@ Each faculty member operates as an independent creator brand with multiple platf
 | YouTube Shorts | @DrOrionHale | Same scripts (repurposed) |
 | Instagram Main | @dr.orionhale | Carousels, quote graphics, book promos |
 
-**Topics:** (To be assigned — brain optimization, sleep, mental performance)
+**Topics:** Optimize Your Sleep, Clear Brain Fog, The Attention Protocol
 
 ---
 
@@ -275,8 +275,8 @@ MONDAY
 
 TUESDAY
   └── Review QA scores
-      └── If any agent < 35/50: fix and re-run that stage
-      └── If all > 35: proceed
+      └── If any agent < 42/60: fix and re-run that stage
+      └── If all > 42: proceed
 
 WEDNESDAY
   └── Feed 20 scripts to HeyGen
