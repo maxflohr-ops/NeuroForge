@@ -341,5 +341,40 @@
     "agent": "Funnel Agent",
     "output_file": "/home/user/NeuroForge/neuroforge-os/output/the_charisma_blueprint/05_funnel_copy_20260316_121922.md",
     "qa_score": 51
+  },
+  {
+    "timestamp": "2026-03-16T12:27:02.727206",
+    "topic": "Beat Anxiety Fast",
+    "agent": "Research Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/beat_anxiety_fast/01_research_brief_20260316_122549.md",
+    "qa_score": 47
+  },
+  {
+    "timestamp": "2026-03-16T12:35:33.582848",
+    "topic": "Beat Anxiety Fast",
+    "agent": "Book Architect Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/beat_anxiety_fast/02_book_blueprint_20260316_123335.md",
+    "qa_score": 46
+  },
+  {
+    "timestamp": "2026-03-16T12:37:57.223257",
+    "topic": "Beat Anxiety Fast",
+    "agent": "Manuscript Agent Ch1",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/beat_anxiety_fast/03_chapter_01_20260316_123651.md",
+    "qa_score": 49
+  },
+  {
+    "timestamp": "2026-03-16T12:42:13.336109",
+    "topic": "Beat Anxiety Fast",
+    "agent": "Shorts Script Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/beat_anxiety_fast/04_shorts_scripts_20260316_124045.md",
+    "qa_score": 45
+  },
+  {
+    "timestamp": "2026-03-16T12:46:58.184296",
+    "topic": "Beat Anxiety Fast",
+    "agent": "Funnel Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/beat_anxiety_fast/05_funnel_copy_20260316_124524.md",
+    "qa_score": 50
   }
 ]
