@@ -376,5 +376,40 @@
     "agent": "Funnel Agent",
     "output_file": "/home/user/NeuroForge/neuroforge-os/output/beat_anxiety_fast/05_funnel_copy_20260316_124524.md",
     "qa_score": 50
+  },
+  {
+    "timestamp": "2026-03-16T12:52:37.245655",
+    "topic": "Optimize Your Sleep",
+    "agent": "Research Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/optimize_your_sleep/01_research_brief_20260316_125116.md",
+    "qa_score": 49
+  },
+  {
+    "timestamp": "2026-03-16T13:00:43.886416",
+    "topic": "Optimize Your Sleep",
+    "agent": "Book Architect Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/optimize_your_sleep/02_book_blueprint_20260316_125852.md",
+    "qa_score": 49
+  },
+  {
+    "timestamp": "2026-03-16T13:03:15.548068",
+    "topic": "Optimize Your Sleep",
+    "agent": "Manuscript Agent Ch1",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/optimize_your_sleep/03_chapter_01_20260316_130200.md",
+    "qa_score": 48
+  },
+  {
+    "timestamp": "2026-03-16T13:07:29.683658",
+    "topic": "Optimize Your Sleep",
+    "agent": "Shorts Script Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/optimize_your_sleep/04_shorts_scripts_20260316_130600.md",
+    "qa_score": 45
+  },
+  {
+    "timestamp": "2026-03-16T13:11:48.746272",
+    "topic": "Optimize Your Sleep",
+    "agent": "Funnel Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/optimize_your_sleep/05_funnel_copy_20260316_131025.md",
+    "qa_score": 49
   }
 ]
