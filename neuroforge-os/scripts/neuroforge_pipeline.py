@@ -146,11 +146,11 @@ def log_to_db(topic: str, agent: str, filepath: str, qa_score: int = None):
 
 def extract_qa_score(qa_output: str) -> int:
     """Parse total QA score from QA Agent output."""
-    match = re.search(r"\*\*TOTAL\*\*.*?(\d+)/50", qa_output)
+    match = re.search(r"\*\*TOTAL\*\*.*?(\d+)/60", qa_output)
     if match:
         return int(match.group(1))
-    # fallback: search for X/50
-    match = re.search(r"(\d+)/50", qa_output)
+    # fallback: search for X/60
+    match = re.search(r"(\d+)/60", qa_output)
     if match:
         return int(match.group(1))
     return None
@@ -389,7 +389,7 @@ def pipeline_research_only(args):
     path = save_output(args.topic, "01_research_brief", brief)
     score = maybe_qa(brief, CT_RESEARCH, "01_research_brief_QA", args.topic, args.faculty, args.no_qa)
     log_to_db(args.topic, "Research Agent", path, score)
-    print(f"\n✅ Research brief complete. QA Score: {score}/50" if score else "\n✅ Research brief complete. (QA skipped)")
+    print(f"\n✅ Research brief complete. QA Score: {score}/60" if score else "\n✅ Research brief complete. (QA skipped)")
     return brief
 
 
@@ -400,7 +400,7 @@ def pipeline_blueprint(args):
     path = save_output(args.topic, "02_book_blueprint", blueprint)
     score = maybe_qa(blueprint, CT_BLUEPRINT, "02_book_blueprint_QA", args.topic, args.faculty, args.no_qa)
     log_to_db(args.topic, "Book Architect Agent", path, score)
-    print(f"\n✅ Blueprint complete. QA Score: {score}/50" if score else "\n✅ Blueprint complete. (QA skipped)")
+    print(f"\n✅ Blueprint complete. QA Score: {score}/60" if score else "\n✅ Blueprint complete. (QA skipped)")
     return brief, blueprint
 
 
@@ -412,7 +412,7 @@ def pipeline_manuscript(args):
     path = save_output(args.topic, f"03_chapter_{chapter_num:02d}", chapter)
     score = maybe_qa(chapter, CT_CHAPTER, f"03_chapter_{chapter_num:02d}_QA", args.topic, args.faculty, args.no_qa)
     log_to_db(args.topic, f"Manuscript Agent Ch{chapter_num}", path, score)
-    print(f"\n✅ Chapter {chapter_num} complete. QA Score: {score}/50" if score else f"\n✅ Chapter {chapter_num} complete. (QA skipped)")
+    print(f"\n✅ Chapter {chapter_num} complete. QA Score: {score}/60" if score else f"\n✅ Chapter {chapter_num} complete. (QA skipped)")
     return brief, blueprint, chapter
 
 
@@ -445,8 +445,8 @@ def pipeline_full(args):
         brief_score = qa(brief, CT_RESEARCH, "01_research_brief_QA")
         log_to_db(args.topic, "Research Agent", brief_path, brief_score)
 
-        if brief_score and brief_score < 35:
-            print(f"\n⚠️  Research brief failed QA ({brief_score}/50). Review before continuing.")
+        if brief_score and brief_score < 42:
+            print(f"\n⚠️  Research brief failed QA ({brief_score}/60). Review before continuing.")
             print("    Output saved. Stopping pipeline. Fix the brief and re-run from --mode blueprint.")
             return
 
@@ -458,8 +458,8 @@ def pipeline_full(args):
         bp_score = qa(blueprint, CT_BLUEPRINT, "02_book_blueprint_QA")
         log_to_db(args.topic, "Book Architect Agent", bp_path, bp_score)
 
-        if bp_score and bp_score < 35:
-            print(f"\n⚠️  Blueprint failed QA ({bp_score}/50). Review before continuing.")
+        if bp_score and bp_score < 42:
+            print(f"\n⚠️  Blueprint failed QA ({bp_score}/60). Review before continuing.")
             return
 
     # Step 3: Chapter 1
@@ -496,9 +496,9 @@ def pipeline_full(args):
         print("  QA skipped — run --mode qa --file <path> to QA any output individually.")
     else:
         for label, score in scores.items():
-            print(f"  {label:<20} {score}/50" if score else f"  {label:<20} N/A")
+            print(f"  {label:<20} {score}/60" if score else f"  {label:<20} N/A")
         valid = [s for s in scores.values() if s]
-        print(f"\n  Average QA Score:     {sum(valid) // len(valid)}/50" if valid else "")
+        print(f"\n  Average QA Score:     {sum(valid) // len(valid)}/60" if valid else "")
     print(f"\n  All outputs saved to: ./output/{re.sub(r'[^a-zA-Z0-9_]', '_', args.topic.lower())}/")
     print(f"  Database updated:     ./neuroforge_db.json")
     print(f"{'='*60}\n")
@@ -512,7 +512,7 @@ def pipeline_qa_file(args):
     content = Path(args.file).read_text(encoding="utf-8")
     qa_report, score = run_qa_agent(content, args.content_type or CT_CHAPTER, args.faculty, args.topic)
     save_output(args.topic, "qa_review", qa_report)
-    print(f"\n✅ QA complete. Score: {score}/50")
+    print(f"\n✅ QA complete. Score: {score}/60")
 
 
 # ─────────────────────────────────────────────

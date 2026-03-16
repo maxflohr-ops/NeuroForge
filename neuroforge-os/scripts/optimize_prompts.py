@@ -24,7 +24,7 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
-MODEL = "claude-sonnet-4-20250514"
+MODEL = "claude-sonnet-4-6"
 DB_FILE = Path("./neuroforge_db.json")
 PROMPT_DIR = Path("./prompts")
 VERSIONS_DIR = Path("./prompts/versions")
@@ -112,7 +112,7 @@ def analyse_performance(db: list, agent_filter: str = None) -> dict:
             "min_score": min(scores) if scores else None,
             "max_score": max(scores) if scores else None,
             "run_count": len(scores),
-            "low_runs": [s for s in scores if s < 40],
+            "low_runs": [s for s in scores if s < 48],
             "notes": data["notes"],
             "topics": data["topics"],
         }
@@ -128,17 +128,17 @@ def print_performance_report(analysis: dict):
     print("  " + "─" * 58)
 
     for key, data in sorted(analysis.items(), key=lambda x: (x[1]["avg_score"] or 0)):
-        avg = f"{data['avg_score']}/50" if data["avg_score"] else "N/A"
+        avg = f"{data['avg_score']}/60" if data["avg_score"] else "N/A"
         min_s = f"{data['min_score']}" if data["min_score"] else "N/A"
         max_s = f"{data["max_score"]}" if data["max_score"] else "N/A"
         runs = str(data["run_count"])
         low = str(len(data["low_runs"]))
 
-        flag = " ⚠️" if data["avg_score"] and data["avg_score"] < 38 else ""
+        flag = " ⚠️" if data["avg_score"] and data["avg_score"] < 46 else ""
         print(f"  {key:<25} {avg:>6} {min_s:>6} {max_s:>6} {runs:>6} {low:>10}{flag}")
 
     print("=" * 60)
-    print("  ⚠️  = below 38/50 average — candidate for optimisation")
+    print("  ⚠️  = below 46/60 average — candidate for optimisation")
     print()
 
 
@@ -160,7 +160,7 @@ def optimise_prompt(agent_key: str, analysis: dict, apply: bool = False):
     notes = "\n\n---\n\n".join(data["notes"]) if data["notes"] else "No specific notes recorded."
 
     avg = data["avg_score"]
-    print(f"\n🔧 Optimising prompt for: {agent_key} (avg score: {avg}/50)")
+    print(f"\n🔧 Optimising prompt for: {agent_key} (avg score: {avg}/60)")
 
     optimizer_system = """You are the NeuroForge Prompt Optimizer. You improve AI agent system prompts based on real QA failure data.
 
@@ -185,7 +185,7 @@ Rules:
 {current_prompt}
 === END PROMPT ===
 
-Here are the QA failure notes from {data['run_count']} runs (average score: {avg}/50):
+Here are the QA failure notes from {data['run_count']} runs (average score: {avg}/60):
 
 === QA FAILURE NOTES ===
 {notes}
@@ -232,8 +232,8 @@ def main():
                         help="Agent to optimise (default: all below threshold)")
     parser.add_argument("--apply", action="store_true",
                         help="Apply rewrites to live prompts (default: preview only)")
-    parser.add_argument("--threshold", type=int, default=40,
-                        help="Optimise agents below this avg score (default: 40)")
+    parser.add_argument("--threshold", type=int, default=48,
+                        help="Optimise agents below this avg score (default: 48)")
     args = parser.parse_args()
 
     db = load_db()
@@ -259,7 +259,7 @@ def main():
         ]
 
     if not candidates:
-        print(f"✅ All agents scoring above {args.threshold}/50. No optimisation needed.")
+        print(f"✅ All agents scoring above {args.threshold}/60. No optimisation needed.")
         print("   Lower --threshold to force optimisation.")
         return
 
