@@ -194,5 +194,12 @@
     "agent": "Research Agent",
     "output_file": "/home/user/NeuroForge/neuroforge-os/output/stop_negative_thoughts/01_research_brief_20260316_103002.md",
     "qa_score": 48
+  },
+  {
+    "timestamp": "2026-03-16T10:36:00.885260",
+    "topic": "Stop Negative Thoughts",
+    "agent": "Book Architect Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/stop_negative_thoughts/02_book_blueprint_20260316_103416.md",
+    "qa_score": 40
   }
 ]
