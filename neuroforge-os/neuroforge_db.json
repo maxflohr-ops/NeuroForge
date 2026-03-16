@@ -208,5 +208,33 @@
     "agent": "Book Architect Agent",
     "output_file": "/home/user/NeuroForge/neuroforge-os/output/stop_negative_thoughts/02_book_blueprint_20260316_104105.md",
     "qa_score": 39
+  },
+  {
+    "timestamp": "2026-03-16T10:57:33.656312",
+    "topic": "Stop Negative Thoughts",
+    "agent": "Book Architect Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/stop_negative_thoughts/02_book_blueprint_20260316_105553.md",
+    "qa_score": 52
+  },
+  {
+    "timestamp": "2026-03-16T10:59:57.173694",
+    "topic": "Stop Negative Thoughts",
+    "agent": "Manuscript Agent Ch1",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/stop_negative_thoughts/03_chapter_01_20260316_105854.md",
+    "qa_score": 46
+  },
+  {
+    "timestamp": "2026-03-16T11:04:23.214679",
+    "topic": "Stop Negative Thoughts",
+    "agent": "Shorts Script Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/stop_negative_thoughts/04_shorts_scripts_20260316_110300.md",
+    "qa_score": 45
+  },
+  {
+    "timestamp": "2026-03-16T11:09:34.337762",
+    "topic": "Stop Negative Thoughts",
+    "agent": "Funnel Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/stop_negative_thoughts/05_funnel_copy_20260316_110735.md",
+    "qa_score": 50
   }
 ]
