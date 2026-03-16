@@ -198,7 +198,7 @@ def call_claude(system_prompt: str, user_message: str, label: str = "",
         messages=[{"role": "user", "content": user_message}],
     )
     if max_tokens > 8192:
-        create_kwargs["betas"] = LONG_OUTPUT_BETA
+        create_kwargs["extra_headers"] = {"anthropic-beta": "output-128k-2025-02-19"}
 
     message = client.messages.create(**create_kwargs)
     return message.content[0].text
