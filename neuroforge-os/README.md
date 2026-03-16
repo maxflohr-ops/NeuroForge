@@ -135,7 +135,25 @@ python optimize_prompts.py --agent manuscript
 python optimize_prompts.py --apply
 
 # Lower the threshold to force optimisation on all agents
-python optimize_prompts.py --threshold 45 --apply
+python optimize_prompts.py --threshold 50 --apply
+```
+
+---
+
+### Migrate legacy QA scores (one-time, if you ran the pipeline before v2.0)
+
+The QA scoring system was updated from /50 to /60 in v2.0 (Entertainment & Readability
+dimension added). If you have records in `neuroforge_db.json` from before this change,
+run the migration script once to rescale them proportionally:
+
+```bash
+cd scripts
+
+# Preview what will change (safe — no writes)
+python migrate_db_scores.py
+
+# Apply the rescaling (backs up the database first)
+python migrate_db_scores.py --apply
 ```
 
 ---
