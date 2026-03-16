@@ -236,5 +236,40 @@
     "agent": "Funnel Agent",
     "output_file": "/home/user/NeuroForge/neuroforge-os/output/stop_negative_thoughts/05_funnel_copy_20260316_110735.md",
     "qa_score": 50
+  },
+  {
+    "timestamp": "2026-03-16T11:13:24.463878",
+    "topic": "How to Read People",
+    "agent": "Research Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/how_to_read_people/01_research_brief_20260316_111213.md",
+    "qa_score": 47
+  },
+  {
+    "timestamp": "2026-03-16T11:20:51.703045",
+    "topic": "How to Read People",
+    "agent": "Book Architect Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/how_to_read_people/02_book_blueprint_20260316_111918.md",
+    "qa_score": 52
+  },
+  {
+    "timestamp": "2026-03-16T11:23:39.367414",
+    "topic": "How to Read People",
+    "agent": "Manuscript Agent Ch1",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/how_to_read_people/03_chapter_01_20260316_112222.md",
+    "qa_score": 47
+  },
+  {
+    "timestamp": "2026-03-16T11:27:56.305137",
+    "topic": "How to Read People",
+    "agent": "Shorts Script Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/how_to_read_people/04_shorts_scripts_20260316_112624.md",
+    "qa_score": 45
+  },
+  {
+    "timestamp": "2026-03-16T11:32:19.114507",
+    "topic": "How to Read People",
+    "agent": "Funnel Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/how_to_read_people/05_funnel_copy_20260316_113102.md",
+    "qa_score": 51
   }
 ]
