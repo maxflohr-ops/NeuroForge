@@ -306,5 +306,40 @@
     "agent": "Funnel Agent",
     "output_file": "/home/user/NeuroForge/neuroforge-os/output/the_discipline_blueprint/05_funnel_copy_20260316_115349.md",
     "qa_score": 51
+  },
+  {
+    "timestamp": "2026-03-16T12:02:03.725854",
+    "topic": "The Charisma Blueprint",
+    "agent": "Research Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/the_charisma_blueprint/01_research_brief_20260316_120035.md",
+    "qa_score": 47
+  },
+  {
+    "timestamp": "2026-03-16T12:09:32.795541",
+    "topic": "The Charisma Blueprint",
+    "agent": "Book Architect Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/the_charisma_blueprint/02_book_blueprint_20260316_120755.md",
+    "qa_score": 53
+  },
+  {
+    "timestamp": "2026-03-16T12:12:00.170470",
+    "topic": "The Charisma Blueprint",
+    "agent": "Manuscript Agent Ch1",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/the_charisma_blueprint/03_chapter_01_20260316_121043.md",
+    "qa_score": 47
+  },
+  {
+    "timestamp": "2026-03-16T12:16:09.423131",
+    "topic": "The Charisma Blueprint",
+    "agent": "Shorts Script Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/the_charisma_blueprint/04_shorts_scripts_20260316_121451.md",
+    "qa_score": 49
+  },
+  {
+    "timestamp": "2026-03-16T12:20:50.437241",
+    "topic": "The Charisma Blueprint",
+    "agent": "Funnel Agent",
+    "output_file": "/home/user/NeuroForge/neuroforge-os/output/the_charisma_blueprint/05_funnel_copy_20260316_121922.md",
+    "qa_score": 51
   }
 ]
