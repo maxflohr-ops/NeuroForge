@@ -303,16 +303,24 @@ def main():
     # Poll and download
     print(f"\n[ Polling & downloading ]")
     success, failed = 0, 0
+    video_urls = {}  # script_number → CDN URL (saved for TokPortal distributor)
     for script, video_id in jobs:
         n = script["number"]
         url = poll_until_complete(video_id)
         if url:
             out = videos_dir / f"script_{n:02d}.mp4"
             download_video(url, out)
+            video_urls[n] = url
             success += 1
         else:
             print(f"  ✗ Script {n:02d} failed — skipping download.")
             failed += 1
+
+    # Save CDN URLs so tokportal_distributor.py can use them
+    if video_urls:
+        urls_path = OUTPUT_DIR / safe_topic / "heygen_video_urls.json"
+        urls_path.write_text(json.dumps(video_urls, indent=2, ensure_ascii=False), encoding="utf-8")
+        print(f"  📎 CDN URLs saved: {urls_path.name}  (use with tokportal_distributor.py)")
 
     print(f"\n{'='*60}")
     print(f"  PRODUCTION COMPLETE")
