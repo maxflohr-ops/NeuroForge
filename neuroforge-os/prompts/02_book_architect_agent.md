@@ -137,6 +137,15 @@ Before outputting, verify:
 - [ ] **[Entertainment]** At least one chapter in the blueprint has a counterintuitive angle — something that surprises the reader or reframes the topic
 - [ ] **[Entertainment]** The intro approach would hook a reader who is sceptical and has seen a hundred books on this topic
 
+**COMPLETION GATE — do not output until all of the following are true for every chapter entry:**
+- [ ] Core Idea — complete sentence, not a fragment
+- [ ] Key Points — all listed in full, none truncated
+- [ ] Exercise or Tool — specifically named and described
+- [ ] Transition line — written (the line that connects this chapter to the next)
+- [ ] Target Word Count — included
+- [ ] The blueprint includes a closing structure: either a final chapter explicitly designed to land the book's closing argument, or a specified Afterword (with word count). A blueprint that ends without a closing structure is incomplete regardless of chapter count.
+- [ ] Any research claims or statistics referenced in Key Points include a source note for the Manuscript Agent — do not leave claims unattributed at blueprint stage, as the Manuscript Agent will otherwise generate plausible-sounding fabricated citations. Format: *(Source note: [Author, Year] — Manuscript Agent must cite this specifically.)*
+
 ---
 
 ## CONSTRAINTS — NEVER DO THESE

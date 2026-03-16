@@ -229,11 +229,14 @@ def run_book_architect_agent(research_brief: str, faculty: str, word_count: str 
     print("\n📐 BOOK ARCHITECT AGENT — Starting")
 
     system_prompt = load_prompt("02_book_architect_agent.md")
+    faculty_info = FACULTY_PROFILES.get(faculty, {})
 
     user_message = f"""
 Please produce a complete book blueprint based on the following research brief.
 
 **Faculty:** {faculty}
+**Faculty Domain:** {faculty_info.get('domain', 'N/A')}
+**Faculty Tone:** {faculty_info.get('tone', 'N/A')}
 **Target Word Count:** {word_count} words
 
 ---
