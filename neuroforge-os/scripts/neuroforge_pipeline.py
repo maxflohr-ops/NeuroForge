@@ -41,7 +41,9 @@ from pathlib import Path
 # ─────────────────────────────────────────────
 
 MODEL = "claude-sonnet-4-6"
-MAX_TOKENS = 8000
+MAX_TOKENS = 8000          # default for most agents
+MAX_TOKENS_LONG = 16000    # for blueprint and manuscript chapter (can exceed 8k tokens)
+LONG_OUTPUT_BETA = ["output-128k-2025-02-19"]  # enables >8192 output tokens
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = SCRIPT_DIR.parent
 OUTPUT_DIR = PROJECT_DIR / "output"
@@ -177,22 +179,28 @@ def _get_client() -> anthropic.Anthropic:
     return anthropic.Anthropic()
 
 
-def call_claude(system_prompt: str, user_message: str, label: str = "") -> str:
-    """Single Claude API call. Returns text content."""
+def call_claude(system_prompt: str, user_message: str, label: str = "",
+                max_tokens: int = MAX_TOKENS) -> str:
+    """Single Claude API call. Returns text content.
+    Pass max_tokens=MAX_TOKENS_LONG for agents that produce long outputs
+    (blueprints, manuscript chapters). Uses extended output beta automatically."""
     client = _get_client()
 
     print(f"\n{'─'*50}")
     print(f"  Calling: {label}")
-    print(f"  Model:   {MODEL}")
+    print(f"  Model:   {MODEL}  |  max_tokens: {max_tokens}")
     print(f"{'─'*50}")
 
-    message = client.messages.create(
+    create_kwargs = dict(
         model=MODEL,
-        max_tokens=MAX_TOKENS,
+        max_tokens=max_tokens,
         system=system_prompt,
         messages=[{"role": "user", "content": user_message}],
     )
+    if max_tokens > 8192:
+        create_kwargs["betas"] = LONG_OUTPUT_BETA
 
+    message = client.messages.create(**create_kwargs)
     return message.content[0].text
 
 
@@ -248,7 +256,8 @@ Please produce a complete book blueprint based on the following research brief.
 Produce the full book blueprint now, following the output format exactly.
 """.strip()
 
-    output = call_claude(system_prompt, user_message, label="Book Architect Agent")
+    output = call_claude(system_prompt, user_message, label="Book Architect Agent",
+                         max_tokens=MAX_TOKENS_LONG)
     return output
 
 
@@ -283,7 +292,8 @@ BOOK BLUEPRINT:
 {blueprint}
 """.strip()
 
-    output = call_claude(system_prompt, user_message, label=f"Manuscript Agent (Chapter {chapter_num})")
+    output = call_claude(system_prompt, user_message, label=f"Manuscript Agent (Chapter {chapter_num})",
+                         max_tokens=MAX_TOKENS_LONG)
     return output
 
 
