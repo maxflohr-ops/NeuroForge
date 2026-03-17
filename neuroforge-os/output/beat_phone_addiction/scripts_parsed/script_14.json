@@ -1,0 +1,12 @@
+{
+  "number": 14,
+  "hook": "The grayscale trick works. But not for the reason you think.",
+  "topic": "Why grayscale reduces phone use and what it reveals about visual reward cues",
+  "duration": "40 seconds",
+  "body": "**The grayscale trick works. But not for the reason you think.**\n\nTurning your phone screen to grayscale reduces usage for most people who try it. The common explanation is that colour is stimulating and removing it makes the phone less appealing. That is partially true. But the more precise mechanism is different.\n\nThe bright, saturated colours in app interfaces — the red notification badge, the blue of Twitter, the gradient of Instagram Stories — are not just aesthetic choices. They are visual reward cues. They signal: there is something here worth checking. They trigger the approach response before you have evaluated whether there is actually anything there.\n\nGrayscale removes the signal, not the content. And without the signal, the automatic reach is slower to fire. There is a half-second gap where the reflex does not launch immediately — and in that half-second, your prefrontal cortex can engage.\n\nHalf a second of friction is not much. But it is enough to interrupt automaticity. And interrupting automaticity is the first structural move in the entire protocol.\n\nGrayscale is not a solution. It is a first layer. But layers compound, and this one costs you nothing to implement tonight.\n\nSettings, accessibility, colour filters, grayscale. Do it before you go to sleep.\n\nFull layered system in the link in bio.",
+  "visual_direction": "Kai Ren, deliberate and specific. Slightly faster delivery on the list of coloured app elements, then slow and intentional on the \"half-second gap\" explanation. That is the key mechanism.",
+  "text_overlay": "\"One half-second of friction changes everything.\" — displayed during the grayscale mechanism explanation.",
+  "caption_hook": "The grayscale trick works. But almost no one knows why. Here's the real mechanism.",
+  "hashtags": "",
+  "tiktok_caption": ""
+}

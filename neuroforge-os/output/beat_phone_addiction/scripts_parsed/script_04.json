@@ -1,0 +1,12 @@
+{
+  "number": 4,
+  "hook": "You get a notification. You check it. There is nothing important. You scroll anyway.",
+  "topic": "How notifications trigger the full scroll loop",
+  "duration": "40 seconds",
+  "body": "**You get a notification. You check it. There is nothing important. You scroll anyway.**\n\nThat sequence is not random. It was designed. The notification is not there to deliver information — it is there to generate a pickup. Once you are in the app, the content environment takes over. Infinite scroll removes the stopping point. You scroll because the architecture of the platform gives you no natural place to stop.\n\nBooks have endings. TV episodes have credits. Conversations have pauses. Infinite scroll was specifically engineered to eliminate the equivalent moment. The designer who built pull-to-refresh — the gesture that mimics a slot machine lever — later said publicly that he no longer uses it himself.\n\nYou were not going to stop on your own. The system was not built for that.\n\nThe intervention starts with a notification audit. Ninety percent of your notifications carry zero useful information and every one of them is a trained entry point into the loop.\n\nGo to settings tonight. Turn off every notification that is not a direct message from a real person. That is the first structural move.\n\nFull audit framework is in the link in bio.",
+  "visual_direction": "Kai Ren, tight medium shot, minimal movement. Slightly faster pacing on the notification-scroll sequence to mirror the described behavior, then slows for the reframe.",
+  "text_overlay": "\"Infinite scroll has no stopping point. By design.\" — displayed during the platform design section.",
+  "caption_hook": "Notification. Check. Nothing important. Scroll anyway. You didn't make that choice. Here's who did.",
+  "hashtags": "",
+  "tiktok_caption": ""
+}
