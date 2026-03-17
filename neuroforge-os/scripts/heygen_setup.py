@@ -66,7 +66,10 @@ FACULTY_SEARCH_PROFILES = {
         "avatar_keywords": ["man", "scholarly", "professional", "mature"],
         "voice_keywords":  ["male", "precise", "professional", "clear"],
         "gender": "male",
-        "description": "Professional man, 40s, scholarly, lab-casual",
+        "description": "Professional man, 40s, scholarly, lab coat — custom photo avatar",
+        # Upload the approved photo to HeyGen → Avatars → Photo Avatar, then set:
+        # custom_avatar_id: the ID returned by HeyGen after upload
+        "custom_avatar_id": None,  # TODO: set after uploading photo to HeyGen
     },
 }
 
@@ -143,18 +146,26 @@ def find_best_matches(faculty: str, avatars: list[dict], voices: list[dict]) -> 
     """Return the top avatar and voice match for a faculty member."""
     profile = FACULTY_SEARCH_PROFILES[faculty]
 
-    scored_avatars = sorted(
-        [(score_avatar(a, profile), a) for a in avatars],
-        key=lambda x: x[0],
-        reverse=True,
-    )
+    # Use custom photo avatar if configured, skip stock avatar search
+    custom_id = profile.get("custom_avatar_id")
+    if custom_id:
+        custom_avatar = {"avatar_id": custom_id, "avatar_name": f"[custom photo] {faculty}"}
+        top_avatars = [(99, custom_avatar)]
+        best_avatar = custom_avatar
+    else:
+        scored_avatars = sorted(
+            [(score_avatar(a, profile), a) for a in avatars],
+            key=lambda x: x[0],
+            reverse=True,
+        )
+        top_avatars = [(s, a) for s, a in scored_avatars[:5] if s > 0]
+        best_avatar = scored_avatars[0][1] if scored_avatars else None
+
     scored_voices = sorted(
         [(score_voice(v, profile), v) for v in voices],
         key=lambda x: x[0],
         reverse=True,
     )
-
-    top_avatars = [(s, a) for s, a in scored_avatars[:5] if s > 0]
     top_voices = [(s, v) for s, v in scored_voices[:5] if s > 0]
 
     return {
@@ -162,7 +173,7 @@ def find_best_matches(faculty: str, avatars: list[dict], voices: list[dict]) -> 
         "description": profile["description"],
         "top_avatars": top_avatars,
         "top_voices": top_voices,
-        "best_avatar": scored_avatars[0][1] if scored_avatars else None,
+        "best_avatar": best_avatar,
         "best_voice": scored_voices[0][1] if scored_voices else None,
     }
 
