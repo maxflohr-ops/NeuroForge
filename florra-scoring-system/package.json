@@ -1,0 +1,29 @@
+{
+  "name": "florra-scoring-system",
+  "version": "1.0.0",
+  "description": "Florra CRM & Operations Hub — Airtable scoring system for People, Outreach, and Brand Targets",
+  "private": true,
+  "scripts": {
+    "create-fields": "ts-node scripts/create-fields.ts",
+    "create-views": "ts-node scripts/create-views.ts",
+    "generate-outreach": "ts-node scripts/generate-outreach.ts",
+    "backfill-scores": "ts-node scripts/backfill-scores.ts",
+    "dry-run:fields": "DRY_RUN=true ts-node scripts/create-fields.ts",
+    "dry-run:views": "DRY_RUN=true ts-node scripts/create-views.ts"
+  },
+  "dependencies": {
+    "airtable": "^0.12.2",
+    "axios": "^1.6.7",
+    "chalk": "^4.1.2",
+    "dotenv": "^16.4.1",
+    "p-limit": "^3.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
