@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crimson Desert Wiki</title>
+  <style>
+    :root {
+      --bg-primary: #0f0f0f;
+      --bg-secondary: #1a1a1a;
+      --bg-card: #222;
+      --text-primary: #e8e6e3;
+      --text-secondary: #a09b93;
+      --accent: #c0392b;
+      --accent-hover: #e74c3c;
+      --border: #333;
+      --gold: #d4a745;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.7;
+    }
+
+    header {
+      background: linear-gradient(180deg, #1a0a0a 0%, var(--bg-primary) 100%);
+      border-bottom: 2px solid var(--accent);
+      padding: 0;
+    }
+
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 1.5rem;
+    }
+
+    .site-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+
+    .site-subtitle {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      letter-spacing: 1px;
+    }
+
+    nav {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    nav ul {
+      max-width: 1200px;
+      margin: 0 auto;
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      padding: 0 1.5rem;
+    }
+
+    nav a {
+      display: block;
+      padding: 0.8rem 1.2rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: color 0.2s, border-bottom 0.2s;
+      border-bottom: 2px solid transparent;
+    }
+
+    nav a:hover, nav a.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #1a0a0a 0%, #2a1515 50%, #1a0a0a 100%);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3rem 2rem;
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .hero h2 {
+      font-size: 1.8rem;
+      color: var(--gold);
+      margin-bottom: 1rem;
+    }
+
+    .hero p {
+      max-width: 700px;
+      margin: 0 auto;
+      color: var(--text-secondary);
+      font-size: 1.05rem;
+    }
+
+    .content-section {
+      display: none;
+    }
+
+    .content-section.active {
+      display: block;
+    }
+
+    h2.section-title {
+      font-size: 1.6rem;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    h3 {
+      color: var(--gold);
+      margin: 1.5rem 0 0.75rem;
+      font-size: 1.2rem;
+    }
+
+    p { margin-bottom: 1rem; }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.5rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .card h4 {
+      color: var(--gold);
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .card p {
+      color: var(--text-secondary);
+      font-size: 0.92rem;
+    }
+
+    .tag {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+    }
+
+    .info-table th, .info-table td {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .info-table th {
+      color: var(--gold);
+      width: 200px;
+      font-weight: 600;
+    }
+
+    .info-table td {
+      color: var(--text-secondary);
+    }
+
+    .info-table tr:hover td {
+      color: var(--text-primary);
+    }
+
+    .lore-block {
+      background: var(--bg-secondary);
+      border-left: 3px solid var(--accent);
+      padding: 1.25rem 1.5rem;
+      margin: 1.5rem 0;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .lore-block cite {
+      display: block;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
+
+    footer {
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 600px) {
+      .site-title { font-size: 1.6rem; }
+      .hero { padding: 2rem 1rem; }
+      .hero h2 { font-size: 1.3rem; }
+      nav a { padding: 0.6rem 0.8rem; font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="site-title">Crimson Desert Wiki</div>
+      <div class="site-subtitle">Community encyclopedia for the world of Pywel</div>
+    </div>
+  </header>
+
+  <nav>
+    <ul>
+      <li><a href="#overview" class="active" data-section="overview">Overview</a></li>
+      <li><a href="#story" data-section="story">Story &amp; Lore</a></li>
+      <li><a href="#characters" data-section="characters">Characters</a></li>
+      <li><a href="#gameplay" data-section="gameplay">Gameplay</a></li>
+      <li><a href="#world" data-section="world">World</a></li>
+      <li><a href="#combat" data-section="combat">Combat</a></li>
+      <li><a href="#factions" data-section="factions">Factions</a></li>
+      <li><a href="#media" data-section="media">Media &amp; Trailers</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <!-- OVERVIEW -->
+    <section id="overview" class="content-section active">
+      <div class="hero">
+        <h2>Welcome to the Crimson Desert Wiki</h2>
+        <p>Your comprehensive guide to Pearl Abyss's open-world action-adventure RPG. Explore the war-torn continent of Pywel, uncover the story of Kliff and the Grey Wolves, and prepare for an epic journey.</p>
+      </div>
+
+      <h2 class="section-title">Game Overview</h2>
+
+      <table class="info-table">
+        <tr><th>Title</th><td>Crimson Desert</td></tr>
+        <tr><th>Developer</th><td>Pearl Abyss</td></tr>
+        <tr><th>Genre</th><td>Open-World Action-Adventure RPG</td></tr>
+        <tr><th>Platforms</th><td>PlayStation 5, Xbox Series X|S, PC</td></tr>
+        <tr><th>Engine</th><td>Pearl Abyss proprietary engine (evolved from BlackDesert engine)</td></tr>
+        <tr><th>Setting</th><td>The continent of Pywel &mdash; a medieval fantasy world</td></tr>
+        <tr><th>Protagonist</th><td>Kliff, leader of the Grey Wolves mercenary band</td></tr>
+      </table>
+
+      <p>Crimson Desert is an open-world action-adventure game developed by Pearl Abyss, the studio behind Black Desert Online. Originally announced as a prequel to Black Desert, the game has evolved into a standalone narrative-driven experience set on the war-torn continent of Pywel. Players follow the journey of Kliff and his mercenary band, the Grey Wolves, as they navigate political intrigue, supernatural threats, and deeply personal conflicts.</p>
+
+      <p>The game combines large-scale open-world exploration with cinematic storytelling and visceral real-time combat. It features a seamless world with no loading screens, dynamic weather and ecology systems, and a combat system that blends melee, ranged, and supernatural abilities.</p>
+    </section>
+
+    <!-- STORY & LORE -->
+    <section id="story" class="content-section">
+      <h2 class="section-title">Story &amp; Lore</h2>
+
+      <p>The narrative of Crimson Desert unfolds on the continent of Pywel, a land fractured by centuries of war among three dominant powers. The story follows Kliff, the reluctant leader of the Grey Wolves, a mercenary band of outcasts and survivors bonded not by ideology but by necessity.</p>
+
+      <h3>The Continent of Pywel</h3>
+      <p>Pywel is a land where ancient magic lingers in the soil and old gods are more than myth. Three great nations have warred over its territories for generations, leaving scars on the land and its people. In the margins of these empires, smaller factions, nomadic tribes, and mercenary companies survive by cunning and force of arms.</p>
+
+      <div class="lore-block">
+        <em>"We are not heroes. We are wolves &mdash; grey and gaunt and hungry. But the desert turns crimson for those who stand in our way."</em>
+        <cite>&mdash; Kliff, leader of the Grey Wolves</cite>
+      </div>
+
+      <h3>The Grey Wolves</h3>
+      <p>The Grey Wolves are a ragtag mercenary band forged from the dispossessed. Each member carries a past marked by loss, betrayal, or exile. Under Kliff's leadership, they take contracts from the warring powers while harboring their own ambitions &mdash; to carve out a place in the world where they belong.</p>
+
+      <h3>The Crimson Prophecy</h3>
+      <p>Beneath the surface of Pywel's political conflicts lies something far older: a prophecy tied to the land itself. Ancient ruins and supernatural phenomena hint at a coming cataclysm. As the Grey Wolves are drawn deeper into the conflict, they discover that the true threat may not be human at all.</p>
+
+      <h3>Themes</h3>
+      <p>The story explores themes of brotherhood, survival, the cost of war, and the tension between freedom and belonging. Pearl Abyss has emphasized a mature, character-driven narrative where choices carry weight and the line between hero and villain is rarely clear.</p>
+    </section>
+
+    <!-- CHARACTERS -->
+    <section id="characters" class="content-section">
+      <h2 class="section-title">Characters</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <span class="tag">Protagonist</span>
+          <h4>Kliff</h4>
+          <p>The stoic and battle-hardened leader of the Grey Wolves. Kliff carries the burden of his mercenary band's survival on his shoulders. A man of few words but decisive action, his past is marked by tragedy that shaped him into the warrior he is today. He fights with a greatsword and possesses latent supernatural abilities.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Grey Wolves</span>
+          <h4>Quito</h4>
+          <p>A veteran warrior and Kliff's right hand. Quito is older and more weathered than most of the band, serving as both strategist and moral compass. His loyalty to the Grey Wolves is absolute, though he questions whether their mercenary life can sustain them forever.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Grey Wolves</span>
+          <h4>Jokoto</h4>
+          <p>A fierce and agile fighter known for dual-wielding curved blades. Jokoto brings intensity and unpredictability to the Grey Wolves. He is fiercely loyal but struggles with a volatile temper forged by years of hardship.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Grey Wolves</span>
+          <h4>Saye</h4>
+          <p>A skilled archer and scout of the Grey Wolves. Quiet and observant, Saye prefers to operate from the periphery, providing cover and reconnaissance. Their keen senses and knowledge of the land make them indispensable to the band's survival.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Grey Wolves</span>
+          <h4>Donau</h4>
+          <p>The youngest member of the Grey Wolves, Donau is eager and idealistic &mdash; a stark contrast to the battle-weary veterans around him. His optimism is both a source of hope and a vulnerability in the harsh world of Pywel.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Antagonist</span>
+          <h4>The Warlord</h4>
+          <p>A powerful and enigmatic military leader seeking to unite Pywel under his iron rule. His armies are vast, his ambitions boundless, and his methods brutal. He views the Grey Wolves as an obstacle to be crushed.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- GAMEPLAY -->
+    <section id="gameplay" class="content-section">
+      <h2 class="section-title">Gameplay</h2>
+
+      <p>Crimson Desert offers a narrative-driven, open-world experience that blends cinematic storytelling with freeform exploration and intense action combat. The game is designed as a single-player experience with optional multiplayer elements.</p>
+
+      <h3>Open-World Exploration</h3>
+      <p>The world of Pywel is seamless and fully explorable, from snow-capped mountain ranges and dense forests to arid deserts and sprawling medieval cities. The environment features a dynamic day-night cycle and weather system that affects gameplay, NPC behavior, and combat conditions.</p>
+
+      <h3>Quest Structure</h3>
+      <p>The game features a main storyline following the Grey Wolves' journey, supplemented by side quests, mercenary contracts, and discovery-based exploration events. Quests are designed to blend naturally into the world rather than relying on traditional quest markers and menus.</p>
+
+      <h3>Traversal</h3>
+      <p>Players can explore on foot, on horseback, by climbing terrain, and through other traversal mechanics. Kliff can scale cliffs, swim across rivers, and use a grappling mechanic for vertical exploration. Mounts play a significant role in traveling across Pywel's vast landscapes.</p>
+
+      <h3>Progression</h3>
+      <p>Character progression is tied to Kliff's growth as a warrior and leader. Players unlock new combat abilities, improve existing skills, and acquire equipment through exploration and combat. The system emphasizes player skill alongside character development.</p>
+
+      <div class="card-grid">
+        <div class="card">
+          <h4>Boss Encounters</h4>
+          <p>Large-scale boss fights against towering creatures and powerful enemies are a highlight. These encounters demand pattern recognition, skillful dodging, and strategic use of abilities.</p>
+        </div>
+        <div class="card">
+          <h4>Mercenary Contracts</h4>
+          <p>Take contracts from various factions across Pywel. These range from escort missions and monster hunts to political assassinations, each with branching consequences.</p>
+        </div>
+        <div class="card">
+          <h4>Multiplayer Elements</h4>
+          <p>While primarily single-player, optional multiplayer modes allow cooperative and competitive play. Details on the full scope of multiplayer features continue to be revealed.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- WORLD -->
+    <section id="world" class="content-section">
+      <h2 class="section-title">World of Pywel</h2>
+
+      <p>The continent of Pywel is a richly detailed open world inspired by medieval landscapes, diverse biomes, and a deep sense of history embedded in its terrain. Every region tells a story through environmental design, ruins, and the people who inhabit it.</p>
+
+      <div class="card-grid">
+        <div class="card">
+          <h4>The Northern Highlands</h4>
+          <p>Snow-covered peaks and frozen valleys home to hardy mountain clans. Ancient fortresses dot the ridgelines, remnants of a once-great kingdom. The harsh climate breeds tougher people and fiercer creatures.</p>
+        </div>
+        <div class="card">
+          <h4>The Crimson Steppe</h4>
+          <p>A vast, semi-arid grassland stained red by iron-rich soil &mdash; and, legend says, by centuries of spilled blood. Nomadic tribes and mercenary bands roam these plains. This is the heartland of the Grey Wolves.</p>
+        </div>
+        <div class="card">
+          <h4>The Verdant Coast</h4>
+          <p>Lush forests and fertile river valleys line the western coast. Wealthy trading cities thrive here, their prosperity built on maritime commerce. But pirates and political corruption threaten the region's stability.</p>
+        </div>
+        <div class="card">
+          <h4>The Ashlands</h4>
+          <p>A desolate volcanic region in the southeast, scarred by ancient eruptions and rumored to be cursed. Strange creatures and supernatural phenomena are most concentrated here, drawing scholars and fortune seekers alike.</p>
+        </div>
+        <div class="card">
+          <h4>The Old Kingdom Ruins</h4>
+          <p>Scattered across Pywel, these ruins are the remnants of a civilization that predated the current nations. They hold valuable artifacts, dangerous traps, and clues to the Crimson Prophecy.</p>
+        </div>
+        <div class="card">
+          <h4>The Free Cities</h4>
+          <p>Independent city-states that maintain neutrality among the warring powers. They serve as hubs for trade, mercenary recruitment, and political intrigue. Each city has its own culture, laws, and hidden agendas.</p>
+        </div>
+      </div>
+
+      <h3>Ecology &amp; Wildlife</h3>
+      <p>Pywel features a dynamic ecosystem with wildlife that reacts to player presence, time of day, and weather. Predators hunt prey, herds migrate across the steppe, and mythical creatures lurk in the most remote corners of the world. Hunting and taming certain creatures is part of the gameplay loop.</p>
+    </section>
+
+    <!-- COMBAT -->
+    <section id="combat" class="content-section">
+      <h2 class="section-title">Combat System</h2>
+
+      <p>Combat in Crimson Desert is fast, visceral, and skill-driven. Pearl Abyss has built on its expertise from Black Desert Online to create a combat system that emphasizes player agency, timing, and tactical decision-making.</p>
+
+      <h3>Melee Combat</h3>
+      <p>Kliff wields a variety of weapons, with the greatsword as his primary armament. Combat features light and heavy attacks, combo chains, parrying, dodging, and guard-breaking mechanics. Each weapon type offers a distinct playstyle and moveset.</p>
+
+      <h3>Supernatural Abilities</h3>
+      <p>As the story progresses, Kliff gains access to supernatural powers linked to the ancient magic of Pywel. These abilities can be woven into melee combos, used for crowd control, or deployed as devastating finishing moves.</p>
+
+      <h3>Ranged Options</h3>
+      <p>Players can use bows, throwing weapons, and environmental hazards to engage enemies from a distance. Ranged combat is fully integrated into the flow of battle rather than being a separate mode.</p>
+
+      <table class="info-table">
+        <tr><th>Light Attacks</th><td>Fast, low-damage strikes ideal for building combos and maintaining pressure</td></tr>
+        <tr><th>Heavy Attacks</th><td>Slower, high-damage blows that can break guards and stagger enemies</td></tr>
+        <tr><th>Parry</th><td>Precisely timed blocks that open enemies to devastating counterattacks</td></tr>
+        <tr><th>Dodge</th><td>Quick evasive maneuvers with invincibility frames for avoiding lethal blows</td></tr>
+        <tr><th>Supernatural Arts</th><td>Powerful abilities fueled by an energy system, ranging from elemental attacks to battlefield control</td></tr>
+        <tr><th>Mounted Combat</th><td>Fight from horseback with a unique set of moves and tactical advantages</td></tr>
+      </table>
+
+      <h3>Enemy Design</h3>
+      <p>Enemies range from human soldiers and bandits to monstrous creatures and colossal bosses. Each enemy type has distinct attack patterns, weaknesses, and behaviors that require players to adapt their strategy.</p>
+    </section>
+
+    <!-- FACTIONS -->
+    <section id="factions" class="content-section">
+      <h2 class="section-title">Factions</h2>
+
+      <p>The political landscape of Pywel is dominated by competing powers, each with their own ambitions, cultures, and military might. The Grey Wolves operate in the spaces between these factions, taking contracts from any side willing to pay.</p>
+
+      <div class="card-grid">
+        <div class="card">
+          <span class="tag">Major Power</span>
+          <h4>The Northern Dominion</h4>
+          <p>A militaristic empire that controls the highland regions. Known for their disciplined armies, fortress cities, and rigid feudal hierarchy. They view expansion as both a right and a necessity for survival.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Major Power</span>
+          <h4>The Coastal Republic</h4>
+          <p>A wealthy maritime nation built on trade and naval superiority. Their power comes from gold rather than steel, employing mercenaries and diplomats in equal measure. Corruption festers beneath their prosperous surface.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Major Power</span>
+          <h4>The Steppe Confederation</h4>
+          <p>A loose alliance of nomadic tribes united under a charismatic khan. They are fierce riders and archers who control the vast central grasslands. Their unity is fragile, held together by tradition and a shared distrust of the settled nations.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Mercenaries</span>
+          <h4>The Grey Wolves</h4>
+          <p>Kliff's mercenary band. Small but formidable, they take contracts from anyone and owe allegiance to no nation. Their reputation grows throughout the story as they are drawn into larger conflicts.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Mysterious</span>
+          <h4>The Order of Embers</h4>
+          <p>A secretive organization of scholars and mystics who study the ancient magic of Pywel. They know more about the Crimson Prophecy than anyone, and their true motives remain unclear.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Outlaws</span>
+          <h4>The Red Talons</h4>
+          <p>A rival mercenary company with a reputation for brutality. They compete with the Grey Wolves for contracts and territory, and a bitter rivalry simmers between the two bands.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- MEDIA & TRAILERS -->
+    <section id="media" class="content-section">
+      <h2 class="section-title">Media &amp; Trailers</h2>
+
+      <p>Pearl Abyss has released several trailers and gameplay demonstrations showcasing Crimson Desert's world, combat, and narrative. Below is a summary of major reveals.</p>
+
+      <div class="card-grid">
+        <div class="card">
+          <h4>G-Star 2018 &mdash; Announcement</h4>
+          <p>The first reveal of Crimson Desert, originally presented as a prequel to Black Desert Online set 100 years before the events of the MMO. The trailer showcased the harsh world and mercenary life.</p>
+        </div>
+        <div class="card">
+          <h4>The Game Awards 2020</h4>
+          <p>A pivotal trailer that reintroduced Crimson Desert as a standalone action-adventure RPG. It featured dramatic cinematics, boss fights, and the reveal of protagonist Kliff and the Grey Wolves.</p>
+        </div>
+        <div class="card">
+          <h4>Gamescom 2021</h4>
+          <p>An extended gameplay showcase demonstrating open-world exploration, real-time combat, mounted traversal, and large-scale battlefield encounters. This trailer highlighted the game's visual fidelity and scale.</p>
+        </div>
+        <div class="card">
+          <h4>2024 Gameplay Deep Dive</h4>
+          <p>Detailed gameplay demonstrations showing combat mechanics, supernatural abilities, and the seamless open world of Pywel. These reveals generated significant excitement and comparisons to top-tier action RPGs.</p>
+        </div>
+      </div>
+
+      <h3>Development Timeline</h3>
+      <table class="info-table">
+        <tr><th>2018</th><td>First announcement at G-Star as a Black Desert prequel</td></tr>
+        <tr><th>2019</th><td>Continued development; limited public information</td></tr>
+        <tr><th>2020</th><td>Major re-reveal at The Game Awards as standalone action-adventure RPG</td></tr>
+        <tr><th>2021</th><td>Extended gameplay reveal at Gamescom</td></tr>
+        <tr><th>2022&ndash;2023</th><td>Continued development with periodic updates from Pearl Abyss</td></tr>
+        <tr><th>2024</th><td>Major gameplay deep dives and renewed marketing push</td></tr>
+        <tr><th>2025</th><td>Anticipated release window</td></tr>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    <p>Crimson Desert Wiki &mdash; A community-built resource. Not affiliated with Pearl Abyss.</p>
+    <p>All game content and materials are trademarks of Pearl Abyss Corp.</p>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const links = document.querySelectorAll('nav a[data-section]');
+      const sections = document.querySelectorAll('.content-section');
+
+      function showSection(id) {
+        sections.forEach(s => s.classList.remove('active'));
+        links.forEach(l => l.classList.remove('active'));
+        const target = document.getElementById(id);
+        const link = document.querySelector(`nav a[data-section="${id}"]`);
+        if (target) target.classList.add('active');
+        if (link) link.classList.add('active');
+      }
+
+      links.forEach(link => {
+        link.addEventListener('click', e => {
+          e.preventDefault();
+          const section = link.getAttribute('data-section');
+          showSection(section);
+          history.replaceState(null, '', `#${section}`);
+        });
+      });
+
+      const hash = window.location.hash.replace('#', '');
+      if (hash && document.getElementById(hash)) {
+        showSection(hash);
+      }
+    });
+  </script>
+</body>
+</html>
