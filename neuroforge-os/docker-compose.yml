@@ -57,3 +57,32 @@ services:
     env_file: .env
     volumes:
       - ./output:/app/output
+
+  # ─────────────────────────────────────────
+  # Airtable sync — syncs content to Airtable
+  # Usage:
+  #   docker compose run --rm airtable-sync --dry-run   # preview
+  #   docker compose run --rm airtable-sync             # live sync
+  #   docker compose run --rm airtable-sync --topic "Stop Overthinking"
+  # ─────────────────────────────────────────
+  airtable-sync:
+    build: .
+    entrypoint: ["python", "scripts/airtable_sync.py"]
+    env_file: .env
+    volumes:
+      - ./output:/app/output
+      - ./neuroforge_db.json:/app/neuroforge_db.json
+
+  # ─────────────────────────────────────────
+  # OpenClaw Airtable Logger — continuously improves via Airtable
+  # Logs interactions, performance, and suggests improvements
+  # Usage:
+  #   python3 scripts/openclaw_airtable_logger.py
+  #   Import in OpenClaw agent for live logging
+  # ─────────────────────────────────────────
+  openclaw-logger:
+    build: .
+    entrypoint: ["python", "scripts/openclaw_airtable_logger.py"]
+    env_file: .env
+    profiles:
+      - openclaw
