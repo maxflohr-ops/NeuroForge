@@ -1,0 +1,44 @@
+{
+  "airtable_base_id": "applXEAjh6k3Xmybl",
+  "systems": {
+    "neuroforge": {
+      "description": "AI content generation pipeline for educational topics",
+      "tables": {
+        "neuroforge_projects": "tblkslL7m7mORCHkR",
+        "pipeline_runs": "tblxxJIc9VXjZwQMT"
+      }
+    },
+    "openclaw": {
+      "description": "AI agent for Telegram, web search, self-improvement",
+      "tables": {
+        "openclaw_interactions": "tblxjo12st1GoOuUM",
+        "agent_performance": "tbl2F024MIEMh26ng",
+        "improvement_suggestions": "tblKhnROIh8ssTqiE",
+        "telegram_messages": "tblQ3Df9ck45HTnfC",
+        "lead_tracking": "tblfCsmmbtUpOPhtX",
+        "model_optimization_log": "tbluLfkFPyv3ugssf"
+      }
+    },
+    "florra": {
+      "description": "UGC research, creator discovery, content library, ads",
+      "tables": {
+        "people": "tblYqPt2BYVjMaXFk",
+        "ugc_pipeline": "tblqTn9O3rIMMecbT",
+        "content_library": "tblmKJcNNOeEUaI79",
+        "spark_codes": "tblqRpE6Ou9vXImey",
+        "campaigns": "tblMUfJKvYiOEARy3",
+        "metadata": "tbleJMnUc8u59V72L"
+      }
+    },
+    "opus": {
+      "description": "Podcast clipping, scheduling, performance tracking",
+      "tables": {
+        "opus_projects": "tblvMbbfjYrOuPqwS",
+        "opus_clips": "tblW3n5Fjr9lBgJph",
+        "opus_scheduling": "tblKYGRy5jU89q66Z",
+        "opus_podcasts": "tblT4R7RtjEpDcwi3",
+        "opus_performance": "tblSOYD7BfyIY77e6"
+      }
+    }
+  }
+}
