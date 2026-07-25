@@ -6,14 +6,17 @@ intake_channels, and (b) direct @mentions. It never speaks otherwise.
 
 from __future__ import annotations
 
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 from core.context import AgentContext
 from core.llm import STANDARD
 from core.log import log_event
 
-from agents.archivist import filing, loc
+from agents.archivist import filing, loc, reports
 
 MENTION_PROMPT = """Recent channel context (newest last):
 {context}
@@ -34,10 +37,22 @@ class PassiveIntake(commands.Cog):
         self.bot = bot
         self.ctx = ctx
         self.system_prompt = system_prompt
+        options = ctx.config.options or {}
+        self.ledger_cfg = options.get("ledger") or {}
+        self.tip_channel = (options.get("tipline") or {}).get("channel_id")
+        if self.ledger_cfg.get("channel_id"):
+            self.ledger_tick.start()
+
+    def cog_unload(self) -> None:
+        self.ledger_tick.cancel()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.author.bot or message.guild is None:
+            return
+
+        if self.tip_channel and message.channel.id == self.tip_channel:
+            await self._intake_tip(message)
             return
 
         in_intake = message.channel.id in self.ctx.config.intake_channels
@@ -77,6 +92,47 @@ class PassiveIntake(commands.Cog):
             else:
                 await message.reply(result.message or "filing failed.", mention_author=False)
         log_event(self.ctx.log, "passive_intake", channel=message.channel.id, urls=len(urls))
+
+    async def _intake_tip(self, message: discord.Message) -> None:
+        """The tip line: every report is kept as an untitled harbor-contract
+        candidate. Active only when config names a channel (legal gate)."""
+        if not self.ctx.limiter.allow(message.author.id, message.channel.id):
+            return
+        if len(message.content.strip()) < 10:
+            return  # not a report
+        result = await filing.file_tip(
+            self.ctx, message.content, reporter=message.author.display_name
+        )
+        try:
+            await message.add_reaction("🕯️")
+        except discord.HTTPException:
+            pass
+        await message.reply(result.message, mention_author=False)
+
+    # -- the weekly ledger ----------------------------------------------
+
+    @tasks.loop(minutes=20)
+    async def ledger_tick(self) -> None:
+        cfg = self.ledger_cfg
+        tz = ZoneInfo(str(cfg.get("timezone", "America/Los_Angeles")))
+        now = datetime.now(tz)
+        if now.weekday() != int(cfg.get("weekday", 6)) or now.hour != int(cfg.get("hour", 10)):
+            return
+        iso = now.isocalendar()
+        week_key = f"ledger:{iso.year}-W{iso.week}"
+        if self.ctx.memory.dedupe_get(week_key):
+            return  # already posted this week
+        channel = self.bot.get_channel(int(cfg["channel_id"]))
+        if channel is None:
+            return
+        ledger = await reports.build_ledger(self.ctx)
+        await channel.send(ledger)
+        self.ctx.memory.dedupe_set(week_key, now.isoformat())
+        log_event(self.ctx.log, "ledger_posted", week=week_key)
+
+    @ledger_tick.before_loop
+    async def _wait_ready(self) -> None:
+        await self.bot.wait_until_ready()
 
     async def _answer_mention(self, message: discord.Message) -> None:
         if not self.ctx.limiter.allow(message.author.id, message.channel.id):

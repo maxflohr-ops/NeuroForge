@@ -25,3 +25,16 @@ intake_channels:
 rate_limit:
   per_user_per_minute: 4
   per_channel_per_minute: 12
+
+options:
+  # weekly ledger: what the office filed this week. sunday, services at 10 a.m.
+  ledger:
+    channel_id: 1524654890201382983   # #virginia-the-brand
+    weekday: 6                        # python weekday: monday=0 ... sunday=6
+    hour: 10
+    timezone: America/Los_Angeles
+  # tip line: fans report strange places -> untitled harbor-contract candidates.
+  # per the bible, the submission-license paragraph must exist before it opens —
+  # leave channel_id null until legal clears it.
+  tipline:
+    channel_id: null

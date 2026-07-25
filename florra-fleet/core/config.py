@@ -41,6 +41,8 @@ class AgentYaml(BaseModel):
     max_tokens_default: int = 1024
     intake_channels: list[int] = Field(default_factory=list)
     rate_limit: RateLimitConfig = Field(default_factory=RateLimitConfig)
+    # agent-specific settings core doesn't interpret — passed through verbatim
+    options: dict = Field(default_factory=dict)
 
 
 class AgentConfig(BaseModel):
@@ -55,6 +57,7 @@ class AgentConfig(BaseModel):
     max_tokens_default: int
     intake_channels: list[int]
     rate_limit: RateLimitConfig
+    options: dict
 
     # fleet-wide settings (shared across agents, from env)
     notion_token: str
@@ -103,6 +106,7 @@ def load_agent_config(agent_name: str) -> AgentConfig:
         max_tokens_default=raw.max_tokens_default,
         intake_channels=raw.intake_channels,
         rate_limit=raw.rate_limit,
+        options=raw.options,
         notion_token=_require_env("NOTION_TOKEN"),
         notion_file_data_source_id=_require_env("NOTION_FILE_DATA_SOURCE_ID"),
         notion_bible_page_id=os.environ.get("NOTION_BIBLE_PAGE_ID", ""),

@@ -58,6 +58,21 @@ links in `intake_channels`. Replies are plain and backend-toned.
 | `/lorecheck <idea>` | CONSISTENT / CONTRADICTS (with the exact clashing canon line) / NOT IN THE FILE. Never auto-canonizes. |
 | `/untitled <idea>` | zero-friction capture: Status=untitled, Class=.0000, Chapter=unassigned |
 | `/status <query>` | reads THE FILE by status, chapter, or title text |
+| `/hunt <query>` | scouts loc.gov, pre-screens candidates against the taking test (cheap tier), returns top picks with thumbnails — nothing filed |
+| `/draft <negative> <kind>` | product copy / obituary drop announcement / caption card for a filed holding, written by the canon tier |
+| `/coverage` | maps holdings against the 12 subjects of Shooting Script No. 1 |
+| `/ledger` | what the office filed this week (also auto-posts sundays 10 a.m., see `options.ledger` in agent.yaml) |
+
+Every filed row also gets: the photograph downloaded from LOC and attached
+(Plate property + page cover + body image), a canon-tier lore memo appended to
+the page, and a **Suggested Chapter** (Chapter itself stays `unassigned` until
+a human confirms). The taking test judges the actual photograph and flags
+visible people ("print the places, not the people").
+
+**Tip line** (built, gated off): set `options.tipline.channel_id` in
+agent.yaml to open it — fan reports in that channel are kept as untitled
+harbor-contract candidates. Per the bible, the submission-license paragraph
+must exist first.
 
 Doctrine enforced in the prompt and the pipeline: the beast is never shown
 whole · print the places, not the people · weather fails the taking test

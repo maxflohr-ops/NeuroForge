@@ -65,12 +65,23 @@ async def fetch_item(item_url: str) -> LocItem:
     item_id = match.group(1).rstrip("/")
     canonical = f"https://www.loc.gov/item/{item_id}/"
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(
-            f"{canonical}?fo=json", timeout=aiohttp.ClientTimeout(total=30)
-        ) as response:
-            response.raise_for_status()
-            data = await response.json()
+    data = None
+    last_error: Exception | None = None
+    for attempt in range(2):  # loc.gov can be slow; one retry
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"{canonical}?fo=json", timeout=aiohttp.ClientTimeout(total=60)
+                ) as response:
+                    response.raise_for_status()
+                    data = await response.json()
+            break
+        except Exception as exc:
+            last_error = exc
+    if data is None:
+        raise RuntimeError(
+            f"loc.gov did not answer ({type(last_error).__name__})"
+        ) from last_error
 
     item = data.get("item", {}) or {}
     result = LocItem(item_id=item_id, url=canonical)

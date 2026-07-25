@@ -8,6 +8,7 @@ caption card.
 from __future__ import annotations
 
 import base64
+import re
 from dataclasses import dataclass
 
 from core.context import AgentContext
@@ -77,11 +78,22 @@ LORE_MEMO_PROMPT = """Write a short internal memo (2-4 sentences, house voice, \
 lower-case-leaning) on how this material might sit in the bandersnatch lore: \
 which chapter it could serve, what the beast took here, what stayed, and any \
 design angle (print, clipping, caption card). Ground every claim in the bible \
-or in what the photograph/metadata actually shows — do not invent canon. \
-End with exactly: "memo only. not canon until a human files it."
+or in what the photograph/metadata actually shows — do not invent canon.
+
+Then two closing lines, exactly:
+suggested chapter: <exactly one of: 001 the cardinal stayed / \
+002 nothing attached to them / 003 the harbor answers / unassigned>
+memo only. not canon until a human files it.
 
 Material:
 {description}"""
+
+VALID_CHAPTERS = {
+    "001 the cardinal stayed",
+    "002 nothing attached to them",
+    "003 the harbor answers",
+    "unassigned",
+}
 
 
 @dataclass
@@ -205,8 +217,11 @@ async def file_source(
         try:
             item = await loc.fetch_item(source_url)
         except Exception as exc:  # network or parse failure — report, don't invent
-            log_event(ctx.log, "loc_fetch_failed", url=source_url, error=str(exc))
-            return FilingResult(ok=False, message=f"could not pull the record from loc.gov ({exc}).")
+            reason = str(exc) or type(exc).__name__
+            log_event(ctx.log, "loc_fetch_failed", url=source_url, error=reason)
+            return FilingResult(
+                ok=False, message=f"could not pull the record from loc.gov ({reason})."
+            )
         title = item.title or title
         date = item.date
         photographer = item.photographer
@@ -323,6 +338,17 @@ async def _enrich_page(
         images=vision_images or None,
     )
     memo = memo[:900]
+
+    # the memo's suggested chapter goes in its own property; Chapter itself
+    # stays unassigned until a human confirms
+    chapter_match = re.search(r"suggested chapter:\s*(.+)", memo)
+    if chapter_match:
+        suggestion = chapter_match.group(1).strip().rstrip(".")
+        if suggestion in VALID_CHAPTERS:
+            await ctx.notion.update_page(
+                page_id, properties={"Suggested Chapter": prop_select(suggestion)}
+            )
+
     if memo:
         blocks: list[dict] = []
         if item and item.image_urls:
@@ -345,6 +371,33 @@ async def _enrich_page(
         )
         await ctx.notion.append_blocks(page_id, blocks)
     return memo
+
+
+async def file_tip(ctx: AgentContext, tip: str, reporter: str) -> FilingResult:
+    """Tip line: a strange place reported by a fan, kept as an untitled
+    harbor-contract candidate. Never opened until the submission-license
+    paragraph exists — gating lives in config, not here."""
+    properties = {
+        "Title": prop_title(tip.strip()[:200]),
+        "Class": prop_select(".0000 unclassified"),
+        "Region": prop_select("E coastal annex"),
+        "Status": prop_select("untitled"),
+        "Taking Test": prop_select("pending"),
+        "Chapter": prop_select("unassigned"),
+        "Suggested Chapter": prop_select("003 the harbor answers"),
+        "Filed By": prop_select("the bot"),
+        "Notes": prop_rich_text(
+            f"tip line submission by {reporter} · harbor contract candidate"
+        ),
+    }
+    page = await ctx.notion.create_row(properties)
+    page_url = page.get("url", "")
+    log_event(ctx.log, "tip_filed", reporter=reporter, tip=tip[:80], page=page_url)
+    return FilingResult(
+        ok=True,
+        page_url=page_url,
+        message="the office has your report. if the place is real, a contract may follow.",
+    )
 
 
 async def file_untitled(ctx: AgentContext, idea: str, filed_by: str = "the bot") -> FilingResult:
