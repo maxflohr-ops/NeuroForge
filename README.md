@@ -29,8 +29,9 @@ frameworks, no build step. Works straight from `file://`.
   PLACEHOLDER` comment — swap the form `action` for your Klaviyo subscribe
   endpoint and remove `data-placeholder="true"`. Until then it confirms
   locally and sends nothing.
-- **Commerce:** each holding on `file.html` links to
-  `https://bandersnatch-2.myshopify.com`.
+- **Commerce:** each holding on `file.html` deep-links to its product page
+  on `https://bandersnatch-2.myshopify.com` (lots 001–008 as of collection
+  001; lots 009–011 are UNTITLED teases with no link).
 - **Images:** none required — the site stands on type and CSS/SVG texture
   (film grain, halftone, vignette). Drop plates into `/assets` and reference
   them if you want photographs.
