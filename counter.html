@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#100E0C">
+<title>bandersnatch · the counter</title>
+<meta name="description" content="ask the office. the clerk answers what the file permits.">
+<link rel="icon" href="assets/seal.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&amp;family=IM+Fell+English:ital@0;1&amp;family=IM+Fell+English+SC&amp;display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#main">skip to the file</a>
+
+<header class="masthead">
+  <a class="mast-mark" href="index.html">bandersnatch</a>
+  <nav aria-label="the building">
+    <a href="index.html">the county</a>
+    <a href="file.html">the file</a>
+    <a href="bestiary.html">the bestiary</a>
+    <a href="virginia.html">virginia</a>
+    <a href="counter.html" aria-current="page">the counter</a>
+    <a href="ledger.html">the ledger</a>
+  </nav>
+</header>
+
+<main id="main">
+
+  <header class="page-head reveal">
+    <p class="page-kicker">the counter · attended</p>
+    <h1 class="page-title">ask the office</h1>
+    <p class="page-lede">state your business. the clerk answers what the file permits.</p>
+  </header>
+
+  <section class="doc reveal" aria-label="the counter">
+    <p class="doc-head">inquiries · taken in the order received</p>
+
+    <div id="clerk-log" class="clerk-log" aria-live="polite"></div>
+
+    <form id="clerk-form" class="clerk-form">
+      <label class="visually-hidden" for="clerk-input">your inquiry</label>
+      <input id="clerk-input" type="text" autocomplete="off" maxlength="140" placeholder="ask the office">
+      <button type="submit">ask</button>
+    </form>
+
+    <noscript>
+      <p class="doc-note">the counter is not attended tonight. not in the file.</p>
+    </noscript>
+  </section>
+
+</main>
+
+<footer class="colophon">
+  <img class="seal" src="assets/seal.svg" alt="house seal: a bare tree in a ring. parva puella, magna somnia. by her hand, MCMXXXV, date open." width="96" height="96">
+  <p class="colophon-credit">a house of little girl big dreams</p>
+  <p class="colophon-line">the file is not closed.</p>
+</footer>
+
+<script src="assets/site.js" defer></script>
+</body>
+</html>

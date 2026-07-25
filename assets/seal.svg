@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="house seal: a bare tree in a ring. parva puella, magna somnia. by her hand, MCMXXXV, date open.">
+  <defs>
+    <path id="arc-top" d="M 30 120 A 90 90 0 0 1 210 120"/>
+    <path id="arc-bottom" d="M 32 120 A 88 88 0 0 0 208 120"/>
+  </defs>
+
+  <!-- ring -->
+  <g fill="none" stroke="#8E897F">
+    <circle cx="120" cy="120" r="116" stroke-width="2"/>
+    <circle cx="120" cy="120" r="111" stroke-width="0.75"/>
+    <circle cx="120" cy="120" r="72" stroke-width="0.75"/>
+  </g>
+
+  <!-- mottos -->
+  <g font-family="Georgia, 'Times New Roman', serif" fill="#8E897F">
+    <text font-size="13.5" letter-spacing="2.5">
+      <textPath href="#arc-top" startOffset="50%" text-anchor="middle">PARVA PUELLA · MAGNA SOMNIA</textPath>
+    </text>
+    <text font-size="11" letter-spacing="2">
+      <textPath href="#arc-bottom" startOffset="50%" text-anchor="middle">BY HER HAND · MCMXXXV —</textPath>
+    </text>
+  </g>
+
+  <!-- bare tree -->
+  <g stroke="#8E897F" fill="none" stroke-linecap="round">
+    <path stroke-width="2.25" d="M120 160 L120 118"/>
+    <path stroke-width="1.5" d="M120 134 L103 115 M103 115 L93 106 M103 115 L107 100 M93 106 L86 101 M93 106 L91 96 M107 100 L102 92 M107 100 L113 91"/>
+    <path stroke-width="1.5" d="M120 127 L137 109 M137 109 L147 101 M137 109 L134 96 M147 101 L154 97 M147 101 L147 91 M134 96 L129 88 M134 96 L139 87"/>
+    <path stroke-width="1.5" d="M120 118 L120 103 M120 103 L114 93 M120 103 L126 94"/>
+    <path stroke-width="1.25" d="M102 160 L138 160 M110 164 L130 164"/>
+  </g>
+</svg>

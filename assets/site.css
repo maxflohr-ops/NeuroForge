@@ -1,0 +1,842 @@
+/* ------------------------------------------------------------------
+   bandersnatch · site.css
+   the office types its own forms.
+   ------------------------------------------------------------------ */
+
+/* fallback faces metric-matched so nothing shifts when the fell arrives */
+@font-face {
+  font-family: "fell-fallback";
+  src: local("Georgia"), local("Times New Roman");
+  size-adjust: 105%;
+  ascent-override: 88%;
+  descent-override: 24%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "fell-sc-fallback";
+  src: local("Georgia"), local("Times New Roman");
+  size-adjust: 111%;
+  ascent-override: 86%;
+  descent-override: 24%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "courier-fallback";
+  src: local("Courier New");
+  size-adjust: 100%;
+}
+
+:root {
+  --field: #100E0C;
+  --bone: #E6E0D3;
+  --silver: #8E897F;
+  --cardinal: #7A1D1D;
+  --line: rgba(142, 137, 127, 0.3);
+  --line-faint: rgba(142, 137, 127, 0.15);
+  --serif: "IM Fell English", fell-fallback, Georgia, serif;
+  --display: "IM Fell English SC", fell-sc-fallback, Georgia, serif;
+  --mono: "Courier Prime", courier-fallback, "Courier New", monospace;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  background: #100E0C;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--field);
+  color: var(--bone);
+  font-family: var(--serif);
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* film grain — feTurbulence, over everything */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  pointer-events: none;
+  z-index: 40;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23g)'/%3E%3C/svg%3E");
+  opacity: 0.09;
+  mix-blend-mode: overlay;
+}
+
+/* heavy vignette — lamplight falls off at the edges */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 41;
+  background: radial-gradient(ellipse 125% 95% at 50% 40%, transparent 52%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body::before { animation: grain-shift 1.7s steps(4) infinite; }
+}
+@keyframes grain-shift {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(-1.5%, 1%); }
+  50%  { transform: translate(1%, -1%); }
+  75%  { transform: translate(-1%, -1.5%); }
+  100% { transform: translate(0, 0); }
+}
+
+::selection { background: var(--silver); color: var(--field); }
+
+a {
+  color: inherit;
+  text-decoration-color: var(--line);
+  text-underline-offset: 0.22em;
+}
+a:hover { text-decoration-color: var(--bone); }
+
+:focus-visible {
+  outline: 1px solid var(--bone);
+  outline-offset: 3px;
+}
+
+.skip {
+  position: absolute;
+  left: -100vw;
+  top: 0;
+  z-index: 100;
+  background: var(--bone);
+  color: var(--field);
+  padding: 0.55rem 1.1rem;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+.skip:focus { left: 0; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------------------------------------------------------- */
+/* masthead                                                          */
+/* ---------------------------------------------------------------- */
+
+.masthead {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem 1.6rem;
+  padding: 1.1rem clamp(1rem, 4vw, 2.5rem);
+  border-bottom: 1px solid var(--line-faint);
+}
+.mast-mark {
+  font-family: var(--display);
+  font-size: 1.05rem;
+  letter-spacing: 0.14em;
+  text-decoration: none;
+}
+.masthead nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1.35rem;
+  font-family: var(--mono);
+  font-size: 0.77rem;
+  letter-spacing: 0.09em;
+}
+.masthead nav a {
+  text-decoration: none;
+  color: var(--silver);
+  padding: 0.2rem 0;
+  border-bottom: 1px solid transparent;
+}
+.masthead nav a:hover { color: var(--bone); }
+.masthead nav a[aria-current="page"] {
+  color: var(--bone);
+  border-bottom-color: var(--silver);
+}
+
+main {
+  position: relative;
+  z-index: 2;
+  max-width: 66rem;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 2.5rem) 5rem;
+}
+
+/* ---------------------------------------------------------------- */
+/* the county — hero                                                 */
+/* ---------------------------------------------------------------- */
+
+.hero {
+  min-height: calc(100vh - 5rem);
+  min-height: calc(100svh - 5rem);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 4rem 0 3rem;
+}
+.hero-office {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--silver);
+  margin: 0;
+}
+.hero-title {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(2.5rem, 12.5vw, 8rem);
+  line-height: 1.02;
+  letter-spacing: 0.045em;
+  margin: 1rem 0 1.4rem;
+  text-shadow: 0 0 70px rgba(230, 224, 211, 0.08);
+}
+.hero-date {
+  font-family: var(--mono);
+  font-size: 1.05rem;
+  color: var(--silver);
+  letter-spacing: 0.3em;
+  margin: 0 0 2.4rem;
+}
+.hero-line {
+  font-style: italic;
+  font-size: 1.2rem;
+  margin: 0;
+}
+.hero-rule {
+  display: block;
+  width: 1px;
+  height: 3.2rem;
+  margin: 2.6rem auto 0;
+  background: var(--line);
+}
+
+.em-breathe { display: inline-block; }
+@media (prefers-reduced-motion: no-preference) {
+  .em-breathe { animation: breathe 6s ease-in-out infinite; }
+}
+@keyframes breathe {
+  0%, 100% { opacity: 0.3; }
+  50%      { opacity: 1; }
+}
+
+/* ---------------------------------------------------------------- */
+/* documents, textures                                               */
+/* ---------------------------------------------------------------- */
+
+.halftone {
+  background-image: radial-gradient(rgba(142, 137, 127, 0.09) 1px, transparent 1.4px);
+  background-size: 8px 8px;
+}
+
+.doc {
+  border: 1px solid var(--line);
+  padding: clamp(1.4rem, 4.5vw, 2.6rem);
+  margin: 0 auto 3.5rem;
+  max-width: 44rem;
+}
+.doc-head {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--silver);
+  margin: 0 0 1.4rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--line-faint);
+}
+.doc-note {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--silver);
+  letter-spacing: 0.04em;
+}
+.doc p:last-child { margin-bottom: 0; }
+
+/* scratched-negative streaks between sections */
+.streaks {
+  border: 0;
+  height: 16px;
+  margin: 3.5rem auto;
+  max-width: 44rem;
+  background: repeating-linear-gradient(
+    93deg,
+    transparent 0 19px,
+    rgba(230, 224, 211, 0.06) 19px 20px,
+    transparent 20px 53px,
+    rgba(230, 224, 211, 0.035) 53px 54px,
+    transparent 54px 91px
+  );
+}
+
+/* ---------------------------------------------------------------- */
+/* doors (index)                                                     */
+/* ---------------------------------------------------------------- */
+
+.doors {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2rem;
+  max-width: 54rem;
+  margin: 0 auto 5rem;
+}
+@media (max-width: 760px) {
+  .doors { grid-template-columns: 1fr; }
+}
+.door {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  border: 1px solid var(--line);
+  padding: 1.6rem 1.4rem 1.5rem;
+  text-decoration: none;
+  transition: background-color 0.6s ease, border-color 0.6s ease;
+}
+.door:hover,
+.door:focus-visible {
+  background: rgba(230, 224, 211, 0.035);
+  border-color: var(--silver);
+}
+.door-no {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--silver);
+}
+.door-name {
+  font-family: var(--display);
+  font-size: 1.7rem;
+  line-height: 1.1;
+}
+.door-line {
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--silver);
+  line-height: 1.55;
+  flex-grow: 1;
+}
+.door-enter {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--silver);
+}
+.door:hover .door-enter,
+.door:focus-visible .door-enter { color: var(--bone); }
+
+/* ---------------------------------------------------------------- */
+/* page heads                                                        */
+/* ---------------------------------------------------------------- */
+
+.page-head {
+  text-align: center;
+  padding: 3.5rem 0 2.8rem;
+}
+.page-kicker {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--silver);
+  margin: 0;
+}
+.page-title {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(2rem, 7vw, 3.6rem);
+  letter-spacing: 0.04em;
+  margin: 0.4rem 0;
+}
+.page-lede {
+  font-style: italic;
+  color: var(--silver);
+  max-width: 34rem;
+  margin: 0.6rem auto 0;
+}
+
+/* ---------------------------------------------------------------- */
+/* the file — mounts                                                 */
+/* ---------------------------------------------------------------- */
+
+.mounts {
+  border-top: 1px solid var(--line);
+  max-width: 56rem;
+  margin: 0 auto 4rem;
+}
+.mount {
+  display: grid;
+  grid-template-columns: 11.5rem 1fr 13rem;
+  gap: 0.8rem 2rem;
+  align-items: start;
+  padding: 1.9rem 0.4rem;
+  border-bottom: 1px solid var(--line-faint);
+}
+@media (max-width: 860px) {
+  .mount { grid-template-columns: 1fr; gap: 0.7rem; }
+}
+.neg,
+.classline {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  color: var(--silver);
+  letter-spacing: 0.05em;
+  margin: 0 0 0.35rem;
+}
+.mount-title {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 1.55rem;
+  line-height: 1.25;
+  margin: 0 0 0.3rem;
+}
+.mount-title a {
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+}
+.mount-title a:hover { border-bottom-color: var(--bone); }
+.mount-epigraph {
+  font-style: italic;
+  color: var(--silver);
+  font-size: 0.98rem;
+  margin: 0;
+}
+.mount-file {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--silver);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+.mount-file p { margin: 0; }
+.stamp {
+  display: inline-block;
+  border: 1px solid currentColor;
+  padding: 0.12rem 0.6rem 0.06rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  transform: rotate(-2deg);
+}
+.stamp-printed { color: var(--bone); opacity: 0.85; }
+.stamp-filed   { color: var(--silver); }
+.stamp-untitled {
+  color: var(--silver);
+  border-style: dashed;
+  opacity: 0.75;
+  transform: rotate(1.5deg);
+}
+.holding-link {
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  color: var(--bone);
+}
+.mount--untitled { opacity: 0.55; }
+.mount--untitled .mount-title {
+  font-family: var(--mono);
+  font-size: 1.05rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--silver);
+  padding-top: 0.2rem;
+}
+
+/* lamplight overlay — file.html */
+.lamp {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background: radial-gradient(
+    circle 24rem at var(--lx, 50%) var(--ly, 38%),
+    rgba(233, 226, 211, 0.1),
+    rgba(233, 226, 211, 0.045) 45%,
+    transparent 72%
+  );
+}
+
+/* caption card — the wolcott plate */
+.caption-card {
+  border: 1px solid var(--line);
+  outline: 1px solid var(--line-faint);
+  outline-offset: 5px;
+  max-width: 44rem;
+  margin: 0 auto 4.5rem;
+  padding: clamp(1.4rem, 4.5vw, 2.4rem);
+  font-family: var(--mono);
+}
+.cc-head {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--silver);
+  margin: 0 0 1.4rem;
+}
+.cc-caption {
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1.7;
+  margin: 0 0 1.1rem;
+}
+.cc-meta {
+  font-size: 0.78rem;
+  color: var(--silver);
+  letter-spacing: 0.05em;
+  margin: 0.15rem 0;
+}
+.cc-taken {
+  margin: 1.5rem 0 0;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line-faint);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.cc-taken .taken-answer {
+  text-transform: none;
+  letter-spacing: normal;
+  font-style: italic;
+}
+.caret {
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  background: var(--silver);
+  margin-left: 0.15em;
+  vertical-align: -0.15em;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .caret { animation: blink 1.1s steps(1) infinite; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .caret { display: none; }
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ---------------------------------------------------------------- */
+/* the bestiary — plates                                             */
+/* ---------------------------------------------------------------- */
+
+.plate {
+  max-width: 44rem;
+  margin: 0 auto 5rem;
+  text-align: center;
+}
+.plate-no {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--silver);
+  margin: 0;
+}
+.plate-title {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(1.7rem, 5vw, 2.6rem);
+  margin: 0.3rem 0 1.5rem;
+}
+.frame {
+  border: 1px solid var(--line);
+  outline: 1px solid var(--line-faint);
+  outline-offset: 6px;
+  aspect-ratio: 5 / 4;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  margin: 0 0 1.4rem;
+}
+.frame-caption {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  color: var(--silver);
+  margin: 0;
+}
+.frame-cardinal svg {
+  width: min(44%, 190px);
+  height: auto;
+}
+.plate-line {
+  font-style: italic;
+  font-size: 1.15rem;
+  margin: 0 0 0.6rem;
+}
+.plate-notes {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--silver);
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+.testimony {
+  font-style: italic;
+  font-size: 1.2rem;
+  line-height: 1.9;
+  text-align: left;
+  border-left: 1px solid var(--line);
+  margin: 0 0 1.4rem;
+  padding: 0.6rem 0 0.6rem 1.6rem;
+}
+
+/* ---------------------------------------------------------------- */
+/* virginia — the estate                                             */
+/* ---------------------------------------------------------------- */
+
+.obit-name {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 2.4rem;
+  text-align: center;
+  margin: 0.5rem 0 0.2rem;
+}
+.obit-dates {
+  font-family: var(--mono);
+  text-align: center;
+  color: var(--silver);
+  letter-spacing: 0.3em;
+  margin: 0 0 1.6rem;
+}
+.epitaph {
+  text-align: center;
+  font-style: italic;
+  font-size: 1.25rem;
+  letter-spacing: 0.08em;
+  margin: 1.8rem 0 0.3rem;
+}
+.epitaph-note {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--silver);
+  text-align: center;
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+.succession {
+  list-style: none;
+  margin: 0 0 1.4rem;
+  padding: 0;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+}
+.succession li {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.2rem 1rem;
+  padding: 0.65rem 0.2rem;
+  border-bottom: 1px solid var(--line-faint);
+}
+.succession .lost { color: var(--silver); }
+.date-open {
+  text-align: center;
+  font-style: italic;
+  font-size: 1.35rem;
+  margin: 4rem 0 1rem;
+}
+
+/* ---------------------------------------------------------------- */
+/* the counter — clerk                                               */
+/* ---------------------------------------------------------------- */
+
+.clerk-log {
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  line-height: 1.8;
+  min-height: 8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: 1.8rem 0 1.6rem;
+}
+.log-you { color: var(--silver); margin: 0; }
+.log-office { margin: 0; }
+.clerk-form {
+  display: flex;
+  gap: 0.9rem;
+  border-top: 1px solid var(--line-faint);
+  padding-top: 1.4rem;
+}
+@media (max-width: 480px) {
+  .clerk-form { flex-direction: column; }
+}
+
+/* ---------------------------------------------------------------- */
+/* forms                                                             */
+/* ---------------------------------------------------------------- */
+
+input[type="text"],
+input[type="email"] {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  color: var(--bone);
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  padding: 0.55rem 0.1rem;
+  caret-color: var(--bone);
+}
+input::placeholder { color: rgba(142, 137, 127, 0.55); }
+input:focus-visible {
+  outline: 1px dashed var(--silver);
+  outline-offset: 5px;
+  border-bottom-color: var(--bone);
+}
+
+button {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--bone);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 0.6rem 1.4rem;
+  cursor: pointer;
+  transition: border-color 0.4s ease, background-color 0.4s ease;
+}
+button:hover {
+  border-color: var(--bone);
+  background: rgba(230, 224, 211, 0.05);
+}
+
+.field { margin: 0 0 1.5rem; }
+.field label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--silver);
+  margin-bottom: 0.35rem;
+}
+.ledger-note {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  margin: 1.2rem 0 0;
+  min-height: 1.4em;
+}
+
+/* ---------------------------------------------------------------- */
+/* colophon                                                          */
+/* ---------------------------------------------------------------- */
+
+.colophon {
+  position: relative;
+  z-index: 2;
+  border-top: 1px solid var(--line-faint);
+  text-align: center;
+  padding: 3.2rem 1.5rem 3.6rem;
+  margin-top: 2rem;
+}
+.seal {
+  width: 96px;
+  height: 96px;
+  opacity: 0.8;
+  margin-bottom: 1.1rem;
+}
+.colophon-credit {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--silver);
+  margin: 0 0 0.5rem;
+}
+.colophon-line {
+  font-style: italic;
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------- */
+/* entrance title card                                               */
+/* ---------------------------------------------------------------- */
+
+.titlecard {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: var(--field);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  cursor: pointer;
+  animation: tc-in 1.1s ease;
+}
+.titlecard.is-out {
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+.tc-office {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--silver);
+  margin: 0 0 1rem;
+}
+.tc-name {
+  font-family: var(--display);
+  font-size: clamp(2.2rem, 9vw, 4.6rem);
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  margin: 0 0 1rem;
+}
+.tc-line {
+  font-style: italic;
+  color: var(--silver);
+  margin: 0;
+}
+@keyframes tc-in { from { opacity: 0; } }
+
+/* ---------------------------------------------------------------- */
+/* slow fades on scroll                                              */
+/* ---------------------------------------------------------------- */
+
+.js .reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 1.2s ease, transform 1.2s ease;
+}
+.js .reveal.lit {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------------------------------------------------------------- */
+/* prefers-reduced-motion — the office holds still                   */
+/* ---------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .js .reveal { opacity: 1; transform: none; transition: none; }
+  .door, button { transition: none; }
+  .titlecard { animation: none; }
+}

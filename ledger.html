@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#100E0C">
+<title>bandersnatch · the ledger</title>
+<meta name="description" content="the visitor ledger, kept since 1935. the estate writes rarely and never sells your name.">
+<link rel="icon" href="assets/seal.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&amp;family=IM+Fell+English:ital@0;1&amp;family=IM+Fell+English+SC&amp;display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#main">skip to the file</a>
+
+<header class="masthead">
+  <a class="mast-mark" href="index.html">bandersnatch</a>
+  <nav aria-label="the building">
+    <a href="index.html">the county</a>
+    <a href="file.html">the file</a>
+    <a href="bestiary.html">the bestiary</a>
+    <a href="virginia.html">virginia</a>
+    <a href="counter.html">the counter</a>
+    <a href="ledger.html" aria-current="page">the ledger</a>
+  </nav>
+</header>
+
+<main id="main">
+
+  <header class="page-head reveal">
+    <p class="page-kicker">the ledger · kept since 1935</p>
+    <h1 class="page-title">the visitor ledger</h1>
+    <p class="page-lede">every visitor to the office is asked to sign. no one is made to.</p>
+  </header>
+
+  <section class="doc halftone reveal" aria-label="sign the ledger">
+    <p class="doc-head">entries · taken by hand</p>
+
+    <p>sign, and the estate will write to you when there is a thing worth
+    writing — a printing, an opening of the file, a holding brought up from
+    the dark. the estate writes rarely and never sells your name. it keeps
+    things — that is different.</p>
+
+    <!--
+      EMAIL CAPTURE — KLAVIYO PLACEHOLDER
+      Replace the action below with your Klaviyo subscribe endpoint, e.g.:
+        action="https://manage.kmail-lists.com/subscriptions/subscribe?a=YOUR_ACCOUNT_ID&g=YOUR_LIST_ID" method="post"
+      and remove data-placeholder="true". The email input is already named "email".
+      Until then the form confirms locally and sends nothing anywhere.
+    -->
+    <form id="ledger-form" data-placeholder="true" method="post" action="#klaviyo-endpoint-goes-here">
+      <div class="field">
+        <label for="lg-name">name, as it should be kept</label>
+        <input id="lg-name" name="name" type="text" autocomplete="name">
+      </div>
+      <div class="field">
+        <label for="lg-email">where the estate may write</label>
+        <input id="lg-email" name="email" type="email" required autocomplete="email">
+      </div>
+      <button type="submit">sign the ledger</button>
+      <p id="ledger-note" class="ledger-note" role="status"></p>
+    </form>
+  </section>
+
+</main>
+
+<footer class="colophon">
+  <img class="seal" src="assets/seal.svg" alt="house seal: a bare tree in a ring. parva puella, magna somnia. by her hand, MCMXXXV, date open." width="96" height="96">
+  <p class="colophon-credit">a house of little girl big dreams</p>
+  <p class="colophon-line">the file is not closed.</p>
+</footer>
+
+<script src="assets/site.js" defer></script>
+</body>
+</html>
