@@ -1,0 +1,62 @@
+/* ------------------------------------------------------------------
+   bandersnatch · fonts.css
+   THE ONLY FILE TO EDIT WHEN SWAPPING TYPE. nothing else references
+   a typeface by name — site.css and the pages read the three role
+   variables defined in step 2.
+
+   to plug in a different font:
+     1 · load it below — change the @import url, or delete it and
+         self-host with @font-face (example provided).
+     2 · put its family name first in the matching role variable.
+     3 · (optional) tune the fallback metrics so text doesn't shift
+         while the real font loads.
+   ------------------------------------------------------------------ */
+
+/* 1 · load the faces ---------------------------------------------- */
+
+@import url("https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap");
+
+/* self-hosted alternative — drop files in /assets/fonts/ and use:
+@font-face {
+  font-family: "your display face";
+  src: url("fonts/your-display.woff2") format("woff2");
+  font-display: swap;
+}
+*/
+
+/* 2 · the three roles --------------------------------------------- */
+
+:root {
+  /* prose — body copy, epigraphs, testimony */
+  --serif: "IM Fell English", fell-fallback, Georgia, serif;
+
+  /* display — the big titles, door names, plate headings */
+  --display: "IM Fell English SC", fell-sc-fallback, Georgia, serif;
+
+  /* typewriter — all file metadata, captions, negative numbers, forms */
+  --mono: "Courier Prime", courier-fallback, "Courier New", monospace;
+}
+
+/* 3 · metric-matched fallbacks (no layout shift while loading) ----- */
+
+@font-face {
+  font-family: "fell-fallback";
+  src: local("Georgia"), local("Times New Roman");
+  size-adjust: 105%;
+  ascent-override: 88%;
+  descent-override: 24%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "fell-sc-fallback";
+  src: local("Georgia"), local("Times New Roman");
+  size-adjust: 111%;
+  ascent-override: 86%;
+  descent-override: 24%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "courier-fallback";
+  src: local("Courier New");
+  size-adjust: 100%;
+}

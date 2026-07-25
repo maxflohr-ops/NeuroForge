@@ -20,6 +20,11 @@ frameworks, no build step. Works straight from `file://`.
 
 ## wiring
 
+- **Fonts:** all typography lives in `assets/fonts.css` — the one file to
+  edit when plugging in a different font. Load your face there (Google
+  `@import` or self-hosted `@font-face`), then put its name first in the
+  matching role variable (`--serif` prose, `--display` titles, `--mono`
+  typewriter). Nothing else references a typeface by name.
 - **Email capture:** `ledger.html` contains a clearly marked `KLAVIYO
   PLACEHOLDER` comment — swap the form `action` for your Klaviyo subscribe
   endpoint and remove `data-placeholder="true"`. Until then it confirms

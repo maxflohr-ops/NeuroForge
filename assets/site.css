@@ -3,28 +3,8 @@
    the office types its own forms.
    ------------------------------------------------------------------ */
 
-/* fallback faces metric-matched so nothing shifts when the fell arrives */
-@font-face {
-  font-family: "fell-fallback";
-  src: local("Georgia"), local("Times New Roman");
-  size-adjust: 105%;
-  ascent-override: 88%;
-  descent-override: 24%;
-  line-gap-override: 0%;
-}
-@font-face {
-  font-family: "fell-sc-fallback";
-  src: local("Georgia"), local("Times New Roman");
-  size-adjust: 111%;
-  ascent-override: 86%;
-  descent-override: 24%;
-  line-gap-override: 0%;
-}
-@font-face {
-  font-family: "courier-fallback";
-  src: local("Courier New");
-  size-adjust: 100%;
-}
+/* type lives in fonts.css — swap fonts there, nowhere else.
+   this file only uses the role variables --serif / --display / --mono. */
 
 :root {
   --field: #100E0C;
@@ -33,9 +13,6 @@
   --cardinal: #7A1D1D;
   --line: rgba(142, 137, 127, 0.3);
   --line-faint: rgba(142, 137, 127, 0.15);
-  --serif: "IM Fell English", fell-fallback, Georgia, serif;
-  --display: "IM Fell English SC", fell-sc-fallback, Georgia, serif;
-  --mono: "Courier Prime", courier-fallback, "Courier New", monospace;
 }
 
 * { box-sizing: border-box; }
