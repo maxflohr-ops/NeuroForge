@@ -1,0 +1,12 @@
+{
+  "name": "bandersnatch-seo-bot",
+  "version": "1.0.0",
+  "description": "standing patrol for bandersnatch.world — page health, seo audit, indexnow submission",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
