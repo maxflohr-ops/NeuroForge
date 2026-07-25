@@ -7,14 +7,23 @@ caption card.
 
 from __future__ import annotations
 
+import base64
 from dataclasses import dataclass
 
 from core.context import AgentContext
-from core.llm import CLASSIFY, STANDARD
+from core.llm import CANON, CLASSIFY, STANDARD
 from core.log import log_event
-from core.notion import prop_rich_text, prop_select, prop_title, prop_url
+from core.notion import (
+    prop_files_upload,
+    prop_rich_text,
+    prop_select,
+    prop_title,
+    prop_url,
+)
 
 from agents.archivist import loc
+
+MAX_VISION_BYTES = 4_500_000  # api image limit is 5MB; stay under it
 
 VALID_CLASSES = {
     ".3100 dwellings unoccupied",
@@ -39,8 +48,9 @@ The Taking Test: material passes only if something was TAKEN — economic \
 extraction (foreclosure, auction, emptied tenant houses, boarded storefronts, \
 land eroded from cash-cropping, towns dead when the mine or the price died, \
 the Dust Bowl as farming-for-profit). Weather alone — hurricane, flood, fire, \
-hard winter — FAILS as "fail weather". If you cannot tell, the answer is \
-"pending". Never guess.
+hard winter — FAILS as "fail weather". Material that is neither extraction nor \
+weather (portraits, war production, plenty, unrelated subjects) is "pending", \
+as is anything you cannot tell. "fail weather" is ONLY for weather. Never guess.
 
 Class numbers (pick exactly one string):
 ".3100 dwellings unoccupied", ".9026 organized gatherings", ".9100 churches", \
@@ -51,11 +61,27 @@ Uncertain -> ".0000 unclassified".
 Region: "E southern" (default; the county, inland, Appalachia, the South) or \
 "E coastal annex" (harbors, coast, California, salt water).
 
+If a photograph is attached, judge from the photograph itself first, the
+metadata second. Also report whether people are visible:
+"people": "none" (no people), "present" (people small/incidental/faces not
+legible), or "prominent" (a person or face is a clear subject).
+
 JSON shape:
 {"taking_test": "pass" | "fail weather" | "pending",
  "reason": "<one short lower-case sentence>",
  "class": "<one class string>",
- "region": "<one region string>"}"""
+ "region": "<one region string>",
+ "people": "none" | "present" | "prominent"}"""
+
+LORE_MEMO_PROMPT = """Write a short internal memo (2-4 sentences, house voice, \
+lower-case-leaning) on how this material might sit in the bandersnatch lore: \
+which chapter it could serve, what the beast took here, what stayed, and any \
+design angle (print, clipping, caption card). Ground every claim in the bible \
+or in what the photograph/metadata actually shows — do not invent canon. \
+End with exactly: "memo only. not canon until a human files it."
+
+Material:
+{description}"""
 
 
 @dataclass
@@ -92,32 +118,50 @@ def _caption_card(
     return card
 
 
-async def run_taking_test(ctx: AgentContext, description: str) -> dict:
-    """Taking test + class + region in one classify-tier call. Uncertainty
+async def run_taking_test(
+    ctx: AgentContext,
+    description: str,
+    images: list[tuple[str, str]] | None = None,
+) -> dict:
+    """Taking test + class + region (+ people flag) in one classify-tier call,
+    judged from the photograph itself when one is available. Uncertainty
     resolves to pending / .0000 — never a guess."""
     parsed = await ctx.llm.complete_json(
-        CLASSIFY, CLASSIFY_SYSTEM, f"Material to classify:\n{description}", max_tokens=300
+        CLASSIFY,
+        CLASSIFY_SYSTEM,
+        f"Material to classify:\n{description}",
+        max_tokens=300,
+        images=images,
     )
     parsed = parsed or {}
     test = parsed.get("taking_test", "pending")
     class_ = parsed.get("class", ".0000 unclassified")
     region = parsed.get("region", "E southern")
+    people = parsed.get("people", "")
     return {
         "taking_test": test if test in VALID_TEST else "pending",
         "reason": str(parsed.get("reason", ""))[:300],
         "class": class_ if class_ in VALID_CLASSES else ".0000 unclassified",
         "region": region if region in VALID_REGIONS else "E southern",
+        "people": people if people in {"none", "present", "prominent"} else "",
     }
 
 
-async def _draft_what_was_taken(ctx: AgentContext, system_full: str, description: str) -> str:
+async def _draft_what_was_taken(
+    ctx: AgentContext,
+    system_full: str,
+    description: str,
+    images: list[tuple[str, str]] | None = None,
+) -> str:
     prompt = (
         "Write the WHAT WAS TAKEN line for this caption card. One sentence, "
         "house voice: lower-case, concrete, names the economic extraction — "
         "never weather, never a monster in place of the real cause. "
         "Output the sentence only.\n\nMaterial:\n" + description
     )
-    return (await ctx.llm.complete(STANDARD, system_full, prompt, max_tokens=200))[:1900]
+    return (
+        await ctx.llm.complete(STANDARD, system_full, prompt, max_tokens=200, images=images)
+    )[:1900]
 
 
 async def check_duplicate(ctx: AgentContext, source_url: str) -> str | None:
@@ -146,6 +190,8 @@ async def file_source(
 
     title, date, photographer, loc_lot, notes = raw.strip()[:200], "", "", "", ""
     description = raw.strip()
+    item: loc.LocItem | None = None
+    vision_images: list[tuple[str, str]] = []
 
     if source_url:
         duplicate_url = await check_duplicate(ctx, source_url)
@@ -170,12 +216,25 @@ async def file_source(
             f"title: {item.title}\ndate: {item.date}\nphotographer: {item.photographer}\n"
             f"lot/negative: {item.loc_lot}\nnotes: {notes}\nsource: {source_url}"
         )
+        # let the models see the photograph itself, not just the caption
+        try:
+            downloaded = await loc.download_image(
+                item.best_image(max_width=1200), max_bytes=MAX_VISION_BYTES
+            )
+            if downloaded:
+                data, content_type = downloaded
+                vision_images = [(content_type, base64.standard_b64encode(data).decode())]
+        except Exception as exc:
+            log_event(ctx.log, "vision_image_failed", url=source_url, error=str(exc))
 
-    verdict = await run_taking_test(ctx, description)
+    verdict = await run_taking_test(ctx, description, images=vision_images)
     test = verdict["taking_test"]
+    if verdict["people"] == "prominent":
+        flag = "people prominent in frame — print the places, not the people."
+        notes = f"{notes} · {flag}" if notes else flag
 
     if test == "pass":
-        taken = await _draft_what_was_taken(ctx, system_full, description)
+        taken = await _draft_what_was_taken(ctx, system_full, description, images=vision_images)
         status = "filed"
     elif test == "fail weather":
         # refused, never deleted — the office keeps everything
@@ -208,11 +267,84 @@ async def file_source(
         ctx.memory.dedupe_set(f"url:{source_url}", page_url)
     log_event(ctx.log, "row_filed", title=title, status=status, test=test, page=page_url)
 
+    # enrichment is best-effort: the row is already filed, so never fail on it
+    memo = ""
+    try:
+        memo = await _enrich_page(
+            ctx, system_full, page.get("id", ""), item, description, vision_images
+        )
+    except Exception as exc:
+        log_event(ctx.log, "enrich_failed", page=page_url, error=str(exc))
+
     card = _caption_card(
         title, date, photographer, verdict["class"], verdict["region"],
         test, taken, loc_lot, status, filed_by, page_url,
     )
+    if memo:
+        card += f"\n> {memo}"
     return FilingResult(ok=True, caption_card=card, page_url=page_url)
+
+
+async def _enrich_page(
+    ctx: AgentContext,
+    system_full: str,
+    page_id: str,
+    item: loc.LocItem | None,
+    description: str,
+    vision_images: list[tuple[str, str]],
+) -> str:
+    """Attach the plate (Plate property + page cover + body image) and append a
+    lore memo written in the estate's voice. Returns the memo text."""
+    if not page_id:
+        return ""
+
+    if item and item.image_urls:
+        best_url = item.best_image()
+        downloaded = await loc.download_image(best_url)
+        if downloaded:
+            data, content_type = downloaded
+            upload_id = await ctx.notion.upload_file(
+                f"{item.item_id}.jpg", data, content_type
+            )
+            if upload_id:
+                await ctx.notion.update_page(
+                    page_id,
+                    properties={"Plate": prop_files_upload(f"{item.item_id}.jpg", upload_id)},
+                    cover={"type": "external", "external": {"url": best_url.split("#")[0]}},
+                )
+
+    # canon-tier models think before writing; max_tokens covers thinking + text,
+    # so give real headroom or the memo comes back empty
+    memo = await ctx.llm.complete(
+        CANON,
+        system_full,
+        LORE_MEMO_PROMPT.format(description=description),
+        max_tokens=2000,
+        images=vision_images or None,
+    )
+    memo = memo[:900]
+    if memo:
+        blocks: list[dict] = []
+        if item and item.image_urls:
+            blocks.append(
+                {
+                    "type": "image",
+                    "image": {
+                        "type": "external",
+                        "external": {"url": item.best_image().split("#")[0]},
+                    },
+                }
+            )
+        blocks.append(
+            {
+                "type": "paragraph",
+                "paragraph": {
+                    "rich_text": [{"text": {"content": f"lore memo — {memo}"[:1990]}}]
+                },
+            }
+        )
+        await ctx.notion.append_blocks(page_id, blocks)
+    return memo
 
 
 async def file_untitled(ctx: AgentContext, idea: str, filed_by: str = "the bot") -> FilingResult:

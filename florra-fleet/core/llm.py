@@ -47,14 +47,27 @@ class ModelRouter:
         system: str,
         prompt: str,
         max_tokens: int | None = None,
+        images: list[tuple[str, str]] | None = None,
     ) -> str:
-        """One-shot completion. Returns the text of the response ('' on refusal)."""
+        """One-shot completion. Returns the text of the response ('' on refusal).
+
+        images: optional [(media_type, base64_data)] shown before the prompt.
+        """
         model = self.model_for(task)
+        content: str | list = prompt
+        if images:
+            content = [
+                {
+                    "type": "image",
+                    "source": {"type": "base64", "media_type": media_type, "data": b64},
+                }
+                for media_type, b64 in images
+            ] + [{"type": "text", "text": prompt}]
         response = await self.client.messages.create(
             model=model,
             max_tokens=max_tokens or self.default_max_tokens,
             system=system,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[{"role": "user", "content": content}],
         )
         log_event(
             self.logger,
@@ -75,10 +88,11 @@ class ModelRouter:
         system: str,
         prompt: str,
         max_tokens: int | None = None,
+        images: list[tuple[str, str]] | None = None,
     ) -> dict | None:
         """Completion that expects a single JSON object back. None if unparseable —
         callers must treat None as 'uncertain', never guess."""
-        text = await self.complete(task, system, prompt, max_tokens=max_tokens)
+        text = await self.complete(task, system, prompt, max_tokens=max_tokens, images=images)
         return _extract_json(text)
 
 

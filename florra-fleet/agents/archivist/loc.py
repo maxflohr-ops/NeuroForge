@@ -27,6 +27,19 @@ class LocItem:
     photographer: str = ""
     loc_lot: str = ""  # e.g. "LOT 1723 · LC-USF33-030272-M1"
     notes: list[str] = field(default_factory=list)
+    image_urls: list[str] = field(default_factory=list)  # jpeg derivatives, various sizes
+
+    def best_image(self, max_width: int | None = None) -> str:
+        """Largest jpeg derivative, optionally capped by width (for vision calls)."""
+        best_url, best_width = "", -1
+        for url in self.image_urls:
+            width_match = re.search(r"[#&]w=(\d+)", url)
+            width = int(width_match.group(1)) if width_match else 0
+            if max_width is not None and width > max_width:
+                continue
+            if width > best_width:
+                best_url, best_width = url, width
+        return best_url
 
 
 def extract_loc_urls(text: str) -> list[str]:
@@ -82,4 +95,33 @@ async def fetch_item(item_url: str) -> LocItem:
     medium = _first(item.get("medium"))
     if medium:
         result.notes.append(medium)
+
+    image_urls = list(item.get("image_url") or [])
+    if not image_urls:
+        for resource in data.get("resources", []) or []:
+            if resource.get("image"):
+                image_urls.append(resource["image"])
+    if not image_urls:
+        # P&P derivative naming: <id>_150px.jpg thumb implies <id>r.jpg (~640px)
+        # and <id>v.jpg (~1024px) siblings
+        thumb = str(item.get("thumb_gallery") or "")
+        if thumb.endswith("_150px.jpg"):
+            base = thumb[: -len("_150px.jpg")]
+            image_urls = [f"{base}r.jpg#w=640", f"{base}v.jpg#w=1024"]
+    result.image_urls = [u for u in image_urls if isinstance(u, str)]
     return result
+
+
+async def download_image(url: str, max_bytes: int = 19_000_000) -> tuple[bytes, str] | None:
+    """Fetch a jpeg derivative. Returns (bytes, content_type) or None."""
+    if not url:
+        return None
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, timeout=aiohttp.ClientTimeout(total=60)) as response:
+            if response.status >= 400:
+                return None
+            data = await response.read()
+    if not data or len(data) > max_bytes:
+        return None
+    content_type = "image/gif" if data[:3] == b"GIF" else "image/jpeg"
+    return data, content_type

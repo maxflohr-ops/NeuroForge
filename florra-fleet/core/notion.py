@@ -12,9 +12,12 @@ from __future__ import annotations
 
 from typing import Any
 
+import aiohttp
 from notion_client import AsyncClient, Client
 
 NOTION_VERSION = "2025-09-03"
+NOTION_API = "https://api.notion.com/v1"
+MAX_UPLOAD_BYTES = 19_000_000  # single-part upload limit is 20MB
 
 
 # -- property payload builders ------------------------------------------
@@ -36,8 +39,13 @@ def prop_url(url: str) -> dict:
     return {"url": url or None}
 
 
+def prop_files_upload(name: str, upload_id: str) -> dict:
+    return {"files": [{"type": "file_upload", "file_upload": {"id": upload_id}, "name": name[:100]}]}
+
+
 class NotionAdapter:
     def __init__(self, token: str, data_source_id: str):
+        self._token = token
         self.client = AsyncClient(auth=token, notion_version=NOTION_VERSION)
         self.data_source_id = data_source_id
 
@@ -70,6 +78,49 @@ class NotionAdapter:
             parent={"type": "data_source_id", "data_source_id": self.data_source_id},
             properties=properties,
         )
+
+    async def update_page(
+        self, page_id: str, properties: dict | None = None, cover: dict | None = None
+    ) -> dict:
+        kwargs: dict[str, Any] = {}
+        if properties:
+            kwargs["properties"] = properties
+        if cover:
+            kwargs["cover"] = cover
+        return await self.client.pages.update(page_id=page_id, **kwargs)
+
+    async def append_blocks(self, page_id: str, children: list[dict]) -> dict:
+        return await self.client.blocks.children.append(block_id=page_id, children=children)
+
+    async def upload_file(self, filename: str, data: bytes, content_type: str) -> str | None:
+        """Upload bytes via the Notion File Upload API. Returns the file_upload id
+        (usable in files properties, covers, and image blocks), or None on failure."""
+        if not data or len(data) > MAX_UPLOAD_BYTES:
+            return None
+        created = await self.client.request(
+            path="file_uploads",
+            method="POST",
+            body={"mode": "single_part", "filename": filename[:100]},
+        )
+        upload_id = created.get("id")
+        if not upload_id:
+            return None
+        # the send step is multipart/form-data, which the SDK doesn't wrap
+        form = aiohttp.FormData()
+        form.add_field("file", data, filename=filename[:100], content_type=content_type)
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"{NOTION_API}/file_uploads/{upload_id}/send",
+                headers={
+                    "Authorization": f"Bearer {self._token}",
+                    "Notion-Version": NOTION_VERSION,
+                },
+                data=form,
+                timeout=aiohttp.ClientTimeout(total=120),
+            ) as response:
+                if response.status >= 400:
+                    return None
+        return upload_id
 
     @staticmethod
     def plain_text(page: dict, property_name: str) -> str:
