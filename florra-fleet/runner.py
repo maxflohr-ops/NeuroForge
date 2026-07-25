@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import importlib
+import os
 
 import discord
 from discord.ext import commands
@@ -30,7 +31,10 @@ class FleetBot(commands.Bot):
     def __init__(self, agent_module, ctx: AgentContext):
         intents = discord.Intents.default()
         intents.message_content = True  # passive intake needs message content
-        super().__init__(command_prefix="!fleet-unused!", intents=intents)
+        # honor an outbound proxy when the host requires one (discord.py does
+        # not read env proxies on its own)
+        proxy = os.environ.get("DISCORD_PROXY") or os.environ.get("HTTPS_PROXY") or None
+        super().__init__(command_prefix="!fleet-unused!", intents=intents, proxy=proxy)
         self.agent_module = agent_module
         self.ctx = ctx
 
