@@ -439,6 +439,10 @@ main {
   place-items: center;
   overflow: hidden;
 }
+.tl-frame.portrait {
+  aspect-ratio: 4 / 5;
+  max-width: 24rem;
+}
 .tl-frame img {
   width: 100%;
   height: 100%;
