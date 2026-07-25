@@ -88,13 +88,13 @@ services:
       - openclaw
 
   # ─────────────────────────────────────────
-  # Pinterest Pipeline — Florra × Ebril
+  # Pinterest Pipeline — BANDERSNATCH
   # ─────────────────────────────────────────
 
   # Step 1: Research trending content themes
   # Usage:
   #   docker compose run --rm pinterest-trends
-  #   docker compose run --rm pinterest-trends --niches aesthetic,music --dry-run
+  #   docker compose run --rm pinterest-trends --niches southern-gothic,americana --dry-run
   pinterest-trends:
     build: .
     entrypoint: ["python", "scripts/pinterest_trend_researcher.py"]
@@ -102,7 +102,7 @@ services:
     volumes:
       - ./output:/app/output
 
-  # Step 2: Generate captions & metadata for Ebril's assets
+  # Step 2: Generate captions & metadata for the county's assets
   # Usage:
   #   docker compose run --rm pinterest-captions \
   #     --asset-dir output/pinterest/assets
@@ -124,13 +124,24 @@ services:
     volumes:
       - ./output:/app/output
 
-  # Step 4: Cross-post Ebril's own TikToks to Pinterest
+  # Step 4: Cross-post the brand's own TikToks to Pinterest
   # Usage:
   #   docker compose run --rm pinterest-repost \
-  #     --urls-file ebril_tiktoks.txt --output-dir output/pinterest/assets
+  #     --urls-file county_tiktoks.txt --output-dir output/pinterest/assets
   pinterest-repost:
     build: .
     entrypoint: ["python", "scripts/pinterest_cross_reposter.py"]
+    env_file: .env
+    volumes:
+      - ./output:/app/output
+
+  # Step 0 (no keys needed): Build a pin package from the live store catalog
+  # and the FSA plates on bandersnatch.world/history.html
+  # Usage:
+  #   docker compose run --rm pinterest-catalog --dry-run
+  pinterest-catalog:
+    build: .
+    entrypoint: ["python", "scripts/pinterest_catalog_pins.py"]
     env_file: .env
     volumes:
       - ./output:/app/output

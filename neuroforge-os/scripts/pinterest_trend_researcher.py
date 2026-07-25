@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-NeuroForge OS — Pinterest Trend Researcher
-============================================
-Researches trending Pinterest keywords, rising sounds, and content themes
-in Ebril's target niches to generate actionable content briefs.
+NeuroForge OS — Pinterest Trend Researcher (BANDERSNATCH)
+==========================================================
+Researches trending Pinterest keywords and content themes in the county's
+target niches (southern gothic, dark academia, americana, vintage
+photography) to generate actionable content briefs for BANDERSNATCH.
 
 This agent does NOT download or repost anyone's content. It produces a
-research brief that informs what ORIGINAL content Ebril should create.
+research brief that informs what ORIGINAL content the office should create.
 
 Prerequisites:
     ANTHROPIC_API_KEY   — for Claude-powered trend analysis
@@ -35,7 +36,7 @@ from pathlib import Path
 
 from pinterest_config import (
     BASE_HASHTAGS,
-    EBRIL_TRACKS,
+    DESTINATIONS,
     NICHE_HASHTAGS,
     NICHE_TO_BOARD,
     PINTEREST_BOARDS,
@@ -48,7 +49,7 @@ from pinterest_config import (
 # CONFIG
 # ─────────────────────────────────────────────
 
-MODEL = "claude-sonnet-4-6"
+MODEL = "claude-sonnet-5"
 MAX_TOKENS = 8000
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = SCRIPT_DIR.parent
@@ -76,20 +77,21 @@ def _init_anthropic_client() -> anthropic.Anthropic:
 # ─────────────────────────────────────────────
 
 TREND_ANALYST_SYSTEM_PROMPT = """\
-You are a Pinterest marketing strategist specializing in indie music discovery \
-and female aesthetic content. You work for Florra, a lifestyle brand that \
-promotes the indie artist Ebril. Your audience is women aged 18-35 who engage \
-with aesthetic mood boards, slow living, indie folk playlists, golden hour \
-photography, and soft lifestyle content.
+You are a Pinterest marketing strategist for BANDERSNATCH — a southern-gothic \
+world that sells clothing, not a clothing brand with lore bolted on. The \
+brand publishes documents from a fictional county photographed since 1935: \
+FSA-era plates, field records, a bestiary, and limited screen-printed \
+holdings (editions of 24, numbered, sealed in wax). Your audience is 18-35 \
+and lives in the southern gothic, dark academia, Ethel Cain-adjacent, \
+americana, and folk-horror aesthetic communities on Pinterest.
 
 You have deep expertise in:
 - Pinterest algorithm behavior, keyword search trends, and pin ranking factors
-- The aesthetic, cottagecore, indie music, lifestyle, fashion, and wellness niches
+- The southern gothic, dark academia, vintage photography, and alt-fashion niches
 - Content formats that drive saves and outbound clicks on Pinterest
-- Seasonal and cultural trend cycles relevant to the female 18-35 demographic
-- Music discovery behavior on visual platforms
+- Seasonal and cultural trend cycles relevant to aesthetic communities
 
-When analyzing trends, you focus on actionable insights that help Ebril's team \
+When analyzing trends, you focus on actionable insights that help the office \
 create ORIGINAL content — never copied, scraped, or repurposed from other \
 creators. Every recommendation should include specific enough detail that a \
 content creator could act on it immediately.
@@ -98,20 +100,25 @@ Always return structured, parseable JSON when asked for trend data.\
 """
 
 CONTENT_BRIEF_SYSTEM_PROMPT = """\
-You are a senior content strategist at Florra, a lifestyle brand built around \
-the indie artist Ebril. You create detailed content briefs that translate \
+You are a senior content strategist for BANDERSNATCH, a southern-gothic \
+world that sells clothing. You create detailed content briefs that translate \
 trend research into an actionable weekly plan.
+
+Hard canon rules every content idea must obey:
+- the animal is never shown or described whole — damage only
+- no faces of victims; never explain — publish documents
+- captions are lowercase clerk voice; no "shop now", no discounts, no urgency
 
 Your briefs are clean, scannable, and written for a small creative team. Each \
 content idea must include:
 - A working title
 - The target niche and Pinterest board
-- A mood tag that maps to one of Ebril's tracks
+- A mood tag that maps to one of the county's destinations (site pages/store)
 - Suggested hashtags
 - A one-sentence creative direction
 
 You write in markdown and organize by niche. Your tone is professional but \
-warm — like a creative director briefing a shoot.\
+plain — like a creative director briefing a shoot.\
 """
 
 
@@ -148,9 +155,9 @@ class TrendResearcher:
             f"  - {key}: {board['name']} ({', '.join(board['content_types'])})"
             for key, board in PINTEREST_BOARDS.items()
         )
-        tracks_context = "\n".join(
-            f"  - {mood}: \"{track['title']}\" — {track['use_for']}"
-            for mood, track in EBRIL_TRACKS.items()
+        destinations_context = "\n".join(
+            f"  - {mood}: \"{dest['title']}\" ({dest['url']}) — {dest['use_for']}"
+            for mood, dest in DESTINATIONS.items()
         )
         queries_context = "\n".join(f"  - {q}" for q in TREND_RESEARCH_QUERIES)
         niche_hashtags_context = "\n".join(
@@ -164,11 +171,11 @@ Analyze current Pinterest trends for the following niches and return structured 
 
 **Niches to research:** {', '.join(niches)}
 
-**Context — Ebril's Pinterest boards:**
+**Context — the county's Pinterest boards:**
 {boards_context}
 
-**Context — Ebril's track catalog (mood -> track):**
-{tracks_context}
+**Context — the county's destinations (mood -> where a pin links):**
+{destinations_context}
 
 **Context — Existing research queries we monitor:**
 {queries_context}
@@ -186,8 +193,8 @@ For each niche, identify:
 6. **suggested_content_ideas** — 3-4 specific content ideas per niche, each with:
    - title (working title for the pin/idea pin)
    - mood_tag (one of: {', '.join(VALID_MOODS)})
-   - description (one sentence creative direction)
-   - suggested_track (from Ebril's catalog)
+   - description (one sentence creative direction, obeying canon: the animal never shown whole, no explaining, clerk voice)
+   - suggested_destination (from the county's destinations)
 7. **optimal_posting** — best days/times based on current engagement patterns
 
 Return ONLY valid JSON with this structure:
@@ -205,7 +212,7 @@ Return ONLY valid JSON with this structure:
           "title": "...",
           "mood_tag": "...",
           "description": "...",
-          "suggested_track": "..."
+          "suggested_destination": "..."
         }}
       ],
       "optimal_posting": {{
@@ -277,9 +284,9 @@ Return ONLY valid JSON with this structure:
             for niche in niches
             if niche in NICHE_TO_BOARD
         )
-        tracks_list = "\n".join(
-            f"  - {mood}: \"{track['title']}\" ({track['use_for']})"
-            for mood, track in EBRIL_TRACKS.items()
+        destinations_list = "\n".join(
+            f"  - {mood}: \"{dest['title']}\" -> {dest['url']} ({dest['use_for']})"
+            for mood, dest in DESTINATIONS.items()
         )
         base_tags = ", ".join(BASE_HASHTAGS)
         niche_tags = "\n".join(
@@ -290,7 +297,7 @@ Return ONLY valid JSON with this structure:
 
         user_message = f"""\
 Using the trend research data below, generate a complete weekly content brief \
-for Ebril's Pinterest strategy.
+for BANDERSNATCH's Pinterest strategy.
 
 **Trend Research Data:**
 ```json
@@ -300,8 +307,8 @@ for Ebril's Pinterest strategy.
 **Niche-to-Board Mapping:**
 {board_mapping}
 
-**Ebril's Track Catalog:**
-{tracks_list}
+**The County's Destinations (where pins link):**
+{destinations_list}
 
 **Base Hashtags (always include):** {base_tags}
 
@@ -316,15 +323,15 @@ Write the brief in clean markdown with these sections:
 2. **Trending Keywords** — table with columns: Keyword | Niche | Trend Direction | Priority
    Include 15-20 keywords across all niches, sorted by priority.
 
-3. **Rising Content Themes** — for each theme, explain why it matters and how Ebril can \
-leverage it authentically.
+3. **Rising Content Themes** — for each theme, explain why it matters and how the \
+county can leverage it authentically.
 
 4. **Content Ideas** (10-15 ideas) — each idea must include:
    - **Title**: working title for the pin
    - **Niche**: which niche it targets
    - **Board**: which Pinterest board to pin to
    - **Mood Tag**: one of ({', '.join(VALID_MOODS)})
-   - **Track Pairing**: which Ebril track to pair with it
+   - **Destination**: which county destination the pin links to
    - **Format**: idea pin, static pin, video pin, or carousel
    - **Hashtags**: 5-8 relevant hashtags (mix of base + niche)
    - **Creative Direction**: 1-2 sentences describing the visual/content approach
@@ -333,14 +340,14 @@ leverage it authentically.
 with estimated reach.
 
 6. **Competitive Landscape** — what similar creators/brands are doing well on Pinterest \
-right now and what Ebril can learn from it (without copying).
+right now and what the office can learn from it (without copying).
 
 7. **Weekly Content Calendar** — a simple Mon-Sun grid suggesting which content ideas \
 to post on which days, considering optimal posting times.
 
 Start the document with:
 # Pinterest Trend Brief — {datetime.now().strftime("%B %d, %Y")}
-**Prepared for:** Ebril / Florra
+**Prepared for:** BANDERSNATCH / the office
 **Niches:** {', '.join(niches)}
 
 Make every recommendation specific and actionable. No generic advice.\

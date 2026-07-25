@@ -1,26 +1,27 @@
 #!/usr/bin/env python3
 """
-NeuroForge OS — Pinterest Cross-Platform Reposter
-===================================================
-Downloads Ebril's OWN TikTok videos and prepares them for Pinterest posting.
-This handles same-creator cross-platform distribution only — it will only
-process URLs from Ebril's verified TikTok account.
+NeuroForge OS — Pinterest Cross-Platform Reposter (BANDERSNATCH)
+=================================================================
+Downloads the county's OWN TikTok videos and prepares them for Pinterest
+posting. This handles same-creator cross-platform distribution only — it
+will only process URLs from the brand's verified TikTok account.
 
 The downloaded assets feed into the caption engine and publisher modules.
 
 Prerequisites:
-    EBRIL_TIKTOK_USERNAME   — Ebril's TikTok handle (for ownership verification)
-    COBALT_API_URL          — Cobalt API endpoint (default: https://api.cobalt.tools/)
+    BANDERSNATCH_TIKTOK_USERNAME — the brand's TikTok handle (ownership verification)
+                                   (EBRIL_TIKTOK_USERNAME honored as legacy fallback)
+    COBALT_API_URL               — Cobalt API endpoint (default: https://api.cobalt.tools/)
 
 Usage:
     # From a URLs file (one TikTok URL per line)
-    python pinterest_cross_reposter.py --urls-file ebril_tiktoks.txt --output-dir output/pinterest/assets
+    python pinterest_cross_reposter.py --urls-file county_tiktoks.txt --output-dir output/pinterest/assets
 
     # Single URL
-    python pinterest_cross_reposter.py --url "https://www.tiktok.com/@ebril/video/123" --output-dir output/pinterest/assets
+    python pinterest_cross_reposter.py --url "https://www.tiktok.com/@bandersnatch/video/123" --output-dir output/pinterest/assets
 
     # Dry run — just validate URLs without downloading
-    python pinterest_cross_reposter.py --urls-file ebril_tiktoks.txt --dry-run
+    python pinterest_cross_reposter.py --urls-file county_tiktoks.txt --dry-run
 """
 
 import argparse
@@ -72,23 +73,24 @@ logger = logging.getLogger("pinterest_cross_reposter")
 # CrossPlatformReposter
 # ===========================================================================
 class CrossPlatformReposter:
-    """Downloads Ebril's own TikTok videos via Cobalt and prepares them for
-    the Pinterest caption-engine / publisher pipeline.
+    """Downloads the brand's own TikTok videos via Cobalt and prepares them
+    for the Pinterest caption-engine / publisher pipeline.
 
     Ownership verification is enforced: every URL must belong to
-    ``self.ebril_username``.  URLs from other creators are rejected.
+    ``self.owner_username``.  URLs from other creators are rejected.
     """
 
     def __init__(
         self,
-        ebril_username: str | None = None,
+        owner_username: str | None = None,
         cobalt_url: str | None = None,
         output_dir: str | Path | None = None,
     ):
-        self.ebril_username = (
-            ebril_username
-            or os.environ.get("EBRIL_TIKTOK_USERNAME")
-            or "ebril"
+        self.owner_username = (
+            owner_username
+            or os.environ.get("BANDERSNATCH_TIKTOK_USERNAME")
+            or os.environ.get("EBRIL_TIKTOK_USERNAME")  # legacy fallback
+            or "bandersnatch"
         )
         self.cobalt_url = (
             cobalt_url
@@ -101,7 +103,7 @@ class CrossPlatformReposter:
         self.output_dir = Path(output_dir) if output_dir else PROJECT_DIR / DEFAULT_OUTPUT_SUBDIR
         self.output_dir.mkdir(parents=True, exist_ok=True)
         logger.info("CrossPlatformReposter initialized")
-        logger.info("  Ebril username : @%s", self.ebril_username)
+        logger.info("  Owner account  : @%s", self.owner_username)
         logger.info("  Cobalt API     : %s", self.cobalt_url)
         logger.info("  Output dir     : %s", self.output_dir)
 
@@ -109,7 +111,7 @@ class CrossPlatformReposter:
     # URL validation
     # ------------------------------------------------------------------
     def validate_url(self, url: str) -> tuple[bool, str]:
-        """Check that *url* is a valid TikTok video URL belonging to Ebril.
+        """Check that *url* is a valid TikTok video URL belonging to the brand account.
 
         Returns ``(is_valid, reason)`` where *reason* explains any rejection.
         """
@@ -121,14 +123,14 @@ class CrossPlatformReposter:
         if not match:
             return False, (
                 f"Not a valid TikTok video URL. "
-                f"Expected format: https://www.tiktok.com/@{self.ebril_username}/video/<id>"
+                f"Expected format: https://www.tiktok.com/@{self.owner_username}/video/<id>"
             )
 
         username = match.group("username")
-        if username.lower() != self.ebril_username.lower():
+        if username.lower() != self.owner_username.lower():
             return False, (
-                f"Skipping {url}: belongs to @{username}, not @{self.ebril_username}. "
-                f"This tool only processes Ebril's own content."
+                f"Skipping {url}: belongs to @{username}, not @{self.owner_username}. "
+                f"This tool only processes the brand's own content."
             )
 
         return True, "Valid"
@@ -271,9 +273,9 @@ class CrossPlatformReposter:
     def download_batch(self, urls: list[str]) -> list[dict]:
         """Process a list of TikTok URLs.
 
-        1. Validates each URL (skips non-Ebril URLs with a warning).
+        1. Validates each URL (skips non-owned URLs with a warning).
         2. Downloads valid URLs via Cobalt.
-        3. Names output files ``ebril-repost-{N}.mp4`` (sequential).
+        3. Names output files ``county-repost-{N}.mp4`` (sequential).
 
         Returns a download manifest — a list of dicts, each with:
         ``source_url``, ``local_file``, ``status``, ``file_size``, ``error``,
@@ -307,7 +309,7 @@ class CrossPlatformReposter:
                 continue
 
             # Build output filename
-            output_path = self.output_dir / f"ebril-repost-{download_seq}.mp4"
+            output_path = self.output_dir / f"county-repost-{download_seq}.mp4"
             dl_result = self.download_via_cobalt(url, output_path)
 
             entry["status"] = dl_result["status"]
@@ -461,7 +463,7 @@ def main():
     parser = argparse.ArgumentParser(
         description=(
             "NeuroForge OS — Pinterest Cross-Platform Reposter. "
-            "Downloads Ebril's own TikTok videos and prepares them for Pinterest posting."
+            "Downloads the brand's own TikTok videos and prepares them for Pinterest posting."
         ),
     )
     url_group = parser.add_mutually_exclusive_group(required=True)
@@ -534,7 +536,7 @@ def main():
     # Header
     print(f"\n{'='*60}")
     print("  PINTEREST CROSS-PLATFORM REPOSTER")
-    print(f"  Owner account : @{reposter.ebril_username}")
+    print(f"  Owner account : @{reposter.owner_username}")
     print(f"  URLs to process: {len(urls)}")
     print(f"  Output dir    : {output_dir}")
     print(f"  Mode          : {'DRY RUN' if args.dry_run else 'LIVE'}")

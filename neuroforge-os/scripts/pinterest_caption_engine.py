@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
-NeuroForge OS — Pinterest Caption & Metadata Engine
-=====================================================
+NeuroForge OS — Pinterest Caption & Metadata Engine (BANDERSNATCH)
+===================================================================
 Generates Pinterest-optimized titles, descriptions, hashtags, board
-assignments, and alt text for Ebril's own content assets.
+assignments, and alt text for the county's own content assets —
+in clerk voice, obeying canon (the animal never shown whole, never
+explain, no "shop now").
 
 Reads video/image files from an asset directory and produces a
 pin-package manifest ready for the publisher module.
@@ -33,7 +35,7 @@ from pinterest_config import (
     BASE_HASHTAGS,
     CAPTION_TEMPLATES,
     CAPTION_TYPE_CYCLE,
-    EBRIL_TRACKS,
+    DESTINATIONS,
     MAX_PINS_PER_HOUR,
     NICHE_HASHTAGS,
     NICHE_TO_BOARD,
@@ -48,8 +50,19 @@ PROJECT_DIR = SCRIPT_DIR.parent
 OUTPUT_DIR = PROJECT_DIR / "output"
 SESSION_TOKEN_FILE = Path("/home/claude/.claude/remote/.session_ingress_token")
 
-MODEL = "claude-sonnet-4-6"
+MODEL = "claude-sonnet-5"
 MAX_TOKENS = 2048
+
+CLERK_SYSTEM_PROMPT = (
+    "You are the clerk of BANDERSNATCH — a southern-gothic world that sells "
+    "clothing. You write Pinterest metadata in the office's voice: lowercase, "
+    "plain, declarative, like a county record. Hard canon rules: the animal "
+    "is never shown or described whole (damage only); no faces of victims; "
+    "never explain — publish documents; no 'shop now', no discounts, no "
+    "urgency, no exclamation marks. Titles may use normal case for Pinterest "
+    "SEO, but descriptions stay lowercase clerk voice. "
+    "Always respond with valid JSON only, no markdown fencing."
+)
 
 SUPPORTED_VIDEO_EXTS = {".mp4", ".mov", ".avi", ".mkv", ".webm"}
 SUPPORTED_IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".tiff"}
@@ -84,7 +97,7 @@ def _get_client() -> anthropic.Anthropic:
 # ---------------------------------------------------------------------------
 
 class CaptionEngine:
-    """Generates Pinterest-optimized metadata for Ebril's content assets."""
+    """Generates Pinterest-optimized metadata for the county's content assets."""
 
     def __init__(self, anthropic_client: anthropic.Anthropic):
         self.client = anthropic_client
@@ -173,23 +186,23 @@ class CaptionEngine:
         # Validate and fall back to defaults
         if parsed_niche not in VALID_NICHES:
             logger.warning(
-                "Niche '%s' not recognized for %s, defaulting to 'aesthetic'",
+                "Niche '%s' not recognized for %s, defaulting to 'southern-gothic'",
                 parsed_niche,
                 asset_info["filename"],
             )
-            parsed_niche = "aesthetic"
+            parsed_niche = "southern-gothic"
 
         if parsed_mood not in VALID_MOODS:
             logger.warning(
-                "Mood '%s' not recognized for %s, defaulting to 'warm'",
+                "Mood '%s' not recognized for %s, defaulting to 'record'",
                 parsed_mood,
                 asset_info["filename"],
             )
-            parsed_mood = "warm"
+            parsed_mood = "record"
 
-        board_key = NICHE_TO_BOARD.get(parsed_niche, "aesthetic-mood")
+        board_key = NICHE_TO_BOARD.get(parsed_niche, "southern-gothic")
         board = PINTEREST_BOARDS[board_key]
-        track_info = EBRIL_TRACKS.get(parsed_mood, EBRIL_TRACKS["warm"])
+        dest = DESTINATIONS.get(parsed_mood, DESTINATIONS["record"])
 
         return {
             "niche": parsed_niche,
@@ -197,8 +210,8 @@ class CaptionEngine:
             "board_id": board_key,
             "board_name": board["name"],
             "pinterest_board_id": board["pinterest_id"],
-            "ebril_track": track_info["title"],
-            "spotify_url": track_info["spotify_url"],
+            "destination_title": dest["title"],
+            "destination_url": dest["url"],
         }
 
     def _infer_metadata_via_claude(
@@ -213,7 +226,7 @@ class CaptionEngine:
 
         prompt = (
             f"Given the filename '{filename}' for a Pinterest content asset "
-            f"in the Florra brand (indie music / aesthetic lifestyle), "
+            f"in the BANDERSNATCH brand (southern gothic / dark americana), "
             f"suggest the most fitting {' and '.join(missing)}.\n\n"
             f"Respond with ONLY a JSON object like: "
             f'{{"niche": "...", "mood": "..."}}'
@@ -231,13 +244,13 @@ class CaptionEngine:
             if json_match:
                 result = json.loads(json_match.group())
                 return (
-                    known_niche or result.get("niche", "aesthetic"),
-                    known_mood or result.get("mood", "warm"),
+                    known_niche or result.get("niche", "southern-gothic"),
+                    known_mood or result.get("mood", "record"),
                 )
         except Exception as exc:
             logger.warning("Claude inference failed for '%s': %s", filename, exc)
 
-        return (known_niche or "aesthetic", known_mood or "warm")
+        return (known_niche or "southern-gothic", known_mood or "record")
 
     # -- caption generation -------------------------------------------------
 
@@ -260,13 +273,7 @@ class CaptionEngine:
             message = self.client.messages.create(
                 model=MODEL,
                 max_tokens=MAX_TOKENS,
-                system=(
-                    "You are a Pinterest SEO and content strategist for Florra, "
-                    "a brand that promotes indie artist Ebril's music through "
-                    "aesthetic lifestyle content. Write captions that feel organic "
-                    "and native to Pinterest — not salesy, not forced. "
-                    "Always respond with valid JSON only, no markdown fencing."
-                ),
+                system=CLERK_SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": prompt}],
             )
             text = message.content[0].text.strip()
@@ -281,8 +288,7 @@ class CaptionEngine:
             if len(description) > 500:
                 description = description[:497] + "..."
             elif len(description) < 150:
-                # Pad short descriptions with a music reference
-                description += f" | {metadata['ebril_track']} by Ebril"
+                description += " what is not known is not in the file. bandersnatch.world"
 
             return {
                 "title": title,
@@ -293,14 +299,13 @@ class CaptionEngine:
             logger.error(
                 "Caption generation failed for %s: %s", asset_info["filename"], exc
             )
-            # Return a serviceable fallback
-            track = metadata.get("ebril_track", "Ebril")
+            # Return a serviceable fallback, in voice
             return {
-                "title": f"{metadata['niche'].title()} Mood | {track} by Ebril",
+                "title": f"bandersnatch — {metadata['destination_title']}",
                 "description": (
-                    f"Aesthetic {metadata['niche']} content with "
-                    f"{metadata['mood']} vibes. Currently listening to "
-                    f"{track} by Ebril on repeat."
+                    f"from the file of bandersnatch county, photographed since 1935. "
+                    f"the office publishes documents; it does not explain them. "
+                    f"{metadata['destination_url']}"
                 ),
                 "caption_type": caption_type,
             }
@@ -321,18 +326,18 @@ class CaptionEngine:
             f"{duration_note}"
             f"Niche: {metadata['niche']}\n"
             f"Mood: {metadata['mood']}\n"
-            f"Ebril track: {metadata['ebril_track']}\n"
+            f"Destination: {metadata['destination_title']} ({metadata['destination_url']})\n"
             f"Board: {metadata['board_name']}\n\n"
-            f"Caption template style: {caption_type}\n"
-            f"Example templates for style {caption_type}:\n"
+            f"Caption register: {caption_type}\n"
+            f"Example register {caption_type} captions (style guides, not copy):\n"
             + "\n".join(f"  - {t}" for t in templates)
             + "\n\n"
             f"Write a JSON object with these fields:\n"
             f"1. \"title\" — max 100 chars, Pinterest SEO-friendly, include "
             f"relevant keywords for the {metadata['niche']} niche\n"
-            f"2. \"description\" — 150-500 chars, written in style {caption_type} "
-            f"(inspired by the templates above but not a copy), must include a "
-            f"natural reference to Ebril or the track \"{metadata['ebril_track']}\"\n\n"
+            f"2. \"description\" — 150-500 chars, written in register {caption_type} "
+            f"(inspired by the examples above but not a copy), lowercase clerk "
+            f"voice, ending with a natural mention of bandersnatch.world\n\n"
             f"Respond with ONLY the JSON object."
         )
 
@@ -415,25 +420,24 @@ class CaptionEngine:
             f"{duration_note}"
             f"Niche: {metadata['niche']}\n"
             f"Mood: {metadata['mood']}\n"
-            f"Ebril track: {metadata['ebril_track']}\n"
+            f"Destination: {metadata['destination_title']} ({metadata['destination_url']})\n"
             f"Board: {metadata['board_name']}\n\n"
-            f"Caption template style: {caption_type}\n"
-            f"Example templates for style {caption_type}:\n"
+            f"Caption register: {caption_type}\n"
+            f"Example register {caption_type} captions (style guides, not copy):\n"
             + "\n".join(f"  - {t}" for t in templates)
             + "\n\n"
             f"Return a JSON object with exactly these three fields:\n\n"
             f"1. \"title\" — max 100 characters. Pinterest SEO-friendly. "
             f"Include relevant keywords for the {metadata['niche']} niche. "
             f"Do not use hashtags in the title.\n\n"
-            f"2. \"description\" — 150-500 characters. Written in caption style "
-            f"{caption_type} (inspired by the templates above but not a copy). "
-            f"Must include a natural reference to Ebril or the track "
-            f"\"{metadata['ebril_track']}\". Should feel organic and native to "
-            f"Pinterest — not salesy.\n\n"
+            f"2. \"description\" — 150-500 characters. Written in register "
+            f"{caption_type} (inspired by the examples above but not a copy). "
+            f"Lowercase clerk voice. End with a natural mention of "
+            f"bandersnatch.world. Never salesy, never explaining.\n\n"
             f"3. \"alt_text\" — 1-2 sentences, max 500 characters. "
             f"Accessibility-focused description of the likely visual content "
-            f"based on niche and mood. Screen-reader friendly. "
-            f"Mention it is {metadata['niche']}-themed content.\n\n"
+            f"based on niche and mood. Screen-reader friendly. Plain prose, "
+            f"normal case is fine here.\n\n"
             f"Respond with ONLY the JSON object, no markdown fencing."
         )
 
@@ -441,13 +445,7 @@ class CaptionEngine:
             message = self.client.messages.create(
                 model=MODEL,
                 max_tokens=MAX_TOKENS,
-                system=(
-                    "You are a Pinterest SEO and content strategist for Florra, "
-                    "a brand that promotes indie artist Ebril's music through "
-                    "aesthetic lifestyle content. Write captions that feel organic "
-                    "and native to Pinterest — not salesy, not forced. "
-                    "Always respond with valid JSON only."
-                ),
+                system=CLERK_SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": prompt}],
             )
             text = message.content[0].text.strip()
@@ -460,7 +458,7 @@ class CaptionEngine:
             if len(description) > 500:
                 description = description[:497] + "..."
             elif len(description) < 150:
-                description += f" | {metadata['ebril_track']} by Ebril"
+                description += " what is not known is not in the file. bandersnatch.world"
             alt_text = result.get("alt_text", "")[:500]
 
             return {
@@ -476,18 +474,17 @@ class CaptionEngine:
                 asset_info["filename"],
                 exc,
             )
-            track = metadata.get("ebril_track", "Ebril")
             return {
-                "title": f"{metadata['niche'].title()} Mood | {track} by Ebril",
+                "title": f"bandersnatch — {metadata['destination_title']}",
                 "description": (
-                    f"Aesthetic {metadata['niche']} content with "
-                    f"{metadata['mood']} vibes. Currently listening to "
-                    f"{track} by Ebril on repeat."
+                    f"from the file of bandersnatch county, photographed since 1935. "
+                    f"the office publishes documents; it does not explain them. "
+                    f"{metadata['destination_url']}"
                 ),
                 "caption_type": caption_type,
                 "alt_text": (
-                    f"{metadata['niche'].title()} {asset_info['media_type']} content "
-                    f"with {metadata['mood']} mood, curated for the "
+                    f"{metadata['niche'].replace('-', ' ').title()} "
+                    f"{asset_info['media_type']} from BANDERSNATCH, for the "
                     f"{metadata['board_name']} board."
                 ),
             }
@@ -591,8 +588,8 @@ class CaptionEngine:
                     "title": claude_result["title"],
                     "description": claude_result["description"],
                     "hashtags": hashtags,
-                    "link_url": metadata["spotify_url"],
-                    "ebril_track": metadata["ebril_track"],
+                    "link": metadata["destination_url"],
+                    "destination": metadata["destination_title"],
                     "caption_type": claude_result["caption_type"],
                     "alt_text": claude_result["alt_text"],
                     "posting_time": schedule["posting_time"],
@@ -652,13 +649,13 @@ class CaptionEngine:
             f"**Total pins:** {len(package)}",
             f"**Model:** {MODEL}",
             "",
-            "| # | File | Board | Track | Type | Time |",
-            "|---|------|-------|-------|------|------|",
+            "| # | File | Board | Destination | Type | Time |",
+            "|---|------|-------|-------------|------|------|",
         ]
         for i, pin in enumerate(package, 1):
             lines.append(
                 f"| {i} | {pin['source_file']} | {pin['board_name']} | "
-                f"{pin['ebril_track']} | {pin['caption_type']} | "
+                f"{pin['destination']} | {pin['caption_type']} | "
                 f"{pin['posting_time']} |"
             )
 
@@ -674,7 +671,7 @@ class CaptionEngine:
             lines.append(f"**Description:** {pin['description']}")
             lines.append(f"**Hashtags:** {' '.join(pin['hashtags'])}")
             lines.append(f"**Alt text:** {pin['alt_text']}")
-            lines.append(f"**Track:** {pin['ebril_track']} | **Mood:** {pin['mood']} | **Niche:** {pin['niche']}")
+            lines.append(f"**Destination:** {pin['destination']} ({pin['link']}) | **Mood:** {pin['mood']} | **Niche:** {pin['niche']}")
             lines.append(f"**Posting:** {pin['posting_time']} ({pin['posting_window']})")
             lines.append("")
 
@@ -689,13 +686,13 @@ class CaptionEngine:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate Pinterest-optimized metadata for Ebril's content assets"
+        description="Generate Pinterest-optimized metadata for the county's content assets"
     )
     parser.add_argument(
         "--asset-dir",
         required=True,
         type=Path,
-        help="Directory containing Ebril's video/image files",
+        help="Directory containing the county's video/image files",
     )
     parser.add_argument(
         "--output-dir",

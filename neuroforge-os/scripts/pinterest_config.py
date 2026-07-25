@@ -1,121 +1,122 @@
 #!/usr/bin/env python3
 """
-NeuroForge OS — Pinterest Pipeline Configuration
-==================================================
-Centralized config for the Florra × Ebril Pinterest content pipeline.
+NeuroForge OS — Pinterest Pipeline Configuration (BANDERSNATCH)
+================================================================
+Centralized config for the Bandersnatch Pinterest content pipeline.
+
+BANDERSNATCH is a southern-gothic world that sells clothing — the office
+publishes documents, it does not advertise. Every caption obeys canon:
+  - the animal is never shown or described whole. damage only.
+  - never explain. publish documents.
+  - lowercase clerk voice. no "shop now", no discounts, no urgency.
+  - what is not known is not in the file.
 
 Env vars required:
     PINTEREST_ACCESS_TOKEN  — OAuth2 bearer token (pins:read, pins:write, boards:read)
     ANTHROPIC_API_KEY       — for caption generation via Claude
 """
 
-# Ebril's track catalog — maps mood tags to track metadata
-EBRIL_TRACKS = {
-    "introspective": {
-        "title": "Stranger in You",
-        "artist": "Ebril",
-        "spotify_url": "https://open.spotify.com/artist/ebril",
-        "use_for": "reflective, emotional, deep content",
+SITE = "https://bandersnatch.world"
+STORE = "https://bandersnatch-2.myshopify.com"
+
+# Destinations — maps mood tags to where a pin should send people.
+# (This replaces the old artist-track catalog: pins link into the county.)
+DESTINATIONS = {
+    "county": {
+        "title": "the county, 1935–1945",
+        "url": f"{SITE}/history.html",
+        "use_for": "FSA plates, vintage photography, timeline, americana",
     },
-    "uplifting": {
-        "title": "Bloom",
-        "artist": "Ebril",
-        "spotify_url": "https://open.spotify.com/artist/ebril",
-        "use_for": "growth, morning routines, nature",
+    "record": {
+        "title": "the record",
+        "url": f"{SITE}/record.html",
+        "use_for": "entries, found objects, unexplained events, documents",
     },
-    "melancholy": {
-        "title": "Paper Walls",
-        "artist": "Ebril",
-        "spotify_url": "https://open.spotify.com/artist/ebril",
-        "use_for": "moody, rainy day, sad girl aesthetic",
+    "bestiary": {
+        "title": "the bestiary",
+        "url": f"{SITE}/bestiary.html",
+        "use_for": "the animal (damage only — never whole), the cardinal, omens",
     },
-    "warm": {
-        "title": "Golden Hour",
-        "artist": "Ebril",
-        "spotify_url": "https://open.spotify.com/artist/ebril",
-        "use_for": "sunset, golden light, cozy content",
+    "holdings": {
+        "title": "the holdings",
+        "url": f"{SITE}/file.html",
+        "use_for": "the clothing — editions of 24, numbered, sealed in wax",
     },
-    "dreamy": {
-        "title": "Wildflower",
-        "artist": "Ebril",
-        "spotify_url": "https://open.spotify.com/artist/ebril",
-        "use_for": "ethereal, wanderlust, soft content",
+    "virginia": {
+        "title": "the photographers",
+        "url": f"{SITE}/virginia.html",
+        "use_for": "field photographers, cameras, film, darkroom content",
+    },
+    "store": {
+        "title": "the store",
+        "url": STORE,
+        "use_for": "direct product pins — a specific holding with its photos",
     },
 }
 
-# Pinterest board definitions
+VALID_MOODS = list(DESTINATIONS.keys())
+
+# Pinterest board definitions.
+# pinterest_id is filled once the Bandersnatch Pinterest account exists —
+# set the real board IDs via env or edit here after boards are created.
 PINTEREST_BOARDS = {
-    "aesthetic-mood": {
-        "name": "Aesthetic Mood",
-        "pinterest_id": "florra/aesthetic-mood",
-        "content_types": ["golden hour", "soft visuals", "film grain", "moody"],
+    "the-file": {
+        "name": "the file",
+        "pinterest_id": None,  # real board ID once the account exists
+        "content_types": ["holdings", "screen prints", "editions of 24", "wax seals"],
     },
-    "music-discovery": {
-        "name": "Music Discovery",
-        "pinterest_id": "florra/music-discovery",
-        "content_types": ["vinyl", "playlists", "artist spotlights", "headphones"],
+    "the-county": {
+        "name": "the county, 1935–1945",
+        "pinterest_id": None,
+        "content_types": ["FSA photography", "1930s americana", "rural gothic", "film grain"],
     },
-    "lifestyle-inspo": {
-        "name": "Lifestyle Inspo",
-        "pinterest_id": "florra/lifestyle-inspo",
-        "content_types": ["routines", "journaling", "coffee", "reading"],
+    "the-bestiary": {
+        "name": "the bestiary",
+        "pinterest_id": None,
+        "content_types": ["the cardinal", "damage", "omens", "field notes"],
     },
-    "fashion-forward": {
-        "name": "Fashion Forward",
-        "pinterest_id": "florra/fashion-forward",
-        "content_types": ["outfit inspo", "thrift", "street style"],
-    },
-    "wellness-growth": {
-        "name": "Wellness & Growth",
-        "pinterest_id": "florra/wellness-growth",
-        "content_types": ["self-care", "meditation", "fitness", "growth"],
+    "southern-gothic": {
+        "name": "southern gothic",
+        "pinterest_id": None,
+        "content_types": ["moodboards", "dark americana", "chapel ruins", "kudzu"],
     },
 }
 
 # Niche tag → board mapping
 NICHE_TO_BOARD = {
-    "aesthetic": "aesthetic-mood",
-    "golden-hour": "aesthetic-mood",
-    "cottagecore": "aesthetic-mood",
-    "music": "music-discovery",
-    "lifestyle": "lifestyle-inspo",
-    "fashion": "fashion-forward",
-    "wellness": "wellness-growth",
+    "southern-gothic": "southern-gothic",
+    "dark-academia": "southern-gothic",
+    "americana": "the-county",
+    "vintage-photography": "the-county",
+    "gothic-fashion": "the-file",
+    "graphic-tees": "the-file",
+    "folklore": "the-bestiary",
 }
 
-VALID_NICHES = [
-    "aesthetic",
-    "lifestyle",
-    "music",
-    "fashion",
-    "wellness",
-    "golden-hour",
-    "cottagecore",
-]
+VALID_NICHES = list(NICHE_TO_BOARD.keys())
 
-VALID_MOODS = ["introspective", "uplifting", "melancholy", "warm", "dreamy"]
-
-# Caption templates — 4 types that get cycled
+# Caption templates — 4 register types the engine cycles through.
+# These are STYLE EXAMPLES for the clerk, not literal copy.
 CAPTION_TEMPLATES = {
-    "A": [
-        "add {track} to your playlist and thank me later",
-        "the song you didn't know you needed: {track} by Ebril",
-        "if this video had a soundtrack it would be {track}",
+    "A": [  # the record — an entry, filed
+        "entry 90-042: a trap was found at the county line, new-set and unsprung. filed.",
+        "the chapel bells rang at four in the morning. the chapel has no bells. filed.",
+        "a canister of film was left on the counter overnight. it is marked vii. it has not been developed.",
     ],
-    "B": [
-        "{aesthetic_caption} | currently listening to Ebril on repeat",
-        "{aesthetic_caption} | soundtrack: {track} by @ebrilmusic",
-        "{aesthetic_caption} | {track} playing in the background",
+    "B": [  # the county — a photograph and its taking
+        "crossroads store, 1935. the man on the porch would not give his name.",
+        "farmhouse at the county line, 1938. what was taken: the house, the fence, the weather.",
+        "church interior, empty, 1939. the congregation is not in the file.",
     ],
-    "C": [
-        "POV: you just found your new favorite artist: Ebril",
-        "this + Ebril's new song {track} = the whole vibe",
-        "saving this for later (and adding Ebril to the queue)",
+    "C": [  # the holdings — the clothing, stated as fact
+        "lot no. 3. screen printed, edition of 24, numbered by hand, sealed in wax. when it is gone it is gone.",
+        "the office does not restock. each holding is printed once, in an edition of 24.",
+        "every seal is pressed by hand. no two sit the same.",
     ],
-    "D": [
-        "{track} — Ebril",
-        "mood: {mood_word}. song: {track}. artist: Ebril.",
-        "{track} on repeat",
+    "D": [  # minimal — the office at its most spare
+        "the file is not closed.",
+        "what is not known is not in the file.",
+        "one county, photographed since 1935.",
     ],
 }
 
@@ -123,66 +124,66 @@ CAPTION_TYPE_CYCLE = ["A", "B", "C", "D"]
 
 # Hashtag sets
 BASE_HASHTAGS = [
-    "#ebrilmusic",
-    "#indiefolk",
-    "#indiemusic",
-    "#newmusic",
-    "#musicdiscovery",
+    "#southerngothic",
+    "#darkacademia",
+    "#americana",
+    "#gothic",
+    "#screenprint",
 ]
 
 NICHE_HASHTAGS = {
-    "aesthetic": [
-        "#aestheticvibes",
+    "southern-gothic": [
+        "#southerngothicaesthetic",
+        "#ruralgothic",
+        "#ethelcain",
+        "#darkamericana",
+        "#gothicaesthetic",
+    ],
+    "dark-academia": [
+        "#darkacademiaaesthetic",
+        "#darkacademiastyle",
         "#moodboard",
-        "#softaesthetic",
-        "#goldenhouraesthetic",
+        "#vintageaesthetic",
+        "#academiacore",
+    ],
+    "americana": [
+        "#vintageamericana",
+        "#1930s",
+        "#dustbowl",
+        "#oldphotos",
+        "#ruralamerica",
+    ],
+    "vintage-photography": [
         "#filmgrain",
+        "#vintagephotography",
+        "#blackandwhitephotography",
+        "#filmphotography",
+        "#foundphotos",
     ],
-    "golden-hour": [
-        "#goldenhour",
-        "#sunsetvibes",
-        "#goldenhouraesthetic",
-        "#warmtones",
-        "#magichour",
+    "gothic-fashion": [
+        "#altfashion",
+        "#gothicfashion",
+        "#graphictee",
+        "#limitededition",
+        "#vintagestyle",
     ],
-    "cottagecore": [
-        "#cottagecore",
-        "#cottagecoreaesthetic",
-        "#naturelover",
-        "#slowliving",
-        "#rurallife",
+    "graphic-tees": [
+        "#graphictees",
+        "#screenprinting",
+        "#bandtee",
+        "#vintagetee",
+        "#tshirtdesign",
     ],
-    "lifestyle": [
-        "#morningroutine",
-        "#lifestyleinspo",
-        "#thatgirl",
-        "#dailyroutine",
-        "#cozyvibes",
-    ],
-    "fashion": [
-        "#outfitinspo",
-        "#fashioninspo",
-        "#ootd",
-        "#thriftfinds",
-        "#streetstyle",
-    ],
-    "wellness": [
-        "#selfcare",
-        "#wellness",
-        "#growthmindset",
-        "#journaling",
-        "#mindfulness",
-    ],
-    "music": [
-        "#playlistvibes",
-        "#vinylrecords",
-        "#songoftheday",
-        "#acousticmusic",
-        "#singersongwriter",
+    "folklore": [
+        "#folklore",
+        "#folkhorror",
+        "#cryptid",
+        "#superstition",
+        "#appalachia",
     ],
 }
 
-# Posting schedule — optimal windows for female 18-35 audience (EST)
+# Posting schedule — optimal windows for the 18-35 aesthetic audience (EST)
 POSTING_WINDOWS = [
     {"label": "morning", "start_hour": 6, "end_hour": 8},
     {"label": "midday", "start_hour": 11, "end_hour": 13},
@@ -202,14 +203,14 @@ PINTEREST_MEDIA_TIMEOUT_SEC = 600
 
 # Trend research keywords — used by the trend scout
 TREND_RESEARCH_QUERIES = [
-    "indie folk aesthetic pinterest",
-    "golden hour playlist pinterest trending",
-    "female singer songwriter discovery",
-    "cottagecore music aesthetic",
-    "soft girl aesthetic playlist",
-    "vinyl records aesthetic trending",
-    "journaling aesthetic music",
-    "sunset drive playlist vibes",
-    "morning routine indie music",
-    "wellness routine acoustic",
+    "southern gothic aesthetic",
+    "dark academia outfit inspiration",
+    "ethel cain aesthetic",
+    "rural gothic americana",
+    "1930s vintage photography",
+    "screen printed tee outfit",
+    "gothic fashion moodboard",
+    "abandoned church aesthetic",
+    "folk horror aesthetic",
+    "film grain photography vintage",
 ]
