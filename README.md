@@ -39,10 +39,11 @@ building: county → file → record → bestiary → virginia → counter → l
 - **Images:** product photography is pulled straight from the Shopify CDN
   (with `&width=` resizing), shown desaturated and revealed in color on
   hover. The site still stands on type + texture if the CDN is unreachable.
-- **SEO:** every page has Open Graph / Twitter cards; `index.html` carries
+- **SEO:** every page has Open Graph / Twitter cards, a canonical URL, and
+  `og:url` pointing at `https://bandersnatch.world`; `index.html` carries
   Organization + WebSite JSON-LD and `file.html` carries an ItemList of
   Product schema pointing offers at the Shopify product pages. `robots.txt`
-  and `sitemap.xml` are included — replace `YOUR-DOMAIN` in both once the
-  real domain exists, then submit the sitemap in Google Search Console.
+  and `sitemap.xml` reference the same domain — once the domain is live,
+  submit the sitemap in Google Search Console.
 
 the file is not closed.
