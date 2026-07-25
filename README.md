@@ -46,4 +46,21 @@ building: county → file → record → bestiary → virginia → counter → l
   and `sitemap.xml` reference the same domain — once the domain is live,
   submit the sitemap in Google Search Console.
 
+## the office writes (content pipeline)
+
+`office/bandersnatch_office.py` — repurposed from the NeuroForge staged
+generate→QA pipeline — drafts in-world content and then audits it against
+the canon's hard rules (the "archivist QA" pass emits a verdict, violations,
+and a corrected version):
+
+```bash
+python3 office/bandersnatch_office.py --mode dispatch --count 3 \
+  --context "september, year ninety. the canister marked vii is still undeveloped."
+# modes: dispatch (record entries + paste-ready HTML) · lot (next holding)
+#        shorts (no-faces tiktok scripts) · letter (estate email) · full
+```
+
+Output lands in `office/output/<date>_<context>/` as draft + QA pairs.
+Runs on `ANTHROPIC_API_KEY` or the Claude remote session token.
+
 the file is not closed.
