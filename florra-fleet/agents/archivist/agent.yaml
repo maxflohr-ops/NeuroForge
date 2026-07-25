@@ -27,6 +27,12 @@ rate_limit:
   per_channel_per_minute: 12
 
 options:
+  # auto workup: every substantive post in intake channels gets the full
+  # treatment — taking test + lorecheck + the command menu. loc.gov links
+  # still go through the filing pipeline instead.
+  auto_workup:
+    enabled: true
+    min_chars: 15   # ignore drive-by reactions and one-worders
   # weekly ledger: what the office filed this week. sunday, services at 10 a.m.
   ledger:
     channel_id: 1524654890201382983   # #virginia-the-brand

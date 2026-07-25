@@ -31,6 +31,11 @@ if it seems worth keeping, add: log it with /untitled if it should be kept."""
 
 MAX_URLS_PER_MESSAGE = 3
 
+COMMAND_MENU = (
+    "-# the office also answers: /file · /test · /lorecheck · /untitled · "
+    "/status · /hunt · /draft · /coverage · /ledger · /ping"
+)
+
 
 class PassiveIntake(commands.Cog):
     def __init__(self, bot: commands.Bot, ctx: AgentContext, system_prompt: str):
@@ -40,6 +45,7 @@ class PassiveIntake(commands.Cog):
         options = ctx.config.options or {}
         self.ledger_cfg = options.get("ledger") or {}
         self.tip_channel = (options.get("tipline") or {}).get("channel_id")
+        self.workup_cfg = options.get("auto_workup") or {}
         if self.ledger_cfg.get("channel_id"):
             self.ledger_tick.start()
 
@@ -70,6 +76,9 @@ class PassiveIntake(commands.Cog):
             if urls:
                 await self._intake_urls(message, urls[:MAX_URLS_PER_MESSAGE])
                 return
+            if not mentioned and self.workup_cfg.get("enabled"):
+                await self._auto_workup(message)
+                return
 
         if mentioned:
             await self._answer_mention(message)
@@ -92,6 +101,35 @@ class PassiveIntake(commands.Cog):
             else:
                 await message.reply(result.message or "filing failed.", mention_author=False)
         log_event(self.ctx.log, "passive_intake", channel=message.channel.id, urls=len(urls))
+
+    async def _auto_workup(self, message: discord.Message) -> None:
+        """The full treatment for a plain post: taking test + lorecheck + the
+        command menu. Everything the office can answer, unprompted."""
+        text = message.content.strip()
+        if len(text) < int(self.workup_cfg.get("min_chars", 15)):
+            return
+        if not self.ctx.limiter.allow(message.author.id, message.channel.id):
+            return  # silent under throttle; the office does not argue
+
+        from agents.archivist.commands import LORECHECK_PROMPT
+
+        verdict = await filing.run_taking_test(self.ctx, text)
+        lorecheck = await self.ctx.llm.complete(
+            STANDARD,
+            self.system_prompt,
+            LORECHECK_PROMPT.format(idea=text),
+            max_tokens=500,
+        )
+        reason = verdict["reason"] or "no reason recorded."
+        reply = (
+            f"```\nTAKING TEST {verdict['taking_test']} — {reason}\n```\n"
+            f"{lorecheck.strip() or 'NOT IN THE FILE'}\n"
+            f"keep it: /untitled · file a plate: /file <loc.gov link>\n"
+            f"{COMMAND_MENU}"
+        )
+        self.ctx.memory.remember(message.channel.id, "the archivist bot", reply[:500])
+        await message.reply(reply[:1990], mention_author=False)
+        log_event(self.ctx.log, "auto_workup", channel=message.channel.id)
 
     async def _intake_tip(self, message: discord.Message) -> None:
         """The tip line: every report is kept as an untitled harbor-contract
