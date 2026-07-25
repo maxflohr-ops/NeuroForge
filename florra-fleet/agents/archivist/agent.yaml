@@ -18,7 +18,9 @@ max_tokens_default: 1024
 
 # Channel ids where passive intake watches for loc.gov links.
 # Empty = passive intake off; slash commands + @mentions still work.
-intake_channels: []
+intake_channels:
+  - 1524654890201382983  # #virginia-the-brand (bandersnatch / virginia)
+  - 1481899024922443798  # #general
 
 rate_limit:
   per_user_per_minute: 4
