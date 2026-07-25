@@ -86,3 +86,51 @@ services:
     env_file: .env
     profiles:
       - openclaw
+
+  # ─────────────────────────────────────────
+  # Pinterest Pipeline — Florra × Ebril
+  # ─────────────────────────────────────────
+
+  # Step 1: Research trending content themes
+  # Usage:
+  #   docker compose run --rm pinterest-trends
+  #   docker compose run --rm pinterest-trends --niches aesthetic,music --dry-run
+  pinterest-trends:
+    build: .
+    entrypoint: ["python", "scripts/pinterest_trend_researcher.py"]
+    env_file: .env
+    volumes:
+      - ./output:/app/output
+
+  # Step 2: Generate captions & metadata for Ebril's assets
+  # Usage:
+  #   docker compose run --rm pinterest-captions \
+  #     --asset-dir output/pinterest/assets
+  pinterest-captions:
+    build: .
+    entrypoint: ["python", "scripts/pinterest_caption_engine.py"]
+    env_file: .env
+    volumes:
+      - ./output:/app/output
+
+  # Step 3: Publish pins to Pinterest
+  # Usage:
+  #   docker compose run --rm pinterest-publish \
+  #     --package output/pinterest/pin-package-2026-07-25.json --dry-run
+  pinterest-publish:
+    build: .
+    entrypoint: ["python", "scripts/pinterest_publisher.py"]
+    env_file: .env
+    volumes:
+      - ./output:/app/output
+
+  # Step 4: Cross-post Ebril's own TikToks to Pinterest
+  # Usage:
+  #   docker compose run --rm pinterest-repost \
+  #     --urls-file ebril_tiktoks.txt --output-dir output/pinterest/assets
+  pinterest-repost:
+    build: .
+    entrypoint: ["python", "scripts/pinterest_cross_reposter.py"]
+    env_file: .env
+    volumes:
+      - ./output:/app/output
