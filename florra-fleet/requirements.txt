@@ -1,0 +1,6 @@
+discord.py>=2.4
+anthropic>=0.60
+notion-client>=2.5
+pydantic>=2.7
+python-dotenv>=1.0
+PyYAML>=6.0
