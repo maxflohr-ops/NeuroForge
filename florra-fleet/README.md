@@ -74,6 +74,30 @@ agent.yaml to open it — fan reports in that channel are kept as untitled
 harbor-contract candidates. Per the bible, the submission-license paragraph
 must exist first.
 
+## Website chat — the front desk
+
+The same agent, served as a website chat with a warmer persona
+(`prompts/frontdesk.md`): a courteous host who answers lore and store
+questions from the bible only, never invents, never shows the beast.
+
+```bash
+python web_runner.py archivist --port 8080   # POST /chat · GET /widget.js · GET /health
+```
+
+Docker: `docker compose up archivist-web`. Per-visitor rolling memory and
+rate limits ride the same core services.
+
+**Embedding on Shopify** (after deploying archivist-web somewhere public):
+Online Store → Themes → Edit code → `theme.liquid`, before `</body>` add:
+
+```html
+<script src="https://YOUR-DEPLOYED-HOST/widget.js"></script>
+```
+
+The widget is a floating 🕯️ bell, styled to the house theme (bg `#141210`,
+text `#E6E0D3`). It auto-wires its endpoint from wherever the script is
+served; to point elsewhere set `window.ESTATE_CHAT_URL` before the tag.
+
 Doctrine enforced in the prompt and the pipeline: the beast is never shown
 whole · print the places, not the people · weather fails the taking test
 (rows are filed `refused`, never deleted) · unknown canon → **"not in the

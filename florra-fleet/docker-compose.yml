@@ -12,6 +12,22 @@ services:
       - fleet-logs:/app/logs
     restart: unless-stopped
 
+  # website chat: the same agent served as an HTTP endpoint + widget
+  archivist-web:
+    build: .
+    entrypoint: ["python", "web_runner.py"]
+    command: ["archivist"]
+    env_file: .env
+    environment:
+      FLEET_DATA_DIR: /app/data
+      FLEET_LOG_DIR: /app/logs
+    ports:
+      - "8080:8080"
+    volumes:
+      - fleet-data:/app/data
+      - fleet-logs:/app/logs
+    restart: unless-stopped
+
   # agent 002 template — new Discord app + agents/<name>/ folder, nothing else:
   # velo-scout:
   #   build: .

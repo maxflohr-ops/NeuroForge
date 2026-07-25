@@ -19,6 +19,14 @@ def build_system_prompt() -> str:
     return template.replace("{{BIBLE}}", bible)
 
 
+def build_web_system_prompt() -> str:
+    """The front-desk persona for the website chat — warmer voice, same canon,
+    same never-invent rules."""
+    template = (PROMPTS_DIR / "frontdesk.md").read_text(encoding="utf-8")
+    bible = (PROMPTS_DIR / "BIBLE.md").read_text(encoding="utf-8")
+    return template.replace("{{BIBLE}}", bible)
+
+
 async def setup(bot, ctx) -> None:
     from agents.archivist.commands import ArchivistCommands
     from agents.archivist.intake import PassiveIntake
