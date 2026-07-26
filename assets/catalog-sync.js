@@ -79,12 +79,23 @@
     row.appendChild(frag);
   }
 
-  /* the file — append any holding the static ledger does not carry yet */
+  /* the file — mount any holding the static ledger does not carry yet.
+     a new lot takes over its "untitled" placeholder card when one waits
+     under the same number; otherwise it is mounted ahead of the
+     placeholders, so the untitled cards keep the end of the wall. */
   function syncMounts(products) {
     var known = {};
     mounts.querySelectorAll('a[href*="/products/"]').forEach(function (a) {
       var m = /\/products\/([a-z0-9-]+)/.exec(a.getAttribute('href') || '');
       if (m) known[m[1]] = true;
+    });
+    var placeholders = {};
+    var firstPlaceholder = null;
+    mounts.querySelectorAll('.mount--untitled').forEach(function (card) {
+      if (!firstPlaceholder) firstPlaceholder = card;
+      var line = card.querySelector('.classline');
+      var m = /lot\s*0*(\d+)/i.exec(line ? line.textContent : '');
+      if (m) placeholders[parseInt(m[1], 10)] = card;
     });
     products.forEach(function (p) {
       if (known[p.handle]) return;
@@ -131,7 +142,17 @@
       file.appendChild(req);
       art.appendChild(file);
 
-      mounts.appendChild(art);
+      var placeholder = p.num !== null ? placeholders[p.num] : null;
+      if (placeholder) {
+        mounts.replaceChild(art, placeholder);
+        if (placeholder === firstPlaceholder) {
+          firstPlaceholder = mounts.querySelector('.mount--untitled');
+        }
+      } else if (firstPlaceholder) {
+        mounts.insertBefore(art, firstPlaceholder);
+      } else {
+        mounts.appendChild(art);
+      }
     });
   }
 
