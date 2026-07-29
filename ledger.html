@@ -57,13 +57,12 @@
     things — that is different.</p>
 
     <!--
-      EMAIL CAPTURE — KLAVIYO PLACEHOLDER
-      Replace the action below with your Klaviyo subscribe endpoint, e.g.:
-        action="https://manage.kmail-lists.com/subscriptions/subscribe?a=YOUR_ACCOUNT_ID&g=YOUR_LIST_ID" method="post"
-      and remove data-placeholder="true". The email input is already named "email".
-      Until then the form confirms locally and sends nothing anywhere.
+      EMAIL CAPTURE — wired to the office's Make webhook. signatures are
+      filed in the Make data store "the ledger — bandersnatch office" and
+      answered by gmail once sending is authorized. site.js intercepts the
+      submit; the form action below is the no-js fallback.
     -->
-    <form id="ledger-form" data-placeholder="true" method="post" action="#klaviyo-endpoint-goes-here">
+    <form id="ledger-form" method="post" action="https://hook.us2.make.com/6hoa2zcm5r9a920iz98a2pbwp87jjiib">
       <div class="field">
         <label for="lg-name">name, as it should be kept</label>
         <input id="lg-name" name="name" type="text" autocomplete="name">
@@ -72,6 +71,7 @@
         <label for="lg-email">where the estate may write</label>
         <input id="lg-email" name="email" type="email" required autocomplete="email">
       </div>
+      <input type="hidden" name="kind" value="ledger">
       <button type="submit">sign the ledger</button>
       <p id="ledger-note" class="ledger-note" role="status"></p>
     </form>

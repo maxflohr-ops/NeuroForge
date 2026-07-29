@@ -212,16 +212,23 @@
     addLine('office', 'state your business.', true);
   }
 
-  /* ---- the ledger — confirms locally until klaviyo is wired in ---- */
+  /* ---- the ledger — signatures are filed with the office ---- */
   var ledgerForm = document.getElementById('ledger-form');
   if (ledgerForm) {
     ledgerForm.addEventListener('submit', function (e) {
-      if (ledgerForm.dataset.placeholder === 'true') {
-        e.preventDefault();
-        var note = document.getElementById('ledger-note');
-        if (note) note.textContent = 'signed. the ledger keeps what it is given.';
-        ledgerForm.reset();
-      }
+      e.preventDefault();
+      var name = (document.getElementById('lg-name') || {}).value || '';
+      var email = (document.getElementById('lg-email') || {}).value || '';
+      if (!email) return;
+      /* simple-request body so no cors preflight; the office door accepts it */
+      fetch(ledgerForm.action, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: new URLSearchParams({ kind: 'ledger', name: name, email: email }),
+      }).catch(function () { /* the page keeps its manners either way */ });
+      var note = document.getElementById('ledger-note');
+      if (note) note.textContent = 'signed. the ledger keeps what it is given.';
+      ledgerForm.reset();
     });
   }
 })();
