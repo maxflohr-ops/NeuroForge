@@ -181,14 +181,32 @@
       }
     };
 
+    var pending = false;
     clerkForm.addEventListener('submit', function (e) {
       e.preventDefault();
       var q = input.value.trim();
-      if (!q) return;
+      if (!q || pending) return;
       addLine('you', q);
       input.value = '';
-      var a = answer(q);
-      setTimeout(function () { addLine('office', a, true); }, 500);
+      pending = true;
+      var localAnswer = answer(q);
+      var settle = function (a) { pending = false; addLine('office', a, true); };
+      /* the attended counter — the real clerk answers when the office
+         holds a key; any failure falls back to the rules above. */
+      fetch('/api/clerk', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ q: q }),
+      })
+        .then(function (r) {
+          return r.json().then(function (d) { return { ok: r.ok, d: d }; });
+        })
+        .then(function (out) {
+          settle(out.ok && out.d && out.d.answer ? out.d.answer : localAnswer);
+        })
+        .catch(function () {
+          setTimeout(function () { settle(localAnswer); }, 400);
+        });
     });
 
     addLine('office', 'state your business.', true);
