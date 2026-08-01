@@ -58,8 +58,15 @@ End-to-end UGC workflow from sound research to paid ads.
 - `UGC Pipeline` — Status workflow (Identified → Outreach → Contract → Content → Paid)
 - `Content Library` — Downloaded videos with metadata
 - `Spark Codes` — TikTok native ad codes
-- `Campaigns` — Campaign briefs, DM scripts, performance
+- `Campaigns` — Campaign briefs, DM scripts, performance, visibility + bounty settings
+- `Campaign Access` — Invites and applications for private campaigns
 - `Metadata` — Integration config
+
+**Private campaigns:** A campaign's `Visibility` is `Public` or `Private`. Private campaigns set an `Access Mode`:
+- `Invite` — only creators you invite can receive the bounty
+- `Apply` — creators apply and must be approved before receiving the bounty
+
+Bounty payouts are enforced: `update_pipeline_status(..., "Paid")` refuses to mark a creator Paid on a private campaign unless they hold an invite or an approved application in `Campaign Access`.
 
 **Logger:** `scripts/florra_airtable_logger.py`
 
@@ -88,6 +95,28 @@ logger.add_to_ugc_pipeline(
     sound="Summer Vibes",
     sound_id="sound_123"
 )
+
+# Private campaign with bounty — invite-only
+logger.create_campaign(
+    name="Spring Launch",
+    brief="UGC videos using the Spring sound",
+    bounty_amount=250,
+    visibility="Private",
+    access_mode="Invite"
+)
+logger.invite_creator(campaign="Spring Launch", creator="Creator Name")
+
+# Or apply-based: creators request access, you approve
+logger.create_campaign(
+    name="Summer Push",
+    bounty_amount=150,
+    visibility="Private",
+    access_mode="Apply"
+)
+logger.apply_to_campaign(campaign="Summer Push", creator="Creator Name",
+                         message="200k followers, 8% ER")
+for app in logger.get_campaign_applications("Summer Push"):
+    logger.review_application(app["id"], approve=True)
 ```
 
 ---
@@ -183,13 +212,18 @@ OpenClaw (6):
 - tblfCsmmbtUpOPhtX — Lead Tracking
 - tbluLfkFPyv3ugssf — Model Optimization Log
 
-Florra (6):
+Florra (7):
 - tblYqPt2BYVjMaXFk — People
 - tblqTn9O3rIMMecbT — UGC Pipeline
 - tblmKJcNNOeEUaI79 — Content Library
 - tblqRpE6Ou9vXImey — Spark Codes
 - tblMUfJKvYiOEARy3 — Campaigns
+- Campaign Access — create in Airtable, then set `FLORRA_CAMPAIGN_ACCESS_TABLE` to its table ID
 - tbleJMnUc8u59V72L — Metadata
+
+**Campaign Access fields:** Campaign (text), Creator (text), Status (single select: Invited, Accepted, Applied, Approved, Rejected), Requested Date (date), Decision Date (date), Message (long text), Notes (long text)
+
+**New Campaigns fields:** Visibility (single select: Public, Private), Access Mode (single select: Invite, Apply), Bounty Amount (currency), Brief (long text), DM Script (long text), Created Date (date)
 
 Opus (5):
 - tblvMbbfjYrOuPqwS — Opus Projects
@@ -206,6 +240,7 @@ Opus (5):
 AIRTABLE_API_KEY=AIRTABLE_API_KEY
 AIRTABLE_BASE_ID=applXEAjh6k3Xmybl
 COBALT_URL=http://localhost:9000
+FLORRA_CAMPAIGN_ACCESS_TABLE=tblXXXXXXXXXXXXXX  # Campaign Access table ID
 ```
 
 ---

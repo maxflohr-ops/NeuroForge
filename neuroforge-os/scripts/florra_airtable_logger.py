@@ -12,7 +12,7 @@ from typing import Dict, List, Optional
 
 class FlorraAirtableLogger:
     def __init__(self):
-        self.api_key = os.getenv("AIRTABLE_API_KEY", "AIRTABLE_API_KEY
+        self.api_key = os.getenv("AIRTABLE_API_KEY", "")
         self.base_id = os.getenv("AIRTABLE_BASE_ID", "applXEAjh6k3Xmybl")
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -27,8 +27,201 @@ class FlorraAirtableLogger:
             "content_library": "tblmKJcNNOeEUaI79",
             "spark_codes": "tblqRpE6Ou9vXImey",
             "campaigns": "tblMUfJKvYiOEARy3",  # Existing Campaigns table
+            "campaign_access": os.getenv("FLORRA_CAMPAIGN_ACCESS_TABLE", "Campaign Access"),
             "metadata": "tbleJMnUc8u59V72L"
         }
+
+    # ------------------------------------------------------------------
+    # Campaigns — visibility + bounty access
+    # ------------------------------------------------------------------
+
+    CAMPAIGN_VISIBILITIES = ["Public", "Private"]
+    CAMPAIGN_ACCESS_MODES = ["Invite", "Apply"]
+
+    def create_campaign(self, name: str, brief: str = "", bounty_amount: float = 0,
+                        visibility: str = "Public", access_mode: str = "",
+                        dm_script: str = "", notes: str = ""):
+        """Create a campaign.
+
+        Public campaigns are open to all creators. Private campaigns must set
+        access_mode to control how creators receive the bounty:
+          - "Invite": only creators you invite are eligible
+          - "Apply":  creators apply and must be approved before they're eligible
+        """
+        if visibility not in self.CAMPAIGN_VISIBILITIES:
+            print(f"❌ Invalid visibility '{visibility}' — use one of {self.CAMPAIGN_VISIBILITIES}")
+            return None
+        if visibility == "Private":
+            if access_mode not in self.CAMPAIGN_ACCESS_MODES:
+                print(f"❌ Private campaigns need access_mode set to one of {self.CAMPAIGN_ACCESS_MODES}")
+                return None
+        else:
+            access_mode = ""
+
+        record = {
+            "fields": {
+                "Name": name,
+                "Brief": brief,
+                "Bounty Amount": bounty_amount,
+                "Visibility": visibility,
+                "Access Mode": access_mode,
+                "DM Script": dm_script,
+                "Created Date": datetime.now().isoformat(),
+                "Notes": notes
+            }
+        }
+
+        response = requests.post(
+            f"{self.api_base}/{self.base_id}/{self.tables['campaigns']}",
+            headers=self.headers,
+            json=record
+        )
+
+        if response.status_code in [200, 201]:
+            return response.json()
+        else:
+            print(f"❌ Failed to create campaign: {response.text}")
+            return None
+
+    def get_campaign(self, name: str) -> Optional[Dict]:
+        """Get a campaign by name"""
+        response = requests.get(
+            f"{self.api_base}/{self.base_id}/{self.tables['campaigns']}?filterByFormula={{Name}}='{name}'",
+            headers=self.headers
+        )
+
+        if response.status_code == 200:
+            records = response.json().get("records", [])
+            return records[0] if records else None
+        return None
+
+    def invite_creator(self, campaign: str, creator: str, notes: str = ""):
+        """Invite a creator to a private invite-only campaign"""
+        camp = self.get_campaign(campaign)
+        if camp and camp["fields"].get("Visibility") == "Private" and \
+                camp["fields"].get("Access Mode") != "Invite":
+            print(f"❌ '{campaign}' is not invite-based — creators must apply instead")
+            return None
+
+        record = {
+            "fields": {
+                "Campaign": campaign,
+                "Creator": creator,
+                "Status": "Invited",
+                "Requested Date": datetime.now().isoformat(),
+                "Notes": notes
+            }
+        }
+
+        response = requests.post(
+            f"{self.api_base}/{self.base_id}/{self.tables['campaign_access']}",
+            headers=self.headers,
+            json=record
+        )
+
+        if response.status_code in [200, 201]:
+            return response.json()
+        else:
+            print(f"❌ Failed to invite creator: {response.text}")
+            return None
+
+    def apply_to_campaign(self, campaign: str, creator: str, message: str = ""):
+        """Submit a creator's application to a private apply-based campaign"""
+        camp = self.get_campaign(campaign)
+        if camp and camp["fields"].get("Visibility") == "Private" and \
+                camp["fields"].get("Access Mode") != "Apply":
+            print(f"❌ '{campaign}' is invite-only — applications are not accepted")
+            return None
+
+        record = {
+            "fields": {
+                "Campaign": campaign,
+                "Creator": creator,
+                "Status": "Applied",
+                "Requested Date": datetime.now().isoformat(),
+                "Message": message
+            }
+        }
+
+        response = requests.post(
+            f"{self.api_base}/{self.base_id}/{self.tables['campaign_access']}",
+            headers=self.headers,
+            json=record
+        )
+
+        if response.status_code in [200, 201]:
+            return response.json()
+        else:
+            print(f"❌ Failed to submit application: {response.text}")
+            return None
+
+    def review_application(self, record_id: str, approve: bool, notes: str = ""):
+        """Approve or reject a creator's application to a campaign"""
+        fields = {
+            "Status": "Approved" if approve else "Rejected",
+            "Decision Date": datetime.now().isoformat()
+        }
+        if notes:
+            fields["Notes"] = notes
+
+        response = requests.patch(
+            f"{self.api_base}/{self.base_id}/{self.tables['campaign_access']}/{record_id}",
+            headers=self.headers,
+            json={"fields": fields}
+        )
+
+        if response.status_code in [200, 201]:
+            return response.json()
+        else:
+            print(f"❌ Failed to review application: {response.text}")
+            return None
+
+    def get_campaign_access(self, campaign: str, creator: str) -> Optional[Dict]:
+        """Get a creator's access record for a campaign"""
+        formula = f"AND({{Campaign}}='{campaign}',{{Creator}}='{creator}')"
+        response = requests.get(
+            f"{self.api_base}/{self.base_id}/{self.tables['campaign_access']}",
+            headers=self.headers,
+            params={"filterByFormula": formula}
+        )
+
+        if response.status_code == 200:
+            records = response.json().get("records", [])
+            return records[0] if records else None
+        return None
+
+    def get_campaign_applications(self, campaign: str, status: str = "Applied") -> List[Dict]:
+        """List access records for a campaign, filtered by status (default: pending applications)"""
+        formula = f"AND({{Campaign}}='{campaign}',{{Status}}='{status}')"
+        response = requests.get(
+            f"{self.api_base}/{self.base_id}/{self.tables['campaign_access']}",
+            headers=self.headers,
+            params={"filterByFormula": formula}
+        )
+
+        if response.status_code == 200:
+            return response.json().get("records", [])
+        return []
+
+    def is_eligible_for_bounty(self, creator: str, campaign: str) -> bool:
+        """Check whether a creator can receive a campaign's bounty.
+
+        Public campaigns: everyone is eligible.
+        Private + Invite: creator must have an Invited/Accepted access record.
+        Private + Apply:  creator's application must be Approved.
+        """
+        camp = self.get_campaign(campaign)
+        if not camp or camp["fields"].get("Visibility") != "Private":
+            return True
+
+        access = self.get_campaign_access(campaign, creator)
+        if not access:
+            return False
+
+        status = access["fields"].get("Status", "")
+        if camp["fields"].get("Access Mode") == "Invite":
+            return status in ["Invited", "Accepted"]
+        return status == "Approved"
 
     def add_creator(self, name: str, tiktok_handle: str = "", instagram_handle: str = "", 
                    tiktok_followers: int = 0, country: str = "", engagement_rate: float = 0,
@@ -154,7 +347,25 @@ class FlorraAirtableLogger:
             return None
 
     def update_pipeline_status(self, record_id: str, status: str, stage_date: str = ""):
-        """Update UGC Pipeline status"""
+        """Update UGC Pipeline status.
+
+        Moving to "Paid" is blocked for private campaigns unless the creator
+        has access (invited, or application approved).
+        """
+        if status == "Paid":
+            entry = requests.get(
+                f"{self.api_base}/{self.base_id}/{self.tables['ugc_pipeline']}/{record_id}",
+                headers=self.headers
+            )
+            if entry.status_code == 200:
+                fields = entry.json().get("fields", {})
+                creator = fields.get("Creator", "")
+                campaign = fields.get("Campaign", "")
+                if campaign and not self.is_eligible_for_bounty(creator, campaign):
+                    print(f"❌ '{creator}' is not eligible for the '{campaign}' bounty — "
+                          f"private campaign requires an invite or approved application")
+                    return None
+
         # Map status to date field
         date_field = {
             "Identified": "Identified Date",
@@ -228,3 +439,9 @@ if __name__ == "__main__":
     print("  - get_creators_by_tier(tier)")
     print("  - get_pipeline_by_status(status)")
     print("  - get_content_by_creator(creator)")
+    print("  - create_campaign(name, brief, bounty_amount, visibility, access_mode)")
+    print("  - invite_creator(campaign, creator)")
+    print("  - apply_to_campaign(campaign, creator, message)")
+    print("  - review_application(record_id, approve)")
+    print("  - get_campaign_applications(campaign)")
+    print("  - is_eligible_for_bounty(creator, campaign)")
