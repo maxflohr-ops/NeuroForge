@@ -22,6 +22,7 @@ from core.config import load_agent_config
 from core.context import AgentContext
 from core.llm import ModelRouter
 from core.log import get_logger, log_event
+from core.longmem import LongMemory
 from core.memory import Memory
 from core.notion import NotionAdapter
 from core.ratelimit import RateLimiter
@@ -81,6 +82,7 @@ def build_context(agent_name: str) -> AgentContext:
         llm=ModelRouter(config.models, logger, config.max_tokens_default),
         notion=NotionAdapter(config.notion_token, config.notion_file_data_source_id),
         memory=Memory(config.db_path, config.name),
+        longmem=LongMemory(config.db_path, config.name),
         limiter=RateLimiter(
             config.rate_limit.per_user_per_minute,
             config.rate_limit.per_channel_per_minute,

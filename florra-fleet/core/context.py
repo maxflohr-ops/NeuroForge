@@ -12,6 +12,7 @@ from dataclasses import dataclass
 
 from core.config import AgentConfig
 from core.llm import ModelRouter
+from core.longmem import LongMemory
 from core.memory import Memory
 from core.notion import NotionAdapter
 from core.ratelimit import RateLimiter
@@ -23,5 +24,6 @@ class AgentContext:
     llm: ModelRouter
     notion: NotionAdapter
     memory: Memory
+    longmem: LongMemory
     limiter: RateLimiter
     log: logging.Logger

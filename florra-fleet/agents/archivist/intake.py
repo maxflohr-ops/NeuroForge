@@ -18,7 +18,11 @@ from core.log import log_event
 
 from agents.archivist import filing, loc, reports
 
-MENTION_PROMPT = """Recent channel context (newest last):
+MENTION_PROMPT = """The office's long-term memory offers (use only what is
+relevant; ignore the rest):
+{facts}
+
+Recent channel context (newest last):
 {context}
 
 A staff member addressed the office:
@@ -48,6 +52,7 @@ class PassiveIntake(commands.Cog):
         self.ledger_cfg = options.get("ledger") or {}
         self.tip_channel = (options.get("tipline") or {}).get("channel_id")
         self.workup_cfg = options.get("auto_workup") or {}
+        self.memory_cfg = options.get("memory") or {}
         if self.ledger_cfg.get("channel_id"):
             self.ledger_tick.start()
 
@@ -72,6 +77,7 @@ class PassiveIntake(commands.Cog):
         self.ctx.memory.remember(
             message.channel.id, message.author.display_name, message.content
         )
+        self._maybe_extract(message.channel.id)
 
         if in_intake:
             urls = loc.extract_loc_urls(message.content)
@@ -174,6 +180,32 @@ class PassiveIntake(commands.Cog):
     async def _wait_ready(self) -> None:
         await self.bot.wait_until_ready()
 
+    def _maybe_extract(self, channel_id: int) -> None:
+        """Every Nth remembered message, run a cheap-tier fact-extraction pass
+        over recent channel context into the office's long-term memory."""
+        if not self.memory_cfg.get("enabled"):
+            return
+        every_n = int(self.memory_cfg.get("extract_every_n", 6))
+        key = f"memct:{channel_id}"
+        count = int(self.ctx.memory.dedupe_get(key) or 0) + 1
+        self.ctx.memory.dedupe_set(key, str(count))
+        if count % every_n != 0:
+            return
+        conversation = "\n".join(
+            f"{author}: {content}"
+            for author, content in self.ctx.memory.recent(channel_id)
+        )
+        import asyncio
+
+        from core.longmem import extract_facts
+
+        asyncio.get_running_loop().create_task(
+            extract_facts(
+                self.ctx.llm, self.ctx.longmem, "office", conversation,
+                source=f"channel:{channel_id}", logger=self.ctx.log,
+            )
+        )
+
     async def _answer_mention(self, message: discord.Message) -> None:
         if not self.ctx.limiter.allow(message.author.id, message.channel.id):
             return
@@ -187,10 +219,16 @@ class PassiveIntake(commands.Cog):
             f"{author}: {content}"
             for author, content in self.ctx.memory.recent(message.channel.id)
         )
+        facts = self.ctx.longmem.recall(
+            "office", question, limit=int(self.memory_cfg.get("recall_max", 4))
+        )
+        facts_block = "\n".join(f"- {f}" for f in facts) or "(nothing on file)"
         answer = await self.ctx.llm.complete(
             STANDARD,
             self.prompts.office,
-            MENTION_PROMPT.format(context=context or "(none)", question=question),
+            MENTION_PROMPT.format(
+                facts=facts_block, context=context or "(none)", question=question
+            ),
             max_tokens=400,
         )
         answer = answer or "not in the file."

@@ -72,6 +72,8 @@ links in `intake_channels`. Replies are plain and backend-toned.
 | `/coverage` | maps holdings against the 12 subjects of Shooting Script No. 1 |
 | `/ledger` | what the office filed this week (also auto-posts sundays 10 a.m., see `options.ledger` in agent.yaml) |
 | `/resync` | re-reads the bible from Notion and rebuilds the prompts — canon updates without a restart (both runners also sync at boot) |
+| `/remember <fact>` | pins a fact into the office's long-term memory |
+| `/recall [query]` | searches the office's long-term memory |
 
 Every filed row also gets: the photograph downloaded from LOC and attached
 (Plate property + page cover + body image), a canon-tier lore memo appended to
@@ -143,8 +145,15 @@ for velo-scout already exists in `core/airtable.py` (stub to implement).
 - **Notion is the source of truth** for lore. THE FILE data source id:
   `d1d87642-4cc6-4339-a375-e951b31ed8f3`. Nothing is ever deleted through
   this codebase — rejected material is `refused`, unprinted is `untitled`.
-- **SQLite is disposable** ops state (rolling context, dedupe cache, in a
-  mounted volume). Losing it costs nothing but a few duplicate Notion queries.
+- **SQLite carries ops state** (rolling context, dedupe cache) **and the
+  office's long-term memory** (`core/longmem.py`): durable facts extracted
+  from gated conversation by the cheap tier, deduped, recalled by keyword
+  rank into mention answers and the web front desk (which remembers
+  returning visitors by their widget id). On the mounted volume, facts
+  survive redeploys; nothing is ever deleted. The recall interface is
+  pluggable — a semantic backend (e.g. TencentDB Agent Memory's hub) can
+  replace it if the fleet ever adds an embedding provider. Tune under
+  `options.memory` in agent.yaml.
 - `BIBLE.md` is a mirror of the Notion bible; regenerate with
   `python scripts/sync_bible.py`. If it ever exceeds ~50k tokens, split
   per-command sections — no vector store.

@@ -18,6 +18,7 @@ as Discord. Deploy behind HTTPS (Railway/Fly) and point the widget at it.
 from __future__ import annotations
 
 import argparse
+import asyncio
 import hashlib
 import importlib
 import os
@@ -27,12 +28,17 @@ from aiohttp import web
 
 from core.llm import STANDARD
 from core.log import log_event
+from core.longmem import extract_facts
 from runner import build_context
 
 MAX_MESSAGE_CHARS = 500
 ALLOWED_ORIGIN = os.environ.get("WEB_ALLOWED_ORIGIN", "*")
 
-CHAT_PROMPT = """Conversation so far (newest last):
+CHAT_PROMPT = """What the desk remembers about this visitor (use only what is
+relevant; never recite it unprompted):
+{facts}
+
+Conversation so far (newest last):
 {context}
 
 The visitor says:
@@ -99,15 +105,33 @@ def build_app(agent_name: str) -> web.Application:
         context = "\n".join(
             f"{author}: {content}" for author, content in ctx.memory.recent(channel)
         )
+        scope = f"web:{visitor}"
+        facts = ctx.longmem.recall(scope, message, limit=3)
+        facts_block = "\n".join(f"- {f}" for f in facts) or "(first visit on record)"
         reply = await ctx.llm.complete(
             STANDARD,
             system_prompt,
-            CHAT_PROMPT.format(context=context or "(a new visitor)", message=message),
+            CHAT_PROMPT.format(
+                facts=facts_block,
+                context=context or "(a new visitor)",
+                message=message,
+            ),
             max_tokens=400,
         )
         reply = reply.strip() or "that page isn't in the file yet."
         ctx.memory.remember(channel, "visitor", message)
         ctx.memory.remember(channel, "front desk", reply)
+        # remember returning visitors: extraction pass every 4th message
+        count = int(ctx.memory.dedupe_get(f"memct:{scope}") or 0) + 1
+        ctx.memory.dedupe_set(f"memct:{scope}", str(count))
+        if count % 4 == 0:
+            conversation = "\n".join(
+                f"{a}: {c}" for a, c in ctx.memory.recent(channel)
+            )
+            asyncio.get_running_loop().create_task(
+                extract_facts(ctx.llm, ctx.longmem, scope, conversation,
+                              source="front desk", logger=ctx.log)
+            )
         log_event(ctx.log, "web_chat", visitor=visitor[:20], chars=len(message))
         return _cors(web.json_response({"reply": reply}))
 

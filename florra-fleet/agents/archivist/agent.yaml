@@ -33,6 +33,13 @@ options:
   auto_workup:
     enabled: true
     min_chars: 15   # ignore drive-by reactions and one-worders
+  # long-term memory: cheap-tier fact extraction from gated conversation,
+  # recalled into mention answers and the web front desk. facts persist in
+  # sqlite on the mounted volume; nothing is ever deleted.
+  memory:
+    enabled: true
+    extract_every_n: 6   # extraction pass every N remembered messages
+    recall_max: 4        # facts injected per answer
   # weekly ledger: what the office filed this week. sunday, services at 10 a.m.
   ledger:
     channel_id: 1524654890201382983   # #virginia-the-brand

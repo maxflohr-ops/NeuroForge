@@ -235,6 +235,41 @@ class ArchivistCommands(commands.Cog):
         await interaction.response.defer()
         await interaction.followup.send(await reports.build_ledger(self.ctx))
 
+    @app_commands.command(name="remember", description="tell the office to keep a fact in long-term memory")
+    @app_commands.describe(fact="the thing worth remembering weeks from now")
+    async def remember(self, interaction: discord.Interaction, fact: str):
+        if not self._allowed(interaction):
+            await interaction.response.send_message(BUSY, ephemeral=True)
+            return
+        new = self.ctx.longmem.add_fact(
+            "office", fact, kind="manual", source=f"by {interaction.user.display_name}"
+        )
+        log_event(self.ctx.log, "fact_remembered", new=new)
+        await interaction.response.send_message(
+            "the office will remember." if new else "the office already had that on file."
+        )
+
+    @app_commands.command(name="recall", description="what does the office remember about this?")
+    @app_commands.describe(query="topic to search the office's memory for (blank = most recent)")
+    async def recall(self, interaction: discord.Interaction, query: str = ""):
+        if not self._allowed(interaction):
+            await interaction.response.send_message(BUSY, ephemeral=True)
+            return
+        if query.strip():
+            facts = self.ctx.longmem.recall("office", query, limit=8)
+        else:
+            facts = [content for _kind, content in self.ctx.longmem.recent("office", limit=8)]
+        total = self.ctx.longmem.count("office")
+        if not facts:
+            await interaction.response.send_message(
+                "the office's memory holds nothing on that yet. /remember will fix it."
+            )
+            return
+        lines = "\n".join(f"- {f}" for f in facts)
+        await interaction.response.send_message(
+            f"from the office's memory ({total} facts on file):\n{lines}"[:1990]
+        )
+
     @app_commands.command(name="resync", description="re-read the bible from Notion — canon updates without a restart")
     async def resync(self, interaction: discord.Interaction):
         if not self._allowed(interaction):
