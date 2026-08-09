@@ -43,7 +43,25 @@ class FleetBot(commands.Bot):
         guild = discord.Object(id=self.ctx.config.guild_id)
         self.tree.copy_global_to(guild=guild)
         synced = await self.tree.sync(guild=guild)
+        self.tree.on_error = self._on_app_command_error
         log_event(self.ctx.log, "commands_synced", count=len(synced))
+
+    async def _on_app_command_error(
+        self, interaction: discord.Interaction, error: Exception
+    ) -> None:
+        """A failed command must never leave the channel hanging on 'thinking…'."""
+        self.ctx.log.error("command_failed", exc_info=error)
+        message = "the office hit a snag filing that. try again shortly."
+        try:
+            if interaction.response.is_done():
+                await interaction.followup.send(message, ephemeral=True)
+            else:
+                await interaction.response.send_message(message, ephemeral=True)
+        except discord.HTTPException:
+            pass
+
+    async def on_error(self, event_method: str, /, *args, **kwargs) -> None:
+        self.ctx.log.error(f"event_error:{event_method}", exc_info=True)
 
     async def on_ready(self) -> None:
         log_event(

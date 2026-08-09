@@ -65,10 +65,10 @@ Holding:
 
 
 class ArchivistCommands(commands.Cog):
-    def __init__(self, bot: commands.Bot, ctx: AgentContext, system_prompt: str):
+    def __init__(self, bot: commands.Bot, ctx: AgentContext, prompts):
         self.bot = bot
         self.ctx = ctx
-        self.system_prompt = system_prompt
+        self.prompts = prompts
 
     def _allowed(self, interaction: discord.Interaction) -> bool:
         return self.ctx.limiter.allow(
@@ -91,7 +91,7 @@ class ArchivistCommands(commands.Cog):
             return
         await interaction.response.defer()
         result = await filing.file_source(
-            self.ctx, self.system_prompt, source, filed_by="the bot"
+            self.ctx, self.prompts.office, source, filed_by="the bot"
         )
         if result.duplicate:
             await interaction.followup.send(result.message)
@@ -111,7 +111,7 @@ class ArchivistCommands(commands.Cog):
         await interaction.response.defer()
         if file:
             result = await filing.file_source(
-                self.ctx, self.system_prompt, material, filed_by="the bot"
+                self.ctx, self.prompts.office, material, filed_by="the bot"
             )
             await interaction.followup.send(
                 result.caption_card or result.message or "filing failed."
@@ -132,7 +132,7 @@ class ArchivistCommands(commands.Cog):
         await interaction.response.defer()
         verdict = await self.ctx.llm.complete(
             STANDARD,
-            self.system_prompt,
+            self.prompts.office,
             LORECHECK_PROMPT.format(idea=idea),
             max_tokens=500,
         )
@@ -211,7 +211,7 @@ class ArchivistCommands(commands.Cog):
         )
         text = await self.ctx.llm.complete(
             CANON,
-            self.system_prompt,
+            self.prompts.office,
             DRAFT_PROMPTS[kind].format(row=row),
             max_tokens=2000,
         )
@@ -224,7 +224,7 @@ class ArchivistCommands(commands.Cog):
             await interaction.response.send_message(BUSY, ephemeral=True)
             return
         await interaction.response.defer()
-        report = await reports.build_coverage(self.ctx, self.system_prompt)
+        report = await reports.build_coverage(self.ctx, self.prompts.office)
         await interaction.followup.send(report)
 
     @app_commands.command(name="ledger", description="what the office filed this week")
@@ -234,6 +234,29 @@ class ArchivistCommands(commands.Cog):
             return
         await interaction.response.defer()
         await interaction.followup.send(await reports.build_ledger(self.ctx))
+
+    @app_commands.command(name="resync", description="re-read the bible from Notion — canon updates without a restart")
+    async def resync(self, interaction: discord.Interaction):
+        if not self._allowed(interaction):
+            await interaction.response.send_message(BUSY, ephemeral=True)
+            return
+        await interaction.response.defer(ephemeral=True)
+        import asyncio
+
+        from agents.archivist import refresh_bible_from_notion
+
+        try:
+            chars = await asyncio.to_thread(refresh_bible_from_notion, self.ctx.config)
+            self.prompts.rebuild()
+            log_event(self.ctx.log, "bible_synced", chars=chars, via="resync")
+            await interaction.followup.send(
+                f"the bible has been re-read. {chars} characters of canon on file."
+            )
+        except Exception as exc:
+            await interaction.followup.send(
+                f"could not reach the estate page ({str(exc)[:120]}). "
+                "the office continues on the last good copy."
+            )
 
     @app_commands.command(name="status", description="read THE FILE by title, chapter, or status")
     @app_commands.describe(query="a status (filed/untitled/printed/refused), chapter (001/002/003/unassigned), or title text")

@@ -40,10 +40,10 @@ COMMAND_MENU = (
 
 
 class PassiveIntake(commands.Cog):
-    def __init__(self, bot: commands.Bot, ctx: AgentContext, system_prompt: str):
+    def __init__(self, bot: commands.Bot, ctx: AgentContext, prompts):
         self.bot = bot
         self.ctx = ctx
-        self.system_prompt = system_prompt
+        self.prompts = prompts
         options = ctx.config.options or {}
         self.ledger_cfg = options.get("ledger") or {}
         self.tip_channel = (options.get("tipline") or {}).get("channel_id")
@@ -90,7 +90,7 @@ class PassiveIntake(commands.Cog):
             return  # silent under throttle; the office does not argue
         for url in urls:
             result = await filing.file_source(
-                self.ctx, self.system_prompt, url, filed_by="the bot"
+                self.ctx, self.prompts.office, url, filed_by="the bot"
             )
             if result.duplicate:
                 await message.reply(result.message, mention_author=False)
@@ -118,7 +118,7 @@ class PassiveIntake(commands.Cog):
         verdict = await filing.run_taking_test(self.ctx, text)
         lorecheck = await self.ctx.llm.complete(
             STANDARD,
-            self.system_prompt,
+            self.prompts.office,
             LORECHECK_PROMPT.format(idea=text),
             max_tokens=500,
         )
@@ -189,7 +189,7 @@ class PassiveIntake(commands.Cog):
         )
         answer = await self.ctx.llm.complete(
             STANDARD,
-            self.system_prompt,
+            self.prompts.office,
             MENTION_PROMPT.format(context=context or "(none)", question=question),
             max_tokens=400,
         )

@@ -30,6 +30,7 @@ from core.log import log_event
 from runner import build_context
 
 MAX_MESSAGE_CHARS = 500
+ALLOWED_ORIGIN = os.environ.get("WEB_ALLOWED_ORIGIN", "*")
 
 CHAT_PROMPT = """Conversation so far (newest last):
 {context}
@@ -54,7 +55,7 @@ def _visitor_channel(visitor: str) -> int:
 
 
 def _cors(response: web.StreamResponse) -> web.StreamResponse:
-    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Origin"] = ALLOWED_ORIGIN
     response.headers["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type"
     return response
@@ -63,6 +64,13 @@ def _cors(response: web.StreamResponse) -> web.StreamResponse:
 def build_app(agent_name: str) -> web.Application:
     ctx = build_context(agent_name)
     agent_module = importlib.import_module(f"agents.{agent_name}")
+    refresh = getattr(agent_module, "refresh_bible_from_notion", None)
+    if refresh:
+        try:
+            chars = refresh(ctx.config)
+            log_event(ctx.log, "bible_synced", chars=chars, via="web_boot")
+        except Exception as exc:
+            log_event(ctx.log, "bible_sync_skipped", reason=str(exc)[:200])
     build_prompt = getattr(
         agent_module, "build_web_system_prompt", None
     ) or getattr(agent_module, "build_system_prompt")

@@ -71,6 +71,7 @@ links in `intake_channels`. Replies are plain and backend-toned.
 | `/draft <negative> <kind>` | product copy / obituary drop announcement / caption card for a filed holding, written by the canon tier |
 | `/coverage` | maps holdings against the 12 subjects of Shooting Script No. 1 |
 | `/ledger` | what the office filed this week (also auto-posts sundays 10 a.m., see `options.ledger` in agent.yaml) |
+| `/resync` | re-reads the bible from Notion and rebuilds the prompts — canon updates without a restart (both runners also sync at boot) |
 
 Every filed row also gets: the photograph downloaded from LOC and attached
 (Plate property + page cover + body image), a canon-tier lore memo appended to
@@ -94,7 +95,9 @@ python web_runner.py archivist --port 8080   # POST /chat · GET /widget.js · G
 ```
 
 Docker: `docker compose up archivist-web`. Per-visitor rolling memory and
-rate limits ride the same core services.
+rate limits ride the same core services. Set `WEB_ALLOWED_ORIGIN` to your
+store's origin (e.g. `https://bandersnatch-2.myshopify.com`) to lock the
+chat API's CORS to the storefront; default is `*`.
 
 **Embedding on Shopify** (after deploying archivist-web somewhere public):
 Online Store → Themes → Edit code → `theme.liquid`, before `</body>` add:
