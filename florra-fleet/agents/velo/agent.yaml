@@ -1,0 +1,40 @@
+# Agent 002 — velo. The Florra ops agent: CRM, outreach, ad summaries.
+# A Discord command surface over the Florra CRM & Operations Hub (Airtable).
+name: velo
+description: >
+  Florra's operations desk. Reads the CRM, drafts and logs outreach, and
+  reports ad performance. Plain, useful, agency-toned. One Discord app.
+
+discord_token_env: DISCORD_TOKEN_VELO
+guild_id_env: DISCORD_GUILD_ID
+
+models:
+  classify: MODEL_CLASSIFY   # cheap: routing, quick reads
+  standard: MODEL_STANDARD   # mid: outreach drafts, summaries
+  canon: MODEL_CANON         # top: high-stakes pitch copy
+
+max_tokens_default: 1024
+
+intake_channels: []
+
+rate_limit:
+  per_user_per_minute: 6
+  per_channel_per_minute: 20
+
+options:
+  # The Florra CRM & Operations Hub base + the tables velo reads/writes.
+  airtable:
+    base_id: applXEAjh6k3Xmybl
+    tables:
+      people: People
+      prospects: Prospects
+      clients: Clients
+      outreach: Outreach
+      campaigns: Campaigns
+      daily_ad_performance: Daily Ad Performance
+      ad_spend: Ad Spend Tracker
+  # long-term memory on, same as the archivist
+  memory:
+    enabled: true
+    extract_every_n: 6
+    recall_max: 4

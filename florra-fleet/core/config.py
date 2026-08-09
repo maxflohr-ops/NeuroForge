@@ -107,8 +107,10 @@ def load_agent_config(agent_name: str) -> AgentConfig:
         intake_channels=raw.intake_channels,
         rate_limit=raw.rate_limit,
         options=raw.options,
-        notion_token=_require_env("NOTION_TOKEN"),
-        notion_file_data_source_id=_require_env("NOTION_FILE_DATA_SOURCE_ID"),
+        # Notion is fleet-wide but optional — agents that don't file to Notion
+        # (e.g. velo, Airtable-only) boot without it; adapters fail only on use.
+        notion_token=os.environ.get("NOTION_TOKEN", ""),
+        notion_file_data_source_id=os.environ.get("NOTION_FILE_DATA_SOURCE_ID", ""),
         notion_bible_page_id=os.environ.get("NOTION_BIBLE_PAGE_ID", ""),
         db_path=data_dir / "fleet.db",
         log_dir=log_dir,

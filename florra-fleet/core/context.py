@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 
+from core.airtable import AirtableAdapter
 from core.config import AgentConfig
 from core.llm import ModelRouter
 from core.longmem import LongMemory
@@ -23,6 +24,7 @@ class AgentContext:
     config: AgentConfig
     llm: ModelRouter
     notion: NotionAdapter
+    airtable: AirtableAdapter
     memory: Memory
     longmem: LongMemory
     limiter: RateLimiter

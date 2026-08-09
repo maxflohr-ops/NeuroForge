@@ -123,7 +123,22 @@ test, class numbers, dedupe) · `standard` = mid tier (caption cards,
 lorecheck, summaries) · `canon` = top tier (anything in the estate's voice).
 Every call logs model + token usage to `logs/archivist.log`.
 
-## Adding agent 002 (zero changes to core/)
+## Agents
+
+- **archivist** (001) — Bandersnatch lore: intake, filing to Notion, front desk.
+- **velo** (002) — Florra ops over the CRM (Airtable base `applXEAjh6k3Xmybl`):
+  `/roster` (search 700+ People), `/prospects` (pitch pipeline by stage),
+  `/clients` (retainers + ad spend managed), `/outreach <person>` (draft in
+  Florra's voice, optionally log to the Outreach table), `/adreport` (spend +
+  CPV/CPC/CTR from Daily Ad Performance). Numbers come only from the CRM —
+  never invented. Needs `DISCORD_TOKEN_VELO` + `AIRTABLE_API_KEY`.
+
+velo is the proof of the fleet claim: it was added as a folder + a token + a
+compose block, with **zero changes to `core/`** (only the Airtable stub in
+`core/airtable.py` got its real implementation, and Notion became optional so
+a non-Notion agent can boot).
+
+## Adding another agent (zero changes to core/)
 
 1. Create a new Discord application + bot token; add its env var to `.env`
    (e.g. `DISCORD_TOKEN_VELO_SCOUT`).

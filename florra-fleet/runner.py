@@ -18,6 +18,7 @@ import os
 import discord
 from discord.ext import commands
 
+from core.airtable import Airtable, NotImplementedAirtable
 from core.config import load_agent_config
 from core.context import AgentContext
 from core.llm import ModelRouter
@@ -81,6 +82,7 @@ def build_context(agent_name: str) -> AgentContext:
         config=config,
         llm=ModelRouter(config.models, logger, config.max_tokens_default),
         notion=NotionAdapter(config.notion_token, config.notion_file_data_source_id),
+        airtable=(Airtable() if os.environ.get("AIRTABLE_API_KEY") else NotImplementedAirtable()),
         memory=Memory(config.db_path, config.name),
         longmem=LongMemory(config.db_path, config.name),
         limiter=RateLimiter(
