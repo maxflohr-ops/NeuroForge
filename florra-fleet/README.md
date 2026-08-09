@@ -28,6 +28,15 @@ florra-fleet/
 ├── Dockerfile · docker-compose.yml · .env.example
 ```
 
+## Maps
+
+Interactive, validated architecture maps (open in a browser; dark/light aware):
+
+- [`docs/fleet-architecture.html`](docs/fleet-architecture.html) — the whole fleet: Discord + website paths, model routing, sources of truth
+- [`docs/filing-pipeline.html`](docs/filing-pipeline.html) — how a loc.gov link becomes a holding of THE FILE
+
+Regenerate with the `archify` skill (`.claude/skills/archify`).
+
 ## Run it
 
 ```bash
