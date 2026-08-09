@@ -1,4 +1,4 @@
-"""Agent 002 — velo, the Florra ops agent.
+"""Agent 002 — florra, the ops agent.
 
 A Discord command surface over the Florra CRM & Operations Hub (Airtable).
 core/ knows nothing about it; the runner boots it by name.
@@ -16,6 +16,6 @@ def build_system_prompt() -> str:
 
 
 async def setup(bot, ctx) -> None:
-    from agents.velo.commands import VeloCommands
+    from agents.florra.commands import FlorraCommands
 
-    await bot.add_cog(VeloCommands(bot, ctx, build_system_prompt()))
+    await bot.add_cog(FlorraCommands(bot, ctx, build_system_prompt()))

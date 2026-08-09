@@ -126,14 +126,14 @@ Every call logs model + token usage to `logs/archivist.log`.
 ## Agents
 
 - **archivist** (001) — Bandersnatch lore: intake, filing to Notion, front desk.
-- **velo** (002) — Florra ops over the CRM (Airtable base `applXEAjh6k3Xmybl`):
+- **florra** (002) — the company's ops desk over the CRM (Airtable base `applXEAjh6k3Xmybl`):
   `/roster` (search 700+ People), `/prospects` (pitch pipeline by stage),
   `/clients` (retainers + ad spend managed), `/outreach <person>` (draft in
   Florra's voice, optionally log to the Outreach table), `/adreport` (spend +
   CPV/CPC/CTR from Daily Ad Performance). Numbers come only from the CRM —
-  never invented. Needs `DISCORD_TOKEN_VELO` + `AIRTABLE_API_KEY`.
+  never invented. Needs `DISCORD_TOKEN_FLORRA` + `AIRTABLE_API_KEY`.
 
-velo is the proof of the fleet claim: it was added as a folder + a token + a
+florra is the proof of the fleet claim: it was added as a folder + a token + a
 compose block, with **zero changes to `core/`** (only the Airtable stub in
 `core/airtable.py` got its real implementation, and Notion became optional so
 a non-Notion agent can boot).

@@ -1,4 +1,4 @@
-"""Slash commands for velo — the Florra ops desk over the CRM."""
+"""Slash commands for florra — the ops desk over the CRM."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ Person record:
 {person}"""
 
 
-class VeloCommands(commands.Cog):
+class FlorraCommands(commands.Cog):
     def __init__(self, bot: commands.Bot, ctx: AgentContext, system_prompt: str):
         self.bot = bot
         self.ctx = ctx

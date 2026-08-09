@@ -1,11 +1,11 @@
-# Agent 002 — velo. The Florra ops agent: CRM, outreach, ad summaries.
+# Agent 002 — florra. The Florra ops agent: CRM, outreach, ad summaries.
 # A Discord command surface over the Florra CRM & Operations Hub (Airtable).
-name: velo
+name: florra
 description: >
   Florra's operations desk. Reads the CRM, drafts and logs outreach, and
   reports ad performance. Plain, useful, agency-toned. One Discord app.
 
-discord_token_env: DISCORD_TOKEN_VELO
+discord_token_env: DISCORD_TOKEN_FLORRA
 guild_id_env: DISCORD_GUILD_ID
 
 models:

@@ -28,11 +28,11 @@ services:
       - fleet-logs:/app/logs
     restart: unless-stopped
 
-  # agent 002 — velo, the Florra ops agent (CRM / outreach / ad summaries).
+  # agent 002 — florra, the ops agent (CRM / outreach / ad summaries).
   # Proof that adding an agent is a folder + a token + this block — zero core changes.
-  velo:
+  florra:
     build: .
-    command: ["velo"]
+    command: ["florra"]
     env_file: .env
     environment:
       FLEET_DATA_DIR: /app/data
