@@ -36,8 +36,18 @@ class Config:
         "AYRSHARE_ENABLED", bool(os.getenv("AYRSHARE_API_KEY", ""))))
     ayrshare_api_base: str = os.getenv("AYRSHARE_API_BASE", "https://api.ayrshare.com/api")
     ayrshare_profile_key: str = os.getenv("AYRSHARE_PROFILE_KEY", "")
+    # X (Twitter) posting via Ayrshare requires bring-your-own-keys: the
+    # OAuth 1.0a Consumer Key + Secret from your X developer app, sent as
+    # headers on every request that targets X. Same env names the Ayrshare
+    # Claude plugin uses.
+    x_twitter_api_key: str = os.getenv("X_TWITTER_OAUTH1_API_KEY", "")
+    x_twitter_api_secret: str = os.getenv("X_TWITTER_OAUTH1_API_SECRET", "")
+    # Default platforms: IG + Snapchat, plus X automatically once its keys are set.
     ayrshare_platforms: list = field(default_factory=lambda: [
-        p.strip() for p in os.getenv("AYRSHARE_PLATFORMS", "instagram,snapchat").split(",")
+        p.strip() for p in os.getenv(
+            "AYRSHARE_PLATFORMS",
+            "instagram,snapchat,twitter" if os.getenv("X_TWITTER_OAUTH1_API_KEY")
+            else "instagram,snapchat").split(",")
         if p.strip()])
     # Post only the top N Opus clips per video (they come back ranked);
     # 0 = post every clip. Keeps a channel backfill from flooding IG/Snap.
@@ -71,4 +81,9 @@ class Config:
         if self.ayrshare_enabled and not self.opus_enabled:
             problems.append("Ayrshare posting needs Opus clips — enable OPUS_ENABLED "
                             "or set AYRSHARE_ENABLED=false")
+        if (self.ayrshare_enabled and "twitter" in self.ayrshare_platforms
+                and not (self.x_twitter_api_key and self.x_twitter_api_secret)):
+            problems.append("Posting to X requires X_TWITTER_OAUTH1_API_KEY and "
+                            "X_TWITTER_OAUTH1_API_SECRET (X developer app Consumer "
+                            "Key/Secret), or remove twitter from AYRSHARE_PLATFORMS")
         return problems

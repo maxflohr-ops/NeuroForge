@@ -31,6 +31,11 @@ class SocialPublisher:
         headers = {"Authorization": f"Bearer {config.ayrshare_api_key}"}
         if config.ayrshare_profile_key:
             headers["Profile-Key"] = config.ayrshare_profile_key
+        if "twitter" in config.ayrshare_platforms:
+            # X posting is bring-your-own-keys: Ayrshare doesn't store them,
+            # they ride along as headers on every request targeting X.
+            headers["X-Twitter-OAuth1-Api-Key"] = config.x_twitter_api_key
+            headers["X-Twitter-OAuth1-Api-Secret"] = config.x_twitter_api_secret
         self.session.headers.update(headers)
 
     def _url(self, path: str) -> str:

@@ -94,6 +94,14 @@ After each video's Opus clips are archived to Drive, the Social Publisher posts 
 as caption. Tune with `AYRSHARE_MAX_CLIPS_PER_VIDEO` (0 = post every clip — careful
 during a big backfill), `AYRSHARE_PLATFORMS`, and `AYRSHARE_CAPTION_SUFFIX`.
 
+**X (Twitter) too:** X posting through Ayrshare is bring-your-own-keys. Grab the
+**API Key (Consumer Key)** and **API Secret** from your X developer app ("Keys and
+tokens" in the [X developer portal](https://developer.x.com)), put them in `.env` as
+`X_TWITTER_OAUTH1_API_KEY` / `X_TWITTER_OAUTH1_API_SECRET`, and link the X account
+once in the Ayrshare dashboard (Social Accounts → X, using those same keys). With the
+keys set, `twitter` is automatically added to the default platform list — Ayrshare
+never stores the keys; the pipeline sends them as headers on each request targeting X.
+
 This repo also enables the [Ayrshare Claude plugin](https://github.com/ayrshare/ayrshare-social-media-api-claude-plugin)
 (`.claude/settings.json`), so in Claude Code sessions you can manage posts, analytics,
 comments, and scheduling conversationally with the same key — run `/ayrshare:setup` once.
@@ -152,7 +160,9 @@ docker run -d --restart unless-stopped \
 | `OPUS_API_BASE` | | Override the OpusClip API base URL (default `https://api.opus.pro/api`) |
 | `AYRSHARE_API_KEY` | for posting | Ayrshare API key (IG + Snapchat linked account) |
 | `AYRSHARE_ENABLED` | | Defaults to `true` when the key is set; `false` pauses posting |
-| `AYRSHARE_PLATFORMS` | | Comma list of Ayrshare platforms (default `instagram,snapchat`) |
+| `AYRSHARE_PLATFORMS` | | Comma list of platforms (default `instagram,snapchat`, `+twitter` when X keys set) |
+| `X_TWITTER_OAUTH1_API_KEY` | for X | Consumer Key from your X developer app |
+| `X_TWITTER_OAUTH1_API_SECRET` | for X | Consumer Secret from your X developer app |
 | `AYRSHARE_MAX_CLIPS_PER_VIDEO` | | Top N clips posted per video, `0` = all (default `3`) |
 | `AYRSHARE_CAPTION_SUFFIX` | | Text appended to every caption, e.g. `#RidgeClub` |
 | `AYRSHARE_PROFILE_KEY` | | Only for Ayrshare multi-profile (Business) accounts |
