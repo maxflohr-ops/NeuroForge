@@ -106,6 +106,21 @@ This repo also enables the [Ayrshare Claude plugin](https://github.com/ayrshare/
 (`.claude/settings.json`), so in Claude Code sessions you can manage posts, analytics,
 comments, and scheduling conversationally with the same key — run `/ayrshare:setup` once.
 
+**Community member onboarding (Business plan):** the Ayrshare Business integration
+package provides a domain (`id-4-GaO`) and a private key for SSO. Drop the key at
+`credentials/ayrshare-private.key`, set `AYRSHARE_DOMAIN` in `.env`, then:
+
+```bash
+python run.py profiles create --title "Jay - Clipper"   # prints their Profile Key (save it!)
+python run.py profiles sso --profile-key <key>          # prints a social-linking URL
+python run.py profiles list
+```
+
+Send the SSO link to the member (it expires in ~5 minutes — generate it when they're
+ready). They connect their own IG/TikTok/etc. on the branded Ayrshare page, no passwords
+shared. To make the bot post through a member's accounts instead of the house accounts,
+set `AYRSHARE_PROFILE_KEY=<their key>` in `.env`.
+
 ### 5. Configure
 
 ```bash
@@ -165,7 +180,9 @@ docker run -d --restart unless-stopped \
 | `X_TWITTER_OAUTH1_API_SECRET` | for X | Consumer Secret from your X developer app |
 | `AYRSHARE_MAX_CLIPS_PER_VIDEO` | | Top N clips posted per video, `0` = all (default `3`) |
 | `AYRSHARE_CAPTION_SUFFIX` | | Text appended to every caption, e.g. `#RidgeClub` |
-| `AYRSHARE_PROFILE_KEY` | | Only for Ayrshare multi-profile (Business) accounts |
+| `AYRSHARE_PROFILE_KEY` | | Post via a specific member profile instead of the primary |
+| `AYRSHARE_DOMAIN` | for SSO | Business SSO domain from the integration package (`id-4-GaO`) |
+| `AYRSHARE_PRIVATE_KEY_FILE` | | Path to the Business private key (default `credentials/ayrshare-private.key`) |
 | `DOWNLOAD_DIR` | | Local scratch dir for downloads (default `downloads/`, cleaned after upload) |
 | `WATCH_INTERVAL_MINUTES` | | Poll interval in `watch` mode (default `15`) |
 | `MAX_VIDEO_HEIGHT` | | Cap download resolution, e.g. `1080` (default: best available) |

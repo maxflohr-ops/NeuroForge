@@ -36,6 +36,10 @@ class Config:
         "AYRSHARE_ENABLED", bool(os.getenv("AYRSHARE_API_KEY", ""))))
     ayrshare_api_base: str = os.getenv("AYRSHARE_API_BASE", "https://api.ayrshare.com/api")
     ayrshare_profile_key: str = os.getenv("AYRSHARE_PROFILE_KEY", "")
+    # Business-plan SSO onboarding (User Profiles for community members)
+    ayrshare_domain: str = os.getenv("AYRSHARE_DOMAIN", "")
+    ayrshare_private_key_file: Path = field(default_factory=lambda: BASE_DIR / os.getenv(
+        "AYRSHARE_PRIVATE_KEY_FILE", "credentials/ayrshare-private.key"))
     # X (Twitter) posting via Ayrshare requires bring-your-own-keys: the
     # OAuth 1.0a Consumer Key + Secret from your X developer app, sent as
     # headers on every request that targets X. Same env names the Ayrshare

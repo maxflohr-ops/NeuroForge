@@ -37,9 +37,38 @@ def main():
     sub.add_parser("retry", help="Re-queue failed videos and process them")
     sub.add_parser("status", help="Show pipeline status")
 
+    profiles = sub.add_parser("profiles",
+                              help="Onboard clipping-community members (Ayrshare Business)")
+    psub = profiles.add_subparsers(dest="profiles_command", required=True)
+    pcreate = psub.add_parser("create", help="Create a member profile (prints Profile Key)")
+    pcreate.add_argument("--title", required=True, help="Member name, e.g. 'Jay - Clipper'")
+    psub.add_parser("list", help="List existing member profiles")
+    psso = psub.add_parser("sso", help="Generate a social-linking SSO URL for a member")
+    psso.add_argument("--profile-key", required=True, help="The member's Profile Key")
+
     args = parser.parse_args()
 
     config = Config()
+
+    if args.command == "profiles":
+        from agents.ayrshare_profiles import ProfileManager
+        if not config.ayrshare_api_key:
+            sys.exit("AYRSHARE_API_KEY is not set")
+        mgr = ProfileManager(config)
+        if args.profiles_command == "create":
+            data = mgr.create_profile(args.title)
+            print(f"✅ Profile created: {data.get('title', args.title)}")
+            print(f"   Profile Key (save this — shown only once): {data.get('profileKey')}")
+            print("   Next: python run.py profiles sso --profile-key <key>")
+        elif args.profiles_command == "list":
+            for p in mgr.list_profiles():
+                print(f" - {p.get('title')} (refId: {p.get('refId', '?')})")
+        elif args.profiles_command == "sso":
+            url = mgr.generate_sso_url(args.profile_key)
+            print("🔗 Send this link to the member (valid ~5 minutes):")
+            print(f"   {url}")
+        return
+
     if args.command != "status":
         problems = config.validate()
         if problems:
