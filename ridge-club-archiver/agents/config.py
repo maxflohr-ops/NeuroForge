@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+"""
+Configuration for the Ridge Club YouTube Archiver.
+Loads from environment (.env supported via python-dotenv).
+"""
+
+import os
+from dataclasses import dataclass, field
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
+
+
+def _bool(name: str, default: bool) -> bool:
+    return os.getenv(name, str(default)).strip().lower() in ("1", "true", "yes", "on")
+
+
+@dataclass
+class Config:
+    channel_url: str = os.getenv("YOUTUBE_CHANNEL_URL", "")
+    drive_root_folder_id: str = os.getenv("DRIVE_ROOT_FOLDER_ID", "")
+    service_account_file: Path = field(default_factory=lambda: BASE_DIR / os.getenv(
+        "GOOGLE_SERVICE_ACCOUNT_FILE", "credentials/service_account.json"))
+
+    opus_enabled: bool = field(default_factory=lambda: _bool("OPUS_ENABLED", True))
+    opus_api_key: str = os.getenv("OPUS_API_KEY", "")
+    opus_api_base: str = os.getenv("OPUS_API_BASE", "https://api.opus.pro/api")
+
+    download_dir: Path = field(default_factory=lambda: BASE_DIR / os.getenv("DOWNLOAD_DIR", "downloads"))
+    state_db: Path = field(default_factory=lambda: BASE_DIR / "state" / "archive.db")
+    watch_interval_minutes: int = int(os.getenv("WATCH_INTERVAL_MINUTES", "15"))
+    max_video_height: int = int(os.getenv("MAX_VIDEO_HEIGHT", "0"))  # 0 = best available
+    keep_local_files: bool = field(default_factory=lambda: _bool("KEEP_LOCAL_FILES", False))
+    cookies_file: str = os.getenv("YTDLP_COOKIES_FILE", "")
+
+    full_videos_folder_name: str = "01 Full Videos"
+    opus_clips_folder_name: str = "02 Opus Clips"
+
+    def validate(self) -> list:
+        """Return a list of human-readable config problems (empty = OK)."""
+        problems = []
+        if not self.channel_url:
+            problems.append("YOUTUBE_CHANNEL_URL is not set")
+        if not self.drive_root_folder_id:
+            problems.append("DRIVE_ROOT_FOLDER_ID is not set")
+        if not self.service_account_file.exists():
+            problems.append(f"Google service account key not found at {self.service_account_file}")
+        if self.opus_enabled and not self.opus_api_key:
+            problems.append("OPUS_ENABLED=true but OPUS_API_KEY is not set "
+                            "(set OPUS_ENABLED=false to archive without clipping)")
+        return problems

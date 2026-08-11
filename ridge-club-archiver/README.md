@@ -1,0 +1,151 @@
+# Ridge Club YouTube Archiver
+
+Automated agent pipeline that mirrors the **Ridge Club house YouTube channel** into a
+shared **Google Drive** for the clipping community, and pushes every video through
+**OpusClip** so the auto-generated clips land in Drive too.
+
+```
+┌──────────────────┐     ┌──────────────┐     ┌───────────────────┐
+│ Channel Watcher   │ ──▶ │  Downloader  │ ──▶ │  Drive Agent      │
+│ (finds every      │     │  (yt-dlp,    │     │  01 Full Videos/  │
+│  video, old + new)│     │  best quality)│    └───────┬───────────┘
+└──────────────────┘     └──────────────┘             │
+                                                       ▼
+                                              ┌───────────────────┐
+                                              │  Opus Agent       │
+                                              │  submit → poll →  │
+                                              │  download clips   │
+                                              └───────┬───────────┘
+                                                      ▼
+                                              ┌───────────────────┐
+                                              │  Drive Agent      │
+                                              │  02 Opus Clips/   │
+                                              │    <video title>/ │
+                                              └───────────────────┘
+```
+
+Every step is checkpointed in a local SQLite state DB (`state/archive.db`), so the
+pipeline is safe to re-run at any time — it only ever does the work that hasn't been
+done yet.
+
+## Drive folder layout
+
+Inside the shared "Ridge Club YouTube" Drive folder (the one shared with the clipping
+community), the pipeline maintains:
+
+```
+Ridge Club YouTube/            ← you create + share this once, put its ID in .env
+├── 01 Full Videos/            ← every full upload from the channel
+│   └── 2026-08-10 - <video title> [<video id>].mp4
+└── 02 Opus Clips/
+    └── <video title> [<video id>]/
+        ├── clip_01 - <clip title>.mp4
+        ├── clip_02 - <clip title>.mp4
+        └── ...
+```
+
+## Setup
+
+### 1. Install dependencies
+
+```bash
+cd ridge-club-archiver
+pip install -r requirements.txt
+```
+
+`ffmpeg` must be on PATH (yt-dlp uses it to merge audio+video):
+`sudo apt install ffmpeg` or `brew install ffmpeg`.
+
+### 2. Google Drive credentials (service account)
+
+1. In [Google Cloud Console](https://console.cloud.google.com/), create a project and
+   enable the **Google Drive API**.
+2. Create a **service account**, then create a JSON key for it and save it as
+   `credentials/service_account.json`.
+3. Share the "Ridge Club YouTube" Drive folder with the service account's email
+   (`...@...iam.gserviceaccount.com`) as **Editor** — the same way you shared it with
+   the clipping community.
+4. Copy the folder ID from its URL (`https://drive.google.com/drive/folders/<THIS_PART>`)
+   into `.env`.
+
+> **Tip:** a folder on a **Shared Drive** is strongly recommended over My Drive.
+> Service accounts have no storage quota of their own; on My Drive the uploads count
+> against the folder owner's quota and can hit per-account limits. On a Shared Drive
+> everything just works (the pipeline passes `supportsAllDrives` everywhere).
+
+### 3. OpusClip API
+
+The Opus agent uses the [OpusClip API](https://docs.opus.pro/). Grab an API key from
+your OpusClip workspace (API access requires an eligible plan) and put it in `.env`.
+
+If you don't have API access, run with `OPUS_ENABLED=false` — full videos still get
+archived to Drive, and you can clip manually in the Opus UI. Since the pipeline records
+each video's YouTube URL in the state DB, wiring Opus in later picks up where it left off.
+
+### 4. Configure
+
+```bash
+cp .env.example .env
+# edit .env — channel URL, Drive folder ID, Opus key
+```
+
+## Running
+
+```bash
+# One-time historical backfill: archive EVERY video ever uploaded to the channel
+python run.py backfill
+
+# Continuous mode: poll for new uploads every 15 min and process them end-to-end
+python run.py watch
+
+# Process a single video (re-runs are safe — completed steps are skipped)
+python run.py process --url https://www.youtube.com/watch?v=VIDEO_ID
+
+# Show pipeline status for all known videos
+python run.py status
+```
+
+### Keeping it running
+
+Cron (every 15 minutes, one pass per invocation):
+
+```cron
+*/15 * * * * cd /path/to/ridge-club-archiver && /usr/bin/python3 run.py watch --once >> logs/archiver.log 2>&1
+```
+
+Or Docker:
+
+```bash
+docker build -t ridge-club-archiver .
+docker run -d --restart unless-stopped \
+  --env-file .env \
+  -v $(pwd)/credentials:/app/credentials \
+  -v $(pwd)/state:/app/state \
+  ridge-club-archiver
+```
+
+## Configuration reference (.env)
+
+| Variable | Required | Description |
+|---|---|---|
+| `YOUTUBE_CHANNEL_URL` | ✅ | Ridge Club channel URL (`https://www.youtube.com/@RidgeClub`) |
+| `DRIVE_ROOT_FOLDER_ID` | ✅ | ID of the shared "Ridge Club YouTube" Drive folder |
+| `GOOGLE_SERVICE_ACCOUNT_FILE` | | Path to the service-account JSON key (default `credentials/service_account.json`) |
+| `OPUS_ENABLED` | | `true`/`false` — toggle the OpusClip stage (default `true`) |
+| `OPUS_API_KEY` | if Opus on | OpusClip API key |
+| `OPUS_API_BASE` | | Override the OpusClip API base URL (default `https://api.opus.pro/api`) |
+| `DOWNLOAD_DIR` | | Local scratch dir for downloads (default `downloads/`, cleaned after upload) |
+| `WATCH_INTERVAL_MINUTES` | | Poll interval in `watch` mode (default `15`) |
+| `MAX_VIDEO_HEIGHT` | | Cap download resolution, e.g. `1080` (default: best available) |
+| `KEEP_LOCAL_FILES` | | `true` to keep local copies after upload (default `false`) |
+
+## Notes
+
+- **Idempotent by design.** The state DB tracks each video through
+  `discovered → downloaded → uploaded → clipping → clips_uploaded → done`. Crash or
+  kill it at any point and the next run resumes exactly where it stopped.
+- **Members-only / private videos**: yt-dlp can only fetch what the account it runs as
+  can see. For members-only content, export cookies from a logged-in browser session and
+  set `YTDLP_COOKIES_FILE` in `.env`.
+- This is built for archiving **Ridge Club's own channel** for its own clipping
+  community — keep it pointed at content you have the rights to redistribute.
