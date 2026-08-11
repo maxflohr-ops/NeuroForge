@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "ayrshare": {
+      "source": {
+        "source": "github",
+        "repo": "ayrshare/ayrshare-social-media-api-claude-plugin"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "ayrshare@ayrshare": true
+  }
+}

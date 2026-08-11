@@ -4,7 +4,8 @@ SQLite-backed pipeline state.
 
 Each video moves through:
     discovered → downloaded → uploaded → clipping → clips_uploaded → done
-(`uploaded` jumps straight to `done` when Opus is disabled.)
+(`uploaded` jumps straight to `done` when Opus is disabled; a social-posting
+step runs inside the clips_uploaded → done transition when Ayrshare is enabled.)
 
 Every mutation is committed immediately, so a crash at any point is recoverable —
 re-running the pipeline resumes each video from its recorded stage.
@@ -51,7 +52,14 @@ class StateStore:
         self.conn = sqlite3.connect(db_path)
         self.conn.row_factory = sqlite3.Row
         self.conn.execute(_SCHEMA)
+        self._migrate()
         self.conn.commit()
+
+    def _migrate(self):
+        """Additive column migrations for DBs created by older versions."""
+        cols = {r["name"] for r in self.conn.execute("PRAGMA table_info(videos)")}
+        if "posts_json" not in cols:
+            self.conn.execute("ALTER TABLE videos ADD COLUMN posts_json TEXT")
 
     # ── discovery ────────────────────────────────────────────────
     def add_video(self, video_id: str, title: str, url: str, upload_date: str = ""):
@@ -102,6 +110,9 @@ class StateStore:
 
     def mark_clips_uploaded(self, video_id: str, clips: list):
         self._set(video_id, stage=CLIPS_UPLOADED, clips_json=json.dumps(clips), error=None)
+
+    def mark_posted(self, video_id: str, posts: list):
+        self._set(video_id, posts_json=json.dumps(posts))
 
     def mark_done(self, video_id: str):
         self._set(video_id, stage=DONE, error=None)

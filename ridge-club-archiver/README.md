@@ -1,8 +1,9 @@
 # Ridge Club YouTube Archiver
 
 Automated agent pipeline that mirrors the **Ridge Club house YouTube channel** into a
-shared **Google Drive** for the clipping community, and pushes every video through
-**OpusClip** so the auto-generated clips land in Drive too.
+shared **Google Drive** for the clipping community, pushes every video through
+**OpusClip** so the auto-generated clips land in Drive too, and posts the top clips
+to **Instagram + Snapchat** via **Ayrshare**.
 
 ```
 ┌──────────────────┐     ┌──────────────┐     ┌───────────────────┐
@@ -17,11 +18,11 @@ shared **Google Drive** for the clipping community, and pushes every video throu
                                               │  download clips   │
                                               └───────┬───────────┘
                                                       ▼
-                                              ┌───────────────────┐
-                                              │  Drive Agent      │
-                                              │  02 Opus Clips/   │
-                                              │    <video title>/ │
-                                              └───────────────────┘
+                             ┌───────────────────┐   ┌───────────────────┐
+                             │ Social Publisher  │ ◀─│  Drive Agent      │
+                             │ (Ayrshare → IG +  │   │  02 Opus Clips/   │
+                             │  Snapchat)        │   │    <video title>/ │
+                             └───────────────────┘   └───────────────────┘
 ```
 
 Every step is checkpointed in a local SQLite state DB (`state/archive.db`), so the
@@ -82,7 +83,22 @@ If you don't have API access, run with `OPUS_ENABLED=false` — full videos stil
 archived to Drive, and you can clip manually in the Opus UI. Since the pipeline records
 each video's YouTube URL in the state DB, wiring Opus in later picks up where it left off.
 
-### 4. Configure
+### 4. Ayrshare (Instagram + Snapchat auto-posting)
+
+The Ayrshare account already has IG and Snapchat linked, so the pipeline just needs the
+API key: grab it from [Ayrshare → API Key](https://app.ayrshare.com/api-key) and set
+`AYRSHARE_API_KEY` in `.env`. Posting turns on automatically once the key is present.
+
+After each video's Opus clips are archived to Drive, the Social Publisher posts the
+**top 3 clips** (Opus returns them ranked) to `instagram,snapchat` with the clip title
+as caption. Tune with `AYRSHARE_MAX_CLIPS_PER_VIDEO` (0 = post every clip — careful
+during a big backfill), `AYRSHARE_PLATFORMS`, and `AYRSHARE_CAPTION_SUFFIX`.
+
+This repo also enables the [Ayrshare Claude plugin](https://github.com/ayrshare/ayrshare-social-media-api-claude-plugin)
+(`.claude/settings.json`), so in Claude Code sessions you can manage posts, analytics,
+comments, and scheduling conversationally with the same key — run `/ayrshare:setup` once.
+
+### 5. Configure
 
 ```bash
 cp .env.example .env
@@ -134,6 +150,12 @@ docker run -d --restart unless-stopped \
 | `OPUS_ENABLED` | | `true`/`false` — toggle the OpusClip stage (default `true`) |
 | `OPUS_API_KEY` | if Opus on | OpusClip API key |
 | `OPUS_API_BASE` | | Override the OpusClip API base URL (default `https://api.opus.pro/api`) |
+| `AYRSHARE_API_KEY` | for posting | Ayrshare API key (IG + Snapchat linked account) |
+| `AYRSHARE_ENABLED` | | Defaults to `true` when the key is set; `false` pauses posting |
+| `AYRSHARE_PLATFORMS` | | Comma list of Ayrshare platforms (default `instagram,snapchat`) |
+| `AYRSHARE_MAX_CLIPS_PER_VIDEO` | | Top N clips posted per video, `0` = all (default `3`) |
+| `AYRSHARE_CAPTION_SUFFIX` | | Text appended to every caption, e.g. `#RidgeClub` |
+| `AYRSHARE_PROFILE_KEY` | | Only for Ayrshare multi-profile (Business) accounts |
 | `DOWNLOAD_DIR` | | Local scratch dir for downloads (default `downloads/`, cleaned after upload) |
 | `WATCH_INTERVAL_MINUTES` | | Poll interval in `watch` mode (default `15`) |
 | `MAX_VIDEO_HEIGHT` | | Cap download resolution, e.g. `1080` (default: best available) |

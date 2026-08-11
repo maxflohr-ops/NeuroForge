@@ -29,6 +29,21 @@ class Config:
     opus_api_key: str = os.getenv("OPUS_API_KEY", "")
     opus_api_base: str = os.getenv("OPUS_API_BASE", "https://api.opus.pro/api")
 
+    # Ayrshare social posting (Instagram + Snapchat are linked to this account).
+    # Enabled by default whenever an API key is present.
+    ayrshare_api_key: str = os.getenv("AYRSHARE_API_KEY", "")
+    ayrshare_enabled: bool = field(default_factory=lambda: _bool(
+        "AYRSHARE_ENABLED", bool(os.getenv("AYRSHARE_API_KEY", ""))))
+    ayrshare_api_base: str = os.getenv("AYRSHARE_API_BASE", "https://api.ayrshare.com/api")
+    ayrshare_profile_key: str = os.getenv("AYRSHARE_PROFILE_KEY", "")
+    ayrshare_platforms: list = field(default_factory=lambda: [
+        p.strip() for p in os.getenv("AYRSHARE_PLATFORMS", "instagram,snapchat").split(",")
+        if p.strip()])
+    # Post only the top N Opus clips per video (they come back ranked);
+    # 0 = post every clip. Keeps a channel backfill from flooding IG/Snap.
+    ayrshare_max_clips_per_video: int = int(os.getenv("AYRSHARE_MAX_CLIPS_PER_VIDEO", "3"))
+    ayrshare_caption_suffix: str = os.getenv("AYRSHARE_CAPTION_SUFFIX", "")
+
     download_dir: Path = field(default_factory=lambda: BASE_DIR / os.getenv("DOWNLOAD_DIR", "downloads"))
     state_db: Path = field(default_factory=lambda: BASE_DIR / "state" / "archive.db")
     watch_interval_minutes: int = int(os.getenv("WATCH_INTERVAL_MINUTES", "15"))
@@ -51,4 +66,9 @@ class Config:
         if self.opus_enabled and not self.opus_api_key:
             problems.append("OPUS_ENABLED=true but OPUS_API_KEY is not set "
                             "(set OPUS_ENABLED=false to archive without clipping)")
+        if self.ayrshare_enabled and not self.ayrshare_api_key:
+            problems.append("AYRSHARE_ENABLED=true but AYRSHARE_API_KEY is not set")
+        if self.ayrshare_enabled and not self.opus_enabled:
+            problems.append("Ayrshare posting needs Opus clips — enable OPUS_ENABLED "
+                            "or set AYRSHARE_ENABLED=false")
         return problems

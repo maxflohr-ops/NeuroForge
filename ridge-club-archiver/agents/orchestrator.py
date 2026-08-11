@@ -8,6 +8,7 @@ Drives each video through the full pipeline:
 Each stage transition is persisted, so any crash resumes cleanly on the next run.
 """
 
+import json
 import shutil
 import time
 from datetime import datetime
@@ -19,6 +20,7 @@ from .config import Config
 from .downloader import Downloader, safe_filename
 from .drive_agent import DriveAgent
 from .opus_agent import OpusAgent
+from .social_publisher import SocialPublisher
 from .state import StateStore
 
 
@@ -32,6 +34,7 @@ class Orchestrator:
         # (e.g. `status`) work without a service account on disk.
         self._drive = None
         self._opus = None
+        self._publisher = None
 
     @property
     def drive(self) -> DriveAgent:
@@ -44,6 +47,12 @@ class Orchestrator:
         if self.config.opus_enabled and self._opus is None:
             self._opus = OpusAgent(self.config)
         return self._opus
+
+    @property
+    def publisher(self):
+        if self.config.ayrshare_enabled and self._publisher is None:
+            self._publisher = SocialPublisher(self.config)
+        return self._publisher
 
     # ── logging ──────────────────────────────────────────────────
     def log(self, message: str, prefix: str = "ℹ️"):
@@ -132,12 +141,18 @@ class Orchestrator:
             folder_id = self.drive.clips_folder_for(folder_name)
             for clip in clips:
                 self.drive.upload_file(Path(clip["path"]), folder_id)
-            self.state.mark_clips_uploaded(
-                video_id, [{"title": c["title"]} for c in clips])
+            self.state.mark_clips_uploaded(video_id, clips)
             video = self.state.get(video_id)
             self.log(f"{len(clips)} Opus clips uploaded to Drive", "🎞️")
 
         if video["stage"] == st.CLIPS_UPLOADED:
+            if self.publisher and not video.get("posts_json"):
+                clips = json.loads(video.get("clips_json") or "[]")
+                posts = self.publisher.publish_clips(video, clips)
+                self.state.mark_posted(video_id, posts)
+                video = self.state.get(video_id)
+                platforms = ", ".join(self.config.ayrshare_platforms)
+                self.log(f"{len(posts)} clip(s) posted to {platforms}", "📣")
             self._cleanup(video)
             self.state.mark_done(video_id)
             self.log("Done — full video + clips archived", "✅")
