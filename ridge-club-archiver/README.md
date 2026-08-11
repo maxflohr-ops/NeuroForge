@@ -118,8 +118,20 @@ python run.py profiles list
 
 Send the SSO link to the member (it expires in ~5 minutes — generate it when they're
 ready). They connect their own IG/TikTok/etc. on the branded Ayrshare page, no passwords
-shared. To make the bot post through a member's accounts instead of the house accounts,
-set `AYRSHARE_PROFILE_KEY=<their key>` in `.env`.
+shared.
+
+**Fan-out distribution:** to turn the community into a distribution network, list the
+profiles in `AYRSHARE_PROFILE_KEYS` — every clip then goes out through *each* profile's
+accounts. `primary` means the house accounts:
+
+```bash
+AYRSHARE_PROFILE_KEYS=primary,MEMBER1-PROFILE-KEY,MEMBER2-PROFILE-KEY
+```
+
+Each clip is uploaded once and posted per profile, restricted to the platforms that
+profile actually linked (a member who only connected IG won't error on Snapchat).
+One member's failure doesn't block the others. `AYRSHARE_PROFILE_KEY` (singular)
+still works for posting via exactly one profile.
 
 ### 5. Configure
 
@@ -181,6 +193,7 @@ docker run -d --restart unless-stopped \
 | `AYRSHARE_MAX_CLIPS_PER_VIDEO` | | Top N clips posted per video, `0` = all (default `3`) |
 | `AYRSHARE_CAPTION_SUFFIX` | | Text appended to every caption, e.g. `#RidgeClub` |
 | `AYRSHARE_PROFILE_KEY` | | Post via a specific member profile instead of the primary |
+| `AYRSHARE_PROFILE_KEYS` | | Fan-out list of profiles to post through (`primary` = house) |
 | `AYRSHARE_DOMAIN` | for SSO | Business SSO domain from the integration package (`id-4-GaO`) |
 | `AYRSHARE_PRIVATE_KEY_FILE` | | Path to the Business private key (default `credentials/ayrshare-private.key`) |
 | `DOWNLOAD_DIR` | | Local scratch dir for downloads (default `downloads/`, cleaned after upload) |

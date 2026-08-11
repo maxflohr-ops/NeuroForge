@@ -36,6 +36,13 @@ class Config:
         "AYRSHARE_ENABLED", bool(os.getenv("AYRSHARE_API_KEY", ""))))
     ayrshare_api_base: str = os.getenv("AYRSHARE_API_BASE", "https://api.ayrshare.com/api")
     ayrshare_profile_key: str = os.getenv("AYRSHARE_PROFILE_KEY", "")
+    # Fan-out: post every clip through each of these member Profile Keys
+    # (comma-separated). Takes precedence over AYRSHARE_PROFILE_KEY.
+    # "primary" is a special value meaning the house accounts, so
+    # AYRSHARE_PROFILE_KEYS=primary,<key1>,<key2> hits house + members.
+    ayrshare_profile_keys: list = field(default_factory=lambda: [
+        k.strip() for k in os.getenv("AYRSHARE_PROFILE_KEYS", "").split(",")
+        if k.strip()])
     # Business-plan SSO onboarding (User Profiles for community members)
     ayrshare_domain: str = os.getenv("AYRSHARE_DOMAIN", "")
     ayrshare_private_key_file: Path = field(default_factory=lambda: BASE_DIR / os.getenv(
