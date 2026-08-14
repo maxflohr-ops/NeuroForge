@@ -30,6 +30,26 @@ Every output is saved to disk. Every QA score is logged to a JSON database. The 
 
 ---
 
+## Command Center
+
+There is a control plane for all of this: an agent commander that launches and
+supervises every agent in `scripts/`, and a real-time console that shows where
+work actually is on a live architecture map.
+
+```bash
+python -m commander --simulate    # rehearse the fleet, no API keys needed
+python -m commander               # live
+docker compose up commander
+```
+
+Then open <http://127.0.0.1:8787>.
+
+It needs no dependencies beyond what the pipeline already has. Full
+documentation — dispatch safety, the event protocol, how to add an agent — is
+in [`commander/README.md`](commander/README.md).
+
+---
+
 ## Setup
 
 ### 1. Install Python dependency
@@ -61,6 +81,9 @@ neuroforge-os/
   scripts/
     neuroforge_pipeline.py   ← main orchestrator
     optimize_prompts.py      ← self-improvement loop
+  commander/         ← agent commander + live command center
+    registry.py      ← the fleet: every agent and how it launches
+    web/             ← the console UI
   output/            ← all agent outputs (auto-created)
   neuroforge_db.json ← QA score log (auto-created)
 ```
@@ -223,6 +246,8 @@ To add a new agent:
 3. Add the QA step after it
 4. Add it to `AGENT_NAME_MAP` in `optimize_prompts.py`
 5. Wire it into `pipeline_full()` at the right stage
+6. Add an `AgentSpec` in `commander/registry.py` so it appears on the command
+   center — the launcher, the map and the credential checks all read from there
 
 ---
 

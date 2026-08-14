@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NeuroForge Command Center</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>⌘</text></svg>">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">⌘</span>
+    <div>
+      <h1>NeuroForge Command Center</h1>
+      <p class="brand-sub" id="brand-sub">connecting…</p>
+    </div>
+  </div>
+
+  <div class="kpis" id="kpis" role="group" aria-label="Fleet metrics"></div>
+
+  <div class="link-state">
+    <span class="link-dot" id="link-dot" data-state="connecting" aria-hidden="true"></span>
+    <span id="link-label">connecting</span>
+  </div>
+</header>
+
+<main class="layout">
+
+  <!-- ── Fleet roster ────────────────────────────────────────────────── -->
+  <section class="panel roster" aria-labelledby="roster-title">
+    <div class="panel-head">
+      <h2 id="roster-title">Fleet</h2>
+      <label class="mini-toggle">
+        <input type="checkbox" id="only-live">
+        <span>active only</span>
+      </label>
+    </div>
+    <div class="panel-body" id="roster"></div>
+  </section>
+
+  <!-- ── Centre column ──────────────────────────────────────────────── -->
+  <div class="centre">
+
+    <section class="panel map-panel" aria-labelledby="map-title">
+      <div class="panel-head">
+        <h2 id="map-title">Architecture</h2>
+        <div class="map-controls">
+          <label class="mini-toggle">
+            <input type="checkbox" id="show-review" checked>
+            <span>QA review</span>
+          </label>
+          <label class="mini-toggle">
+            <input type="checkbox" id="show-dependency">
+            <span>dependencies</span>
+          </label>
+          <div class="btn-group">
+            <button type="button" id="zoom-out" title="Zoom out" aria-label="Zoom out">−</button>
+            <button type="button" id="zoom-fit" title="Fit to view">fit</button>
+            <button type="button" id="zoom-in" title="Zoom in" aria-label="Zoom in">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="map-shell" id="map-shell">
+        <svg id="map" role="img" aria-labelledby="map-title map-desc">
+          <desc id="map-desc">Live map of the NeuroForge agent fleet. Each box is
+            an agent; its status is written inside it. Solid lines carry work,
+            faint lines are QA reviews and external dependencies.</desc>
+        </svg>
+        <div class="map-legend" id="map-legend"></div>
+      </div>
+    </section>
+
+    <section class="panel timeline-panel" aria-labelledby="timeline-title">
+      <div class="panel-head">
+        <h2 id="timeline-title">Mission timeline</h2>
+        <span class="panel-note" id="timeline-note">no run selected</span>
+      </div>
+      <div class="panel-body" id="timeline"></div>
+    </section>
+
+    <section class="panel feed-panel" aria-labelledby="feed-title">
+      <div class="panel-head">
+        <h2 id="feed-title">Live feed</h2>
+        <div class="feed-controls">
+          <label class="mini-toggle">
+            <input type="checkbox" id="follow" checked>
+            <span>follow</span>
+          </label>
+          <select id="feed-filter" aria-label="Filter feed by level">
+            <option value="all">everything</option>
+            <option value="event">events only</option>
+            <option value="warn">warnings &amp; errors</option>
+          </select>
+        </div>
+      </div>
+      <div class="panel-body feed" id="feed" role="log" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <!-- ── Command column ─────────────────────────────────────────────── -->
+  <div class="side">
+    <section class="panel launch-panel" aria-labelledby="launch-title">
+      <div class="panel-head">
+        <h2 id="launch-title">Launch</h2>
+        <span class="mode-pill" id="mode-pill">—</span>
+      </div>
+      <form class="panel-body launch" id="launch-form">
+        <label class="field">
+          <span>Agent</span>
+          <select id="launch-agent" required></select>
+        </label>
+        <p class="agent-blurb" id="launch-blurb"></p>
+        <div id="launch-params"></div>
+        <label class="mini-toggle sim-toggle">
+          <input type="checkbox" id="launch-simulate">
+          <span>simulate this run</span>
+        </label>
+        <button type="submit" class="launch-button" id="launch-button">Deploy agent</button>
+        <p class="form-error" id="launch-error" role="alert"></p>
+      </form>
+    </section>
+
+    <section class="panel runs-panel" aria-labelledby="runs-title">
+      <div class="panel-head">
+        <h2 id="runs-title">Runs</h2>
+        <span class="panel-note" id="runs-note"></span>
+      </div>
+      <div class="panel-body" id="runs"></div>
+    </section>
+
+    <section class="panel scores-panel" aria-labelledby="scores-title">
+      <div class="panel-head">
+        <h2 id="scores-title">QA by agent</h2>
+        <span class="panel-note">out of 50</span>
+      </div>
+      <div class="panel-body" id="scores"></div>
+    </section>
+  </div>
+</main>
+
+<!-- Agent detail drawer -->
+<div class="drawer" id="drawer" hidden>
+  <div class="drawer-scrim" id="drawer-scrim"></div>
+  <aside class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+    <header class="drawer-head">
+      <h2 id="drawer-title">Agent</h2>
+      <button type="button" id="drawer-close" aria-label="Close">✕</button>
+    </header>
+    <div class="drawer-body" id="drawer-body"></div>
+  </aside>
+</div>
+
+<script src="/static/graph.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,6 +1,31 @@
 services:
 
   # ─────────────────────────────────────────
+  # Agent Commander + visual command center
+  # Usage:
+  #   docker compose up commander
+  #   open http://localhost:8787
+  #
+  # Rehearse the whole fleet without API keys:
+  #   docker compose run --rm -e COMMANDER_SIMULATE=1 -p 8787:8787 commander
+  #
+  # The container must bind 0.0.0.0 for the published port to work, which
+  # means anything that can reach the host can reach the commander. Set
+  # COMMANDER_TOKEN in .env before exposing it beyond your own machine.
+  # ─────────────────────────────────────────
+  commander:
+    build: .
+    entrypoint: ["python", "-m", "commander"]
+    command: ["--host", "0.0.0.0"]
+    env_file: .env
+    ports:
+      - "127.0.0.1:8787:8787"
+    volumes:
+      - ./output:/app/output
+      - ./neuroforge_db.json:/app/neuroforge_db.json
+      - ./commander/state:/app/commander/state
+
+  # ─────────────────────────────────────────
   # Main pipeline — run one topic at a time
   # Usage:
   #   docker compose run --rm pipeline \
