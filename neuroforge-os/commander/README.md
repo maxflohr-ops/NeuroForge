@@ -198,6 +198,7 @@ meter tracks only what that fleet has spent.)
 
 ```
 registry.py     what agents exist, how they launch, how work flows between them
+export.py       the map as a standalone SVG or self-contained HTML page
 runner.py       launches them as subprocesses and supervises the result
 interpreter.py  reconstructs structure from what the agents print
 eventbus.py     ordered, replayable telemetry with a JSONL record
@@ -253,6 +254,21 @@ The commander **refuses to serve** if the map is unsound.
 python -m commander.graph --validate   # exit 1 if the map is broken
 python -m commander.graph --json       # print the IR
 ```
+
+### Exporting the map
+
+The same validated IR renders to a picture you can commit, attach to a doc or
+open from disk years from now — no scripts, no fonts, no network:
+
+```bash
+python -m commander.export --format html --out docs/fleet-architecture.html
+python -m commander.export --format svg  --out docs/fleet-architecture.svg
+python -m commander.export --format svg  --include flow --out docs/fleet-flow.svg
+```
+
+Colour is applied through CSS custom properties per squad rather than baked
+into the shapes, so one fragment reads correctly on a light or a dark ground.
+An unsound map is an error, not a crooked diagram — export refuses.
 
 Layout is deterministic: the same registry always produces the same picture, so
 the IR can be diffed and tested like any other artifact.
@@ -322,7 +338,7 @@ mission.
 python -m unittest discover -s commander/tests -t .
 ```
 
-92 tests, standard library only. The end-to-end cases drive the real supervisor
+105 tests, standard library only. The end-to-end cases drive the real supervisor
 against the simulator, so dispatch, interpretation, the event bus and the store
 are exercised together rather than mocked past. The autopilot is driven by
 calling `tick()` directly, so each decision — budget stop, daily cap, rework,

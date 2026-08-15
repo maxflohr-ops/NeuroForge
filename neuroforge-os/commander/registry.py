@@ -127,8 +127,9 @@ class Squad:
     id: str
     name: str
     lane: int
-    accent: str
+    accent: str          # step for a dark surface
     summary: str
+    accent_light: str = ""   # the same hue, stepped for a light surface
 
 
 # Accents are the validated categorical order for a dark surface, assigned in
@@ -136,19 +137,19 @@ class Squad:
 # carried by its own indicator and label, never by its squad hue.
 SQUADS: tuple[Squad, ...] = (
     Squad("command", "Command", 0, "#3987e5",
-          "Mission intake and fleet supervision"),
+          "Mission intake and fleet supervision", "#2a78d6"),
     Squad("forge", "Content Forge", 1, "#d95926",
-          "Claude agents that write the product"),
+          "Claude agents that write the product", "#eb6834"),
     Squad("production", "Production", 2, "#199e70",
-          "Turns text into shippable media"),
+          "Turns text into shippable media", "#1baf7a"),
     Squad("distribution", "Distribution", 3, "#c98500",
-          "Moves finished assets into the stack"),
+          "Moves finished assets into the stack", "#eda100"),
     Squad("growth", "Growth", 4, "#d55181",
-          "Paid amplification and audience building"),
+          "Paid amplification and audience building", "#e87ba4"),
     Squad("intelligence", "Intelligence", 5, "#008300",
-          "Closes the loop and improves the system"),
+          "Closes the loop and improves the system", "#008300"),
     Squad("external", "External Systems", 6, "#9085e9",
-          "Third-party endpoints the fleet depends on"),
+          "Third-party endpoints the fleet depends on", "#4a3aa7"),
 )
 
 FACULTY = (

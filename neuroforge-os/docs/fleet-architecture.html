@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Florra Fleet Alpha — Fleet Architecture</title>
+<style>
+:root {
+  --plane: #f9f9f7; --surface: #fcfcfb;
+  --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+  --hairline: #e1e0d9; --rule: #c3c2b7; --accent: #2a78d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --plane: #0d0d0d; --surface: #1a1a19;
+    --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+    --hairline: #2c2c2a; --rule: #383835; --accent: #3987e5;
+  }
+}
+:root[data-theme="dark"] {
+  --plane: #0d0d0d; --surface: #1a1a19;
+  --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+  --hairline: #2c2c2a; --rule: #383835; --accent: #3987e5;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--plane); color: var(--ink);
+  font: 15px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.wrap { max-width: 1180px; margin: 0 auto; padding: 40px 24px 72px; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+header { border-bottom: 1px solid var(--hairline); padding-bottom: 20px; margin-bottom: 28px; }
+.callsign {
+  display: inline-block; padding: 3px 9px; border-radius: 5px;
+  background: var(--surface); border: 1px solid var(--rule);
+  font-size: 12px; letter-spacing: 0.06em; color: var(--accent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+h1 { font-size: 30px; margin: 12px 0 6px; letter-spacing: -0.015em; text-wrap: balance; }
+.lede { margin: 0; color: var(--ink-2); max-width: 62ch; }
+.stats { display: flex; flex-wrap: wrap; gap: 26px; margin-top: 20px; }
+.stat b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+figure { margin: 0 0 12px; }
+.mapframe {
+  overflow-x: auto; background: var(--surface);
+  border: 1px solid var(--hairline); border-radius: 12px; padding: 8px;
+}
+figcaption { font-size: 13px; color: var(--ink-2); margin-top: 10px; max-width: 70ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 20px; margin: 18px 0 0; padding: 0; list-style: none; font-size: 13px; color: var(--ink-2); }
+.legend li { display: flex; align-items: center; gap: 8px; }
+.swatch { width: 22px; height: 0; border-top: 2px solid var(--rule); }
+.swatch.review { border-top: 2px dashed #ec835a; }
+.swatch.dep { border-top: 2px dotted var(--muted); }
+.swatch.dash { border: 1px dashed var(--rule); height: 12px; width: 18px; border-radius: 3px; }
+h2 { font-size: 13px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin: 44px 0 14px; }
+.roster { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 22px; }
+.rk-squad h3 { display: flex; align-items: center; gap: 8px; font-size: 14px; margin: 0 0 4px; }
+.rk-swatch { width: 10px; height: 10px; border-radius: 3px; background: var(--sq); }
+.rk-note { margin: 0 0 10px; font-size: 12.5px; color: var(--muted); }
+.rk-squad ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.rk-squad li { display: grid; grid-template-columns: 20px 1fr; gap: 2px 8px; }
+.rk-glyph { color: var(--sq); }
+.rk-name { font-weight: 600; font-size: 13.5px; }
+.rk-sum { grid-column: 2; font-size: 12.5px; color: var(--ink-2); }
+footer { margin-top: 52px; padding-top: 18px; border-top: 1px solid var(--hairline);
+  font-size: 12.5px; color: var(--muted); }
+.fleetmap {
+  --fm-ink: #0b0b0b;
+  --fm-ink-2: #52514e;
+  --fm-muted: #898781;
+  --fm-rule: #c3c2b7;
+  --fm-hairline: #e1e0d9;
+  --fm-surface: #fcfcfb;
+  --fm-node: #ffffff;
+}
+.sq-command { --sq: #2a78d6; }
+.sq-forge { --sq: #eb6834; }
+.sq-production { --sq: #1baf7a; }
+.sq-distribution { --sq: #eda100; }
+.sq-growth { --sq: #e87ba4; }
+.sq-intelligence { --sq: #008300; }
+.sq-external { --sq: #4a3aa7; }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .fleetmap {
+    --fm-ink: #ffffff;
+    --fm-ink-2: #c3c2b7;
+    --fm-muted: #898781;
+    --fm-rule: #383835;
+    --fm-hairline: #2c2c2a;
+    --fm-surface: #1a1a19;
+    --fm-node: #212120;
+  }
+  :root:not([data-theme="light"]) .sq-command { --sq: #3987e5; }
+  :root:not([data-theme="light"]) .sq-forge { --sq: #d95926; }
+  :root:not([data-theme="light"]) .sq-production { --sq: #199e70; }
+  :root:not([data-theme="light"]) .sq-distribution { --sq: #c98500; }
+  :root:not([data-theme="light"]) .sq-growth { --sq: #d55181; }
+  :root:not([data-theme="light"]) .sq-intelligence { --sq: #008300; }
+  :root:not([data-theme="light"]) .sq-external { --sq: #9085e9; }
+}
+
+:root[data-theme="dark"] .fleetmap {
+  --fm-ink: #ffffff;
+  --fm-ink-2: #c3c2b7;
+  --fm-muted: #898781;
+  --fm-rule: #383835;
+  --fm-hairline: #2c2c2a;
+  --fm-surface: #1a1a19;
+  --fm-node: #212120;
+}
+  :root[data-theme="dark"] .sq-command { --sq: #3987e5; }
+  :root[data-theme="dark"] .sq-forge { --sq: #d95926; }
+  :root[data-theme="dark"] .sq-production { --sq: #199e70; }
+  :root[data-theme="dark"] .sq-distribution { --sq: #c98500; }
+  :root[data-theme="dark"] .sq-growth { --sq: #d55181; }
+  :root[data-theme="dark"] .sq-intelligence { --sq: #008300; }
+  :root[data-theme="dark"] .sq-external { --sq: #9085e9; }
+
+.fleetmap { display: block; max-width: 100%; height: auto; }
+.fm-lane-rule { stroke: var(--sq); stroke-width: 2; stroke-linecap: round; }
+.fm-lane-label {
+  fill: var(--fm-ink-2); font-size: 10.5px; letter-spacing: 0.08em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.fm-node-box { fill: var(--fm-node); stroke: var(--fm-rule); stroke-width: 1; }
+.fm-node-accent { fill: var(--sq); }
+.fm-node-glyph { fill: var(--sq); font-size: 13px; }
+.fm-node-label { fill: var(--fm-ink); font-size: 12px; font-weight: 600; }
+.fm-node-sub {
+  fill: var(--fm-muted); font-size: 9.5px; letter-spacing: 0.04em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.fm-node--unconfigured .fm-node-box { stroke-dasharray: 3 3; }
+.fm-edge {
+  fill: none; stroke: var(--fm-rule); stroke-width: 1.5;
+  stroke-linejoin: round; stroke-linecap: round;
+}
+.fm-edge--review { stroke: #ec835a; stroke-width: 1.2; opacity: 0.5; stroke-dasharray: 2 4; }
+.fm-edge--dependency { stroke: var(--fm-muted); stroke-width: 1.2; opacity: 0.38; stroke-dasharray: 1 5; }
+.fm-edge-label {
+  fill: var(--fm-muted); font-size: 10px; text-anchor: middle;
+  dominant-baseline: middle;
+}
+.fm-edge-label-bg { fill: var(--fm-surface); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <span class="callsign">FFA</span>
+  <h1>Florra Fleet Alpha — Fleet Architecture</h1>
+  <p class="lede">Florra&#x27;s first continuously-operating fleet. Same agent architecture as NeuroForge, its own mission book, budget and cadence. Works the backlog around the clock, gates every artifact on QA, and folds what it learns back into the prompts.</p>
+  <div class="stats">
+    <div class="stat"><b>25</b><span>agents</span></div>
+    <div class="stat"><b>7</b><span>squads</span></div>
+    <div class="stat"><b>32</b><span>work paths</span></div>
+    <div class="stat"><b>1/19</b><span>credentialled</span></div>
+    <div class="stat"><b>10</b><span>objectives</span></div>
+  </div>
+</header>
+
+<figure>
+  <div class="mapframe">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2008 816" class="fleetmap" role="img" aria-label="Architecture of Florra Fleet Alpha: 25 agents in 7 squads, with work flow, QA review and external dependencies.">
+  <title>Florra Fleet Alpha architecture</title>
+  <defs>
+    <marker id="fm-arrow" viewBox="0 0 8 8" refX="7" refY="4"
+            markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <polygon points="0,0 8,4 0,8" fill="currentColor" />
+    </marker>
+  </defs>
+  <g class="fm-lanes">
+    <g class="sq-command"><line class="fm-lane-rule" x1="40" y1="45" x2="66" y2="45" /><text class="fm-lane-label" x="74" y="49">COMMAND</text></g>
+    <g class="sq-forge"><line class="fm-lane-rule" x1="332" y1="45" x2="358" y2="45" /><text class="fm-lane-label" x="366" y="49">CONTENT FORGE</text></g>
+    <g class="sq-production"><line class="fm-lane-rule" x1="624" y1="45" x2="650" y2="45" /><text class="fm-lane-label" x="658" y="49">PRODUCTION</text></g>
+    <g class="sq-distribution"><line class="fm-lane-rule" x1="916" y1="45" x2="942" y2="45" /><text class="fm-lane-label" x="950" y="49">DISTRIBUTION</text></g>
+    <g class="sq-growth"><line class="fm-lane-rule" x1="1208" y1="45" x2="1234" y2="45" /><text class="fm-lane-label" x="1242" y="49">GROWTH</text></g>
+    <g class="sq-intelligence"><line class="fm-lane-rule" x1="1500" y1="45" x2="1526" y2="45" /><text class="fm-lane-label" x="1534" y="49">INTELLIGENCE</text></g>
+    <g class="sq-external"><line class="fm-lane-rule" x1="1792" y1="45" x2="1818" y2="45" /><text class="fm-lane-label" x="1826" y="49">EXTERNAL SYSTEMS</text></g>
+  </g>
+  <g class="fm-edges">
+    <path class="fm-edge fm-edge--dependency" d="M 800.0 500.0 C 1246.4 500.0, 1345.6 316.0, 1792.0 316.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--dependency" d="M 1092.0 316.0 C 1407.0 316.0, 1477.0 408.0, 1792.0 408.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--dependency" d="M 1092.0 408.0 C 1407.0 408.0, 1477.0 408.0, 1792.0 408.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--dependency" d="M 1092.0 500.0 C 1407.0 500.0, 1477.0 408.0, 1792.0 408.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--dependency" d="M 1384.0 362.0 C 1567.6 362.0, 1608.4 500.0, 1792.0 500.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--dependency" d="M 1384.0 454.0 C 1567.6 454.0, 1608.4 592.0, 1792.0 592.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--dependency" d="M 1676.0 362.0 C 1736.0 362.0, 1732.0 408.0, 1792.0 408.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--dependency" d="M 216.0 454.0 C 925.2 454.0, 1082.8 224.0, 1792.0 224.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--dependency" d="M 508.0 178.0 C 1085.8 178.0, 1214.2 224.0, 1792.0 224.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--dependency" d="M 508.0 270.0 C 1085.8 270.0, 1214.2 224.0, 1792.0 224.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--dependency" d="M 508.0 362.0 C 1085.8 362.0, 1214.2 224.0, 1792.0 224.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--dependency" d="M 508.0 454.0 C 1085.8 454.0, 1214.2 224.0, 1792.0 224.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--dependency" d="M 508.0 546.0 C 1085.8 546.0, 1214.2 224.0, 1792.0 224.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--dependency" d="M 508.0 638.0 C 1085.8 638.0, 1214.2 224.0, 1792.0 224.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--dependency" d="M 800.0 408.0 C 1246.4 408.0, 1345.6 316.0, 1792.0 316.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--dependency" d="M 1092.0 224.0 C 1407.0 224.0, 1477.0 408.0, 1792.0 408.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--dependency" d="M 1676.0 454.0 C 1736.0 454.0, 1732.0 224.0, 1792.0 224.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--review" d="M 508.0 178.0 C 622.0 178.0, 622.0 638.0, 508.0 638.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--review" d="M 508.0 270.0 C 610.0 270.0, 610.0 638.0, 508.0 638.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--review" d="M 508.0 362.0 C 598.0 362.0, 598.0 638.0, 508.0 638.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--review" d="M 508.0 454.0 C 586.0 454.0, 586.0 638.0, 508.0 638.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--review" d="M 508.0 546.0 C 574.0 546.0, 574.0 638.0, 508.0 638.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge fm-edge--review" d="M 1500.0 454.0 C 1053.6 454.0, 954.4 638.0, 508.0 638.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 128.0 391.0 L 128.0 425.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 216.0 454.0 L 244.1 454.0 Q 253.1 454.0 253.1 445.0 L 253.1 187.0 Q 253.1 178.0 262.1 178.0 L 332.0 178.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 420.0 207.0 L 420.0 241.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 332.0 178.0 L 319.0 178.0 Q 310.0 178.0 310.0 187.0 L 310.0 445.0 Q 310.0 454.0 319.0 454.0 L 332.0 454.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 332.0 178.0 L 297.0 178.0 Q 288.0 178.0 288.0 187.0 L 288.0 537.0 Q 288.0 546.0 297.0 546.0 L 332.0 546.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 420.0 299.0 L 420.0 333.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 332.0 270.0 L 275.0 270.0 Q 266.0 270.0 266.0 279.0 L 266.0 537.0 Q 266.0 546.0 275.0 546.0 L 332.0 546.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 420.0 391.0 L 420.0 425.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 332.0 362.0 L 253.0 362.0 Q 244.0 362.0 244.0 371.0 L 244.0 537.0 Q 244.0 546.0 253.0 546.0 L 332.0 546.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 508.0 454.0 L 536.1 454.0 Q 545.1 454.0 545.1 445.0 L 545.1 325.0 Q 545.1 316.0 554.1 316.0 L 624.0 316.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 420.0 517.0 L 420.0 141.0 Q 420.0 132.0 429.0 132.0 L 1287.0 132.0 Q 1296.0 132.0 1296.0 141.0 L 1296.0 333.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 420.0 609.0 L 420.0 124.0 Q 420.0 115.0 429.0 115.0 L 1579.0 115.0 Q 1588.0 115.0 1588.0 124.0 L 1588.0 425.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 420.0 609.0 L 420.0 107.0 Q 420.0 98.0 429.0 98.0 L 995.0 98.0 Q 1004.0 98.0 1004.0 107.0 L 1004.0 287.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 624.0 316.0 L 611.0 316.0 Q 602.0 316.0 602.0 325.0 L 602.0 491.0 Q 602.0 500.0 611.0 500.0 L 624.0 500.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 712.0 437.0 L 712.0 471.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 800.0 500.0 L 828.1 500.0 Q 837.1 500.0 837.1 509.0 L 837.1 583.0 Q 837.1 592.0 846.1 592.0 L 916.0 592.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 800.0 500.0 L 916.0 500.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1004.0 253.0 L 1004.0 287.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 916.0 224.0 L 903.0 224.0 Q 894.0 224.0 894.0 233.0 L 894.0 399.0 Q 894.0 408.0 903.0 408.0 L 916.0 408.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 916.0 224.0 L 881.0 224.0 Q 872.0 224.0 872.0 233.0 L 872.0 491.0 Q 872.0 500.0 881.0 500.0 L 916.0 500.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1004.0 195.0 L 1004.0 90.0 Q 1004.0 81.0 1013.0 81.0 L 1579.0 81.0 Q 1588.0 81.0 1588.0 90.0 L 1588.0 333.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1004.0 437.0 L 1004.0 471.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1004.0 529.0 L 1004.0 563.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1004.0 471.0 L 1004.0 73.0 Q 1004.0 64.0 1013.0 64.0 L 1579.0 64.0 Q 1588.0 64.0 1588.0 73.0 L 1588.0 333.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1092.0 592.0 L 1120.1 592.0 Q 1129.1 592.0 1129.1 583.0 L 1129.1 463.0 Q 1129.1 454.0 1138.1 454.0 L 1208.0 454.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1092.0 592.0 L 1136.1 592.0 Q 1145.1 592.0 1145.1 583.0 L 1145.1 371.0 Q 1145.1 362.0 1154.1 362.0 L 1208.0 362.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1588.0 391.0 L 1588.0 425.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1588.0 483.0 L 1588.0 675.0 Q 1588.0 684.0 1579.0 684.0 L 429.0 684.0 Q 420.0 684.0 420.0 675.0 L 420.0 207.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1588.0 483.0 L 1588.0 692.0 Q 1588.0 701.0 1579.0 701.0 L 429.0 701.0 Q 420.0 701.0 420.0 692.0 L 420.0 299.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1588.0 483.0 L 1588.0 709.0 Q 1588.0 718.0 1579.0 718.0 L 429.0 718.0 Q 420.0 718.0 420.0 709.0 L 420.0 391.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1588.0 483.0 L 1588.0 726.0 Q 1588.0 735.0 1579.0 735.0 L 429.0 735.0 Q 420.0 735.0 420.0 726.0 L 420.0 483.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1588.0 483.0 L 1588.0 743.0 Q 1588.0 752.0 1579.0 752.0 L 429.0 752.0 Q 420.0 752.0 420.0 743.0 L 420.0 575.0" marker-end="url(#fm-arrow)" />
+  </g>
+  <g class="fm-edge-labels">
+    <rect class="fm-edge-label-bg" x="104.6" y="400.5" width="46.8" height="15" rx="4" /><text class="fm-edge-label" x="128.0" y="408.0">launch</text>
+    <rect class="fm-edge-label-bg" x="226.8" y="308.5" width="52.6" height="15" rx="4" /><text class="fm-edge-label" x="253.1" y="316.0">kickoff</text>
+    <rect class="fm-edge-label-bg" x="399.5" y="216.5" width="41.0" height="15" rx="4" /><text class="fm-edge-label" x="420.0" y="224.0">brief</text>
+    <rect class="fm-edge-label-bg" x="289.5" y="308.5" width="41.0" height="15" rx="4" /><text class="fm-edge-label" x="310.0" y="316.0">brief</text>
+    <rect class="fm-edge-label-bg" x="267.5" y="354.5" width="41.0" height="15" rx="4" /><text class="fm-edge-label" x="288.0" y="362.0">brief</text>
+    <rect class="fm-edge-label-bg" x="387.9" y="308.5" width="64.2" height="15" rx="4" /><text class="fm-edge-label" x="420.0" y="316.0">blueprint</text>
+    <rect class="fm-edge-label-bg" x="233.9" y="400.5" width="64.2" height="15" rx="4" /><text class="fm-edge-label" x="266.0" y="408.0">blueprint</text>
+    <rect class="fm-edge-label-bg" x="379.2" y="400.5" width="81.6" height="15" rx="4" /><text class="fm-edge-label" x="420.0" y="408.0">voice anchor</text>
+    <rect class="fm-edge-label-bg" x="203.2" y="494.3" width="81.6" height="15" rx="4" /><text class="fm-edge-label" x="244.0" y="501.8">voice anchor</text>
+    <rect class="fm-edge-label-bg" x="504.3" y="398.2" width="81.6" height="15" rx="4" /><text class="fm-edge-label" x="545.1" y="405.7">script batch</text>
+    <rect class="fm-edge-label-bg" x="831.7" y="124.5" width="52.6" height="15" rx="4" /><text class="fm-edge-label" x="858.0" y="132.0">ad copy</text>
+    <rect class="fm-edge-label-bg" x="980.6" y="107.5" width="46.8" height="15" rx="4" /><text class="fm-edge-label" x="1004.0" y="115.0">scores</text>
+    <rect class="fm-edge-label-bg" x="564.1" y="352.7" width="75.8" height="15" rx="4" /><text class="fm-edge-label" x="602.0" y="360.2">script JSON</text>
+    <rect class="fm-edge-label-bg" x="677.0" y="446.5" width="70.0" height="15" rx="4" /><text class="fm-edge-label" x="712.0" y="454.0">avatar IDs</text>
+    <rect class="fm-edge-label-bg" x="856.1" y="584.5" width="41.0" height="15" rx="4" /><text class="fm-edge-label" x="876.6" y="592.0">video</text>
+    <rect class="fm-edge-label-bg" x="1258.1" y="56.5" width="75.8" height="15" rx="4" /><text class="fm-edge-label" x="1296.0" y="64.0">performance</text>
+    <rect class="fm-edge-label-bg" x="1088.3" y="536.2" width="81.6" height="15" rx="4" /><text class="fm-edge-label" x="1129.1" y="543.7">sound signal</text>
+    <rect class="fm-edge-label-bg" x="1532.7" y="400.5" width="110.6" height="15" rx="4" /><text class="fm-edge-label" x="1588.0" y="408.0">improvement notes</text>
+    <rect class="fm-edge-label-bg" x="948.7" y="676.5" width="110.6" height="15" rx="4" /><text class="fm-edge-label" x="1004.0" y="684.0">rewritten prompts</text>
+  </g>
+  <g class="fm-nodes">
+    <g class="fm-node sq-command" transform="translate(40 333.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">⌘</text>
+      <text class="fm-node-label" x="34" y="24">Agent Commander</text>
+      <text class="fm-node-sub" x="14" y="42">COMMAND</text>
+    </g>
+    <g class="fm-node sq-command fm-node--unconfigured" transform="translate(40 425.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">▶</text>
+      <text class="fm-node-label" x="34" y="24">Full Mission</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-forge fm-node--unconfigured" transform="translate(332 149.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">🔬</text>
+      <text class="fm-node-label" x="34" y="24">Research Agent</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-forge fm-node--unconfigured" transform="translate(332 241.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">📐</text>
+      <text class="fm-node-label" x="34" y="24">Book Architect</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-forge fm-node--unconfigured" transform="translate(332 333.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">✍</text>
+      <text class="fm-node-label" x="34" y="24">Manuscript Agent</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-forge fm-node--unconfigured" transform="translate(332 425.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">🎬</text>
+      <text class="fm-node-label" x="34" y="24">Shorts Script Agent</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-forge fm-node--unconfigured" transform="translate(332 517.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">💰</text>
+      <text class="fm-node-label" x="34" y="24">Funnel Agent</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-forge fm-node--unconfigured" transform="translate(332 609.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">🔍</text>
+      <text class="fm-node-label" x="34" y="24">QA Agent</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-production" transform="translate(624 287.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">⧉</text>
+      <text class="fm-node-label" x="34" y="24">Script Parser</text>
+      <text class="fm-node-sub" x="14" y="42">PRODUCTION</text>
+    </g>
+    <g class="fm-node sq-production fm-node--unconfigured" transform="translate(624 379.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">⚙</text>
+      <text class="fm-node-label" x="34" y="24">HeyGen Setup</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-production fm-node--unconfigured" transform="translate(624 471.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">🎥</text>
+      <text class="fm-node-label" x="34" y="24">HeyGen Producer</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-distribution fm-node--unconfigured" transform="translate(916 195.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">📡</text>
+      <text class="fm-node-label" x="34" y="24">Master Orchestrator</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-distribution fm-node--unconfigured" transform="translate(916 287.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">🗂</text>
+      <text class="fm-node-label" x="34" y="24">Airtable Sync</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-distribution fm-node--unconfigured" transform="translate(916 379.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">🌸</text>
+      <text class="fm-node-label" x="34" y="24">Florra Logger</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-distribution fm-node--unconfigured" transform="translate(916 471.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">🎞</text>
+      <text class="fm-node-label" x="34" y="24">Opus Scheduler</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-distribution fm-node--unconfigured" transform="translate(916 563.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">📤</text>
+      <text class="fm-node-label" x="34" y="24">Flowstage Publisher</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-growth fm-node--unconfigured" transform="translate(1208 333.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">🅜</text>
+      <text class="fm-node-label" x="34" y="24">Meta Ads</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-growth fm-node--unconfigured" transform="translate(1208 425.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">🅣</text>
+      <text class="fm-node-label" x="34" y="24">TikTok Ads</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-intelligence fm-node--unconfigured" transform="translate(1500 333.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">🦾</text>
+      <text class="fm-node-label" x="34" y="24">OpenClaw</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-intelligence fm-node--unconfigured" transform="translate(1500 425.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">♻</text>
+      <text class="fm-node-label" x="34" y="24">Prompt Optimizer</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-external fm-node--unconfigured" transform="translate(1792 195.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">✳</text>
+      <text class="fm-node-label" x="34" y="24">Anthropic API</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-external fm-node--unconfigured" transform="translate(1792 287.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">◉</text>
+      <text class="fm-node-label" x="34" y="24">HeyGen</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-external fm-node--unconfigured" transform="translate(1792 379.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">▦</text>
+      <text class="fm-node-label" x="34" y="24">Airtable</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-external fm-node--unconfigured" transform="translate(1792 471.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">◑</text>
+      <text class="fm-node-label" x="34" y="24">Meta Ads API</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+    <g class="fm-node sq-external fm-node--unconfigured" transform="translate(1792 563.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">◐</text>
+      <text class="fm-node-label" x="34" y="24">TikTok Ads API</text>
+      <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
+    </g>
+  </g>
+</svg>
+  </div>
+  <figcaption>Work enters at Command and moves left to right; the QA agent
+  scores every artifact it produces, and the optimizer feeds what it learns
+  back into the forge prompts — the loop that makes the fleet self-improving.
+  Dashed outlines mark agents whose credentials are not set.</figcaption>
+</figure>
+
+<ul class="legend">
+  <li><span class="swatch"></span>work</li>
+  <li><span class="swatch review"></span>QA review</li>
+  <li><span class="swatch dep"></span>external call</li>
+  <li><span class="swatch dash"></span>no credentials</li>
+</ul>
+
+<h2>Roster</h2>
+<div class="roster">
+    <section class="rk-squad sq-command">
+      <h3><span class="rk-swatch"></span>Command</h3>
+      <p class="rk-note">Mission intake and fleet supervision</p>
+      <ul>
+      <li><span class="rk-glyph">⌘</span><span class="rk-name">Agent Commander</span><span class="rk-sum">Dispatches every agent, supervises runs, streams live telemetry.</span></li>
+      <li><span class="rk-glyph">▶</span><span class="rk-name">Full Mission</span><span class="rk-sum">Runs the complete forge chain for one topic: research → funnel.</span></li>
+      </ul>
+    </section>
+    <section class="rk-squad sq-forge">
+      <h3><span class="rk-swatch"></span>Content Forge</h3>
+      <p class="rk-note">Claude agents that write the product</p>
+      <ul>
+      <li><span class="rk-glyph">🔬</span><span class="rk-name">Research Agent</span><span class="rk-sum">Builds the structured strategy brief every later agent reads.</span></li>
+      <li><span class="rk-glyph">📐</span><span class="rk-name">Book Architect</span><span class="rk-sum">Turns the brief into a full book blueprint and transformation arc.</span></li>
+      <li><span class="rk-glyph">✍</span><span class="rk-name">Manuscript Agent</span><span class="rk-sum">Writes chapters in faculty voice; chapter 1 anchors every other voice.</span></li>
+      <li><span class="rk-glyph">🎬</span><span class="rk-name">Shorts Script Agent</span><span class="rk-sum">Produces 20–40 short-form scripts plus quote and carousel concepts.</span></li>
+      <li><span class="rk-glyph">💰</span><span class="rk-name">Funnel Agent</span><span class="rk-sum">Landing page, thank-you page, 5-email sequence and ad copy.</span></li>
+      <li><span class="rk-glyph">🔍</span><span class="rk-name">QA Agent</span><span class="rk-sum">Scores every artifact out of 50 and writes a prompt improvement note.</span></li>
+      </ul>
+    </section>
+    <section class="rk-squad sq-production">
+      <h3><span class="rk-swatch"></span>Production</h3>
+      <p class="rk-note">Turns text into shippable media</p>
+      <ul>
+      <li><span class="rk-glyph">⧉</span><span class="rk-name">Script Parser</span><span class="rk-sum">Splits a shorts batch file into one JSON per script.</span></li>
+      <li><span class="rk-glyph">⚙</span><span class="rk-name">HeyGen Setup</span><span class="rk-sum">Matches each faculty member to a stock avatar and voice ID.</span></li>
+      <li><span class="rk-glyph">🎥</span><span class="rk-name">HeyGen Producer</span><span class="rk-sum">Renders avatar video for each parsed short-form script.</span></li>
+      </ul>
+    </section>
+    <section class="rk-squad sq-distribution">
+      <h3><span class="rk-swatch"></span>Distribution</h3>
+      <p class="rk-note">Moves finished assets into the stack</p>
+      <ul>
+      <li><span class="rk-glyph">📡</span><span class="rk-name">Master Orchestrator</span><span class="rk-sum">Runs the cross-system sync: forge → Florra → Opus → OpenClaw.</span></li>
+      <li><span class="rk-glyph">🗂</span><span class="rk-name">Airtable Sync</span><span class="rk-sum">Pushes projects, pipeline runs and QA scores into the Airtable base.</span></li>
+      <li><span class="rk-glyph">🌸</span><span class="rk-name">Florra Logger</span><span class="rk-sum">Manages the UGC creator pipeline and content library.</span></li>
+      <li><span class="rk-glyph">🎞</span><span class="rk-name">Opus Scheduler</span><span class="rk-sum">Clips long-form video and schedules the results per platform.</span></li>
+      <li><span class="rk-glyph">📤</span><span class="rk-name">Flowstage Publisher</span><span class="rk-sum">Auto-posts finished clips to TikTok, Instagram and YouTube.</span></li>
+      </ul>
+    </section>
+    <section class="rk-squad sq-growth">
+      <h3><span class="rk-swatch"></span>Growth</h3>
+      <p class="rk-note">Paid amplification and audience building</p>
+      <ul>
+      <li><span class="rk-glyph">🅜</span><span class="rk-name">Meta Ads</span><span class="rk-sum">Builds custom and lookalike audiences, campaigns and ads.</span></li>
+      <li><span class="rk-glyph">🅣</span><span class="rk-name">TikTok Ads</span><span class="rk-sum">Sound and hashtag retargeting audiences, campaigns and ad groups.</span></li>
+      </ul>
+    </section>
+    <section class="rk-squad sq-intelligence">
+      <h3><span class="rk-swatch"></span>Intelligence</h3>
+      <p class="rk-note">Closes the loop and improves the system</p>
+      <ul>
+      <li><span class="rk-glyph">🦾</span><span class="rk-name">OpenClaw</span><span class="rk-sum">Logs interactions and proposes improvements back to the fleet.</span></li>
+      <li><span class="rk-glyph">♻</span><span class="rk-name">Prompt Optimizer</span><span class="rk-sum">Rewrites underperforming prompts from accumulated QA data.</span></li>
+      </ul>
+    </section>
+    <section class="rk-squad sq-external">
+      <h3><span class="rk-swatch"></span>External Systems</h3>
+      <p class="rk-note">Third-party endpoints the fleet depends on</p>
+      <ul>
+      <li><span class="rk-glyph">✳</span><span class="rk-name">Anthropic API</span><span class="rk-sum">Claude model endpoint behind every reasoning agent.</span></li>
+      <li><span class="rk-glyph">◉</span><span class="rk-name">HeyGen</span><span class="rk-sum">Avatar IV video rendering.</span></li>
+      <li><span class="rk-glyph">▦</span><span class="rk-name">Airtable</span><span class="rk-sum">System of record for projects, runs, QA and campaigns.</span></li>
+      <li><span class="rk-glyph">◑</span><span class="rk-name">Meta Ads API</span><span class="rk-sum">Audiences, campaigns and ad delivery.</span></li>
+      <li><span class="rk-glyph">◐</span><span class="rk-name">TikTok Ads API</span><span class="rk-sum">Sound retargeting and campaign delivery.</span></li>
+      </ul>
+    </section>
+</div>
+
+<footer class="mono">
+  FFA · 25 agents ·
+  generated from commander/registry.py · map validated before export
+</footer>
+</div>
+</body>
+</html>
