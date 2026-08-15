@@ -275,6 +275,49 @@ the IR can be diffed and tested like any other artifact.
 
 ---
 
+## The Evidence Agent (smolagents)
+
+One agent in the fleet writes and executes Python: `scripts/evidence_agent.py`
+is a smolagents `CodeAgent`. It reads an artifact, pulls out the checkable
+factual claims, searches for real sources, and writes an evidence table —
+claim, verdict, URL. It exists because the project's non-negotiables forbid
+fabricated citations and nothing was actually checking.
+
+```bash
+python scripts/evidence_agent.py --selftest          # wiring only, no model call
+python scripts/evidence_agent.py \
+    --topic "Stop Overthinking" \
+    --file output/stop_overthinking/01_research_brief_20260101_120000.md
+```
+
+Output lands at `output/<topic>/06_evidence_<timestamp>.md`.
+
+### Containing it
+
+Generated code is untrusted by construction, so this agent is bounded more
+tightly than the rest:
+
+| Guard | Effect |
+|---|---|
+| `--executor docker` | **The default.** Generated code runs in a container, never in the commander's process. |
+| `--executor local` | Refused outright unless `EVIDENCE_ALLOW_LOCAL=1` is set for a supervised run. Never appropriate unattended. |
+| `--executor e2b` | Available; requires `E2B_API_KEY`. |
+| Import allowlist | `json, re, collections, itertools, statistics` only — no filesystem, network or subprocess. |
+| Not autopilot-dispatched | The unattended loop only launches missions and the optimizer. This one runs when a person asks. |
+
+### Why no LiteLLM
+
+smolagents ships no Anthropic model, and its LiteLLM path pulls a large
+dependency tree in for no gain — this project already depends on `anthropic`.
+The agent uses a small `Model` subclass over that SDK instead, which has a
+useful side effect: it reports **real token counts**, where the rest of the
+fleet only estimates spend.
+
+Search is keyless DuckDuckGo (`ddgs`) by default, or a keyed API when
+`SERPER_API_KEY` / `SEARCHAPI_API_KEY` is set.
+
+---
+
 ## Adding an agent
 
 Add one `AgentSpec` to `registry.py`. The dispatcher, the launch form, the
@@ -338,7 +381,7 @@ mission.
 python -m unittest discover -s commander/tests -t .
 ```
 
-105 tests, standard library only. The end-to-end cases drive the real supervisor
+129 tests. The commander itself is standard library only; the Evidence Agent tests skip cleanly when smolagents is absent. The end-to-end cases drive the real supervisor
 against the simulator, so dispatch, interpretation, the event bus and the store
 are exercised together rather than mocked past. The autopilot is driven by
 calling `tick()` directly, so each decision — budget stop, daily cap, rework,

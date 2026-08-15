@@ -470,6 +470,37 @@ AGENTS: tuple[AgentSpec, ...] = (
         feed_labels={"optimizer": "improvement notes"},
     ),
     AgentSpec(
+        id="evidence",
+        name="Evidence Agent",
+        squad="intelligence",
+        kind=KIND_LLM,
+        glyph="🔎",
+        summary="Checks claims in artifacts against real sources it retrieves.",
+        command=("python", "scripts/evidence_agent.py"),
+        params=(_TOPIC,
+                ParamSpec("file", "Artifact", flag="--file", required=True,
+                          pattern=r"^[\w\-./ ]{1,200}$",
+                          help="Path to the artifact whose claims to verify"),
+                ParamSpec("executor", "Sandbox", kind="choice", flag="--executor",
+                          default="docker", choices=("docker", "e2b", "local"),
+                          help="Where generated code runs. Local is refused "
+                               "unless EVIDENCE_ALLOW_LOCAL=1."),
+                ParamSpec("max_claims", "Max claims", kind="int",
+                          flag="--max-claims", default=12,
+                          help="How many claims to check")),
+        requires_env=("ANTHROPIC_API_KEY",),
+        feeds=("research", "qa", "web_search"),
+        feed_labels={"research": "verified sources"},
+        log_signature=r"EVIDENCE AGENT|Evidence Agent",
+        aliases=("06_evidence", "Evidence Report"),
+        doc="A smolagents CodeAgent — it writes and runs Python to work through "
+            "the claims. That code executes in a Docker sandbox by default; "
+            "--executor local runs it in-process and is refused unless "
+            "EVIDENCE_ALLOW_LOCAL=1. Serves the fleet's own rule against "
+            "fabricated citations, and reports real token counts rather than "
+            "an estimate.",
+    ),
+    AgentSpec(
         id="optimizer",
         name="Prompt Optimizer",
         squad="intelligence",
@@ -508,6 +539,9 @@ AGENTS: tuple[AgentSpec, ...] = (
     AgentSpec("tiktok_api", "TikTok Ads API", "external", KIND_EXTERNAL,
               "Sound retargeting and campaign delivery.", glyph="◐",
               requires_env=("TIKTOK_ADS_ACCESS_TOKEN",)),
+    AgentSpec("web_search", "Web Search", "external", KIND_EXTERNAL,
+              "Keyless DuckDuckGo, or a keyed search API when one is set.",
+              glyph="◎"),
 )
 
 # The forge chain, in the order a full mission executes it.

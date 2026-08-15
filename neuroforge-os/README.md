@@ -54,8 +54,12 @@ and writes nothing, so you can watch a full day of operation before it costs a
 cent. Going live is one setting, and the fleet still stops itself at its budget
 ceiling, its daily cap and after repeated failures.
 
-No dependencies beyond what the pipeline already has. Full documentation —
-fleet cloning, the rails, dispatch safety, how to add an agent — is in
+The commander itself runs on the Python standard library. One agent — the
+Evidence Agent, a smolagents `CodeAgent` that checks claims against real
+sources — adds `smolagents` and `ddgs` to `requirements.txt`; it writes and
+executes Python, so it runs in a Docker sandbox and the autopilot never
+dispatches it. Full documentation — fleet cloning, the rails, dispatch safety,
+containing the code agent, how to add an agent — is in
 [`commander/README.md`](commander/README.md).
 
 ---
@@ -239,7 +243,8 @@ At $0.17 per topic, running all 50 topics costs approximately $8–10 total.
 ## Non-Negotiables
 
 These are hardcoded into every agent prompt:
-- No fake citations or fabricated studies
+- No fake citations or fabricated studies (the Evidence Agent checks this —
+  see [`commander/README.md`](commander/README.md))
 - No medical diagnosis claims
 - No overclaiming or false promises
 - Human QA review before any publishing
