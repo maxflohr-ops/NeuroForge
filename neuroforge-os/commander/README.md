@@ -199,6 +199,7 @@ meter tracks only what that fleet has spent.)
 ```
 registry.py     what agents exist, how they launch, how work flows between them
 export.py       the map as a standalone SVG or self-contained HTML page
+webapp.py       the whole console as one hostable, read-only page
 runner.py       launches them as subprocesses and supervises the result
 interpreter.py  reconstructs structure from what the agents print
 eventbus.py     ordered, replayable telemetry with a JSONL record
@@ -318,6 +319,52 @@ Search is keyless DuckDuckGo (`ddgs`) by default, or a keyed API when
 
 ---
 
+## Shipping the console as a web app
+
+The live commander launches subprocesses. Putting **that** on a public URL
+would hand anyone who finds it the ability to run commands on the host, so it
+is not something to deploy. What you can host is a read-only build:
+
+```bash
+python -m commander.webapp --out docs/console-demo.html --standalone
+```
+
+One self-contained HTML file — no server, no backend, nothing fetched at load.
+Open it from disk, drop it on any static host, attach it to a deck.
+
+It ships the **real** console assets — the same `web/styles.css`,
+`web/graph.js` and `web/app.js` the commander serves — and replaces only the
+transport beneath them, so the demo cannot drift from the console it
+demonstrates:
+
+| Endpoint | In the build |
+|---|---|
+| `GET /api/*` | Answered from a baked snapshot of a real fleet |
+| `GET /api/events` | A recorded run, replayed on a clock at its original rhythm |
+| `POST /api/runs` | Restarts the replay. **There is no dispatch path.** |
+| `POST /api/autopilot/*` | Toggles the panel locally; launches nothing |
+
+The page says `recorded · read-only` in its own header, so it is never mistaken
+for a live fleet, and the Deploy button reads *Replay mission*.
+
+### Recording one
+
+The build replays `commander/state/events.jsonl`, which the commander writes as
+it runs. To capture a fresh one:
+
+```bash
+python -m commander --simulate --no-autopilot &
+curl -s localhost:8787/api/runs -H 'Content-Type: application/json' \
+     -d '{"agent":"mission","params":{"topic":"Stop Negative Thoughts",
+          "faculty":"Dr. Nova Vale"},"simulate":true}'
+python -m commander.webapp --out docs/console-demo.html --standalone
+```
+
+`--run <id>` narrows the build to a single run; `--fleet` picks which fleet's
+identity and snapshot to bake in.
+
+---
+
 ## Adding an agent
 
 Add one `AgentSpec` to `registry.py`. The dispatcher, the launch form, the
@@ -381,7 +428,9 @@ mission.
 python -m unittest discover -s commander/tests -t .
 ```
 
-129 tests. The commander itself is standard library only; the Evidence Agent tests skip cleanly when smolagents is absent. The end-to-end cases drive the real supervisor
+147 tests. The commander itself is standard library only; the Evidence Agent
+tests skip cleanly when smolagents is absent, and the static-build tests skip
+when no recording is present. The end-to-end cases drive the real supervisor
 against the simulator, so dispatch, interpretation, the event bus and the store
 are exercised together rather than mocked past. The autopilot is driven by
 calling `tick()` directly, so each decision — budget stop, daily cap, rework,

@@ -49,6 +49,12 @@ docker compose up -d florra-alpha          # 24/7, restarts with the host
 
 Then open <http://127.0.0.1:8787>.
 
+Want to just *look* at it? `python -m commander.webapp --out console.html
+--standalone` builds the whole console into one self-contained, read-only page
+that replays a recorded mission — no server, nothing to install, safe to host.
+(The live commander launches subprocesses, so it is not something to put on a
+public URL.)
+
 It ships in **simulate** mode: the whole loop runs end to end, spends nothing
 and writes nothing, so you can watch a full day of operation before it costs a
 cent. Going live is one setting, and the fleet still stops itself at its budget

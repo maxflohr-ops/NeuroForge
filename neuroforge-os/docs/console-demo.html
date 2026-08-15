@@ -1,0 +1,2555 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Florra Fleet Alpha Console</title>
+<style>
+/* NeuroForge Command Center
+   Dark-surface console. Colour roles come from the project's validated
+   palette: status hues are reserved and always ship with a written label,
+   squad hues carry lane identity only. */
+
+:root {
+  color-scheme: dark;
+
+  --plane:        #0d0d0d;
+  --surface:      #1a1a19;
+  --surface-2:    #212120;
+  --surface-3:    #2a2a28;
+
+  --ink:          #ffffff;
+  --ink-2:        #c3c2b7;
+  --ink-muted:    #898781;
+
+  --hairline:     #2c2c2a;
+  --rule:         #383835;
+  --border:       rgba(255, 255, 255, 0.10);
+
+  --accent:       #3987e5;
+  --accent-soft:  rgba(57, 135, 229, 0.16);
+
+  --good:         #0ca30c;
+  --warning:      #fab219;
+  --serious:      #ec835a;
+  --critical:     #d03b3b;
+
+  --radius:       10px;
+  --radius-sm:    6px;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--plane);
+  color: var(--ink);
+  font: 14px/1.5 var(--sans);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+h1, h2, h3 { margin: 0; font-weight: 600; }
+
+button, select, input { font: inherit; color: inherit; }
+
+button {
+  cursor: pointer;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+}
+button:hover { background: var(--surface-3); }
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────────── */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 10px 18px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--hairline);
+  flex: 0 0 auto;
+}
+
+.brand { display: flex; align-items: center; gap: 12px; min-width: 260px; }
+
+.brand-mark {
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border-radius: 9px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 18px;
+}
+
+.brand-mark.is-callsign {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.topbar h1 { font-size: 15px; letter-spacing: 0.01em; }
+
+.brand-sub {
+  margin: 1px 0 0;
+  font-size: 11.5px;
+  color: var(--ink-muted);
+}
+
+.kpis {
+  display: flex;
+  gap: 10px;
+  flex: 1 1 auto;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.kpi {
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  min-width: 92px;
+  flex: 0 0 auto;
+}
+
+.kpi-label {
+  display: block;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+
+.kpi-value {
+  display: block;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.kpi-value .unit { font-size: 12px; color: var(--ink-2); font-weight: 500; }
+
+.kpi-spark { display: block; margin-top: 2px; }
+
+.link-state {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12px; color: var(--ink-2);
+  flex: 0 0 auto;
+}
+
+.link-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--ink-muted);
+}
+.link-dot[data-state="live"]        { background: var(--good); }
+.link-dot[data-state="connecting"]  { background: var(--warning); }
+.link-dot[data-state="lost"]        { background: var(--critical); }
+
+/* ── Layout ──────────────────────────────────────────────────────────── */
+
+.layout {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: 262px minmax(0, 1fr) 330px;
+  gap: 12px;
+  padding: 12px;
+  min-height: 0;
+}
+
+.centre, .side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--hairline);
+  flex: 0 0 auto;
+}
+
+.panel-head h2 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+}
+
+.panel-note { font-size: 11.5px; color: var(--ink-muted); }
+
+.panel-body {
+  overflow: auto;
+  padding: 10px 12px;
+  min-height: 0;
+  scrollbar-width: thin;
+}
+
+.map-panel   { flex: 1 1 64%; min-height: 320px; }
+.timeline-panel { flex: 0 1 auto; max-height: 190px; }
+.feed-panel  { flex: 1 1 26%; min-height: 140px; }
+.autopilot-panel { flex: 0 0 auto; }
+.launch-panel { flex: 0 0 auto; }
+.runs-panel  { flex: 1 1 auto; min-height: 120px; }
+.scores-panel { flex: 0 0 auto; max-height: 190px; }
+
+.mini-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: var(--ink-2);
+  cursor: pointer;
+  user-select: none;
+}
+.mini-toggle input { accent-color: var(--accent); margin: 0; }
+
+/* ── Fleet roster ────────────────────────────────────────────────────── */
+
+.squad-block + .squad-block { margin-top: 14px; }
+
+.squad-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-muted);
+  margin-bottom: 6px;
+}
+
+.squad-swatch { width: 8px; height: 8px; border-radius: 2px; }
+
+.agent-row {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  padding: 6px 7px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+}
+.agent-row:hover { background: var(--surface-2); }
+.agent-row[aria-current="true"] {
+  background: var(--accent-soft);
+  border-color: rgba(57, 135, 229, 0.4);
+}
+
+.agent-glyph { font-size: 13px; text-align: center; }
+
+.agent-name {
+  font-size: 12.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agent-sub { font-size: 10.5px; color: var(--ink-muted); }
+
+/* Status is a dot plus a written word — never colour alone. */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.status::before {
+  content: "";
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--ink-muted);
+  flex: 0 0 auto;
+}
+.status[data-status="running"]::before { background: var(--accent); }
+.status[data-status="queued"]::before  { background: var(--warning); }
+.status[data-status="ok"]::before      { background: var(--good); }
+.status[data-status="warn"]::before    { background: var(--serious); }
+.status[data-status="error"]::before,
+.status[data-status="cancelled"]::before { background: var(--critical); }
+.status[data-status="unconfigured"]::before {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--ink-muted);
+}
+
+.status[data-status="running"]::before { animation: pulse 1.4s ease-in-out infinite; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.45; transform: scale(0.78); }
+}
+
+/* ── Architecture map ────────────────────────────────────────────────── */
+
+.map-panel .panel-head { border-bottom-color: var(--hairline); }
+
+.map-controls { display: flex; align-items: center; gap: 12px; }
+
+.btn-group { display: flex; gap: 4px; }
+.btn-group button { padding: 3px 9px; font-size: 12px; }
+
+.map-shell {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  background:
+    radial-gradient(circle at 1px 1px, var(--hairline) 1px, transparent 0) 0 0 / 26px 26px;
+  cursor: grab;
+}
+.map-shell.dragging { cursor: grabbing; }
+
+#map { display: block; }
+
+.map-legend {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 7px 12px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border-top: 1px solid var(--hairline);
+  font-size: 11px;
+  color: var(--ink-2);
+  backdrop-filter: blur(3px);
+}
+
+.legend-item { display: inline-flex; align-items: center; gap: 6px; }
+
+.legend-swatch { width: 18px; height: 2px; border-radius: 1px; background: var(--ink-2); }
+.legend-swatch.review     { background: var(--serious); opacity: 0.75; }
+.legend-swatch.dependency { background: var(--ink-muted); opacity: 0.7; }
+
+/* Node visuals: squad hue tints the header strip, status owns the ring. */
+.node-box {
+  fill: var(--surface-2);
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+.node-hit { cursor: pointer; }
+.node-hit:hover .node-box { stroke: var(--ink-muted); }
+.node-hit:focus-visible { outline: none; }
+.node-hit:focus-visible .node-box { stroke: var(--accent); stroke-width: 2; }
+
+.node-label { fill: var(--ink); font-size: 12px; font-weight: 600; }
+.node-status { fill: var(--ink-2); font-size: 10px; }
+.node-glyph { font-size: 13px; }
+
+.node[data-status="running"] .node-box { stroke: var(--accent); stroke-width: 2; }
+.node[data-status="queued"]  .node-box { stroke: var(--warning); }
+.node[data-status="ok"]      .node-box { stroke: var(--good); }
+.node[data-status="warn"]    .node-box { stroke: var(--serious); }
+.node[data-status="error"]   .node-box,
+.node[data-status="cancelled"] .node-box { stroke: var(--critical); }
+
+.node[data-readiness="unconfigured"] .node-box { stroke-dasharray: 3 3; }
+.node[data-readiness="unconfigured"] .node-label { fill: var(--ink-2); }
+
+.node-halo {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  opacity: 0;
+}
+.node[data-status="running"] .node-halo { animation: halo 1.8s ease-out infinite; }
+
+@keyframes halo {
+  0%   { opacity: 0.55; transform: scale(1); }
+  100% { opacity: 0;    transform: scale(1.06); }
+}
+
+.edge {
+  fill: none;
+  stroke: var(--rule);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.edge[data-kind="review"] {
+  stroke: var(--serious);
+  stroke-width: 1.2;
+  opacity: 0.42;
+  stroke-dasharray: 2 4;
+}
+.edge[data-kind="dependency"] {
+  stroke: var(--ink-muted);
+  stroke-width: 1.2;
+  opacity: 0.34;
+  stroke-dasharray: 1 5;
+}
+.edge[data-active="true"] {
+  stroke: var(--accent);
+  stroke-width: 2.4;
+  opacity: 1;
+  stroke-dasharray: 7 6;
+  animation: flow 0.85s linear infinite;
+}
+
+@keyframes flow { to { stroke-dashoffset: -26; } }
+
+.edge-label {
+  fill: var(--ink-muted);
+  font-size: 10px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+.edge-label-bg { fill: var(--surface); }
+
+.lane-head { fill: var(--ink-2); font-size: 10.5px; letter-spacing: 0.07em; }
+.lane-rule { stroke-width: 2; stroke-linecap: round; }
+
+.map-dim .node:not(.related) { opacity: 0.28; }
+.map-dim .edge:not(.related) { opacity: 0.1; }
+
+/* ── Mission timeline ────────────────────────────────────────────────── */
+
+.timeline-row {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr) 54px;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 0;
+}
+
+.timeline-name {
+  font-size: 11.5px;
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timeline-track {
+  position: relative;
+  height: 14px;
+  background: var(--surface-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.timeline-bar {
+  position: absolute;
+  top: 0; bottom: 0;
+  border-radius: 4px;
+  background: var(--accent);
+  min-width: 3px;
+}
+.timeline-bar[data-status="ok"]       { background: var(--good); }
+.timeline-bar[data-status="warn"]     { background: var(--serious); }
+.timeline-bar[data-status="error"]    { background: var(--critical); }
+.timeline-bar[data-status="skipped"]  { background: var(--rule); }
+.timeline-bar[data-status="running"]  { background: var(--accent); }
+
+.timeline-meta {
+  font-size: 11px;
+  color: var(--ink-muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Live feed ───────────────────────────────────────────────────────── */
+
+.feed { font-family: var(--mono); font-size: 11.5px; line-height: 1.55; }
+
+.feed-controls { display: flex; align-items: center; gap: 10px; }
+
+.feed-controls select {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px 6px;
+  font-size: 11.5px;
+}
+
+.feed-line {
+  display: grid;
+  grid-template-columns: 62px 92px minmax(0, 1fr);
+  gap: 8px;
+  padding: 1px 0;
+  border-left: 2px solid transparent;
+  padding-left: 6px;
+}
+.feed-line[data-level="warn"]    { border-left-color: var(--serious); }
+.feed-line[data-level="error"]   { border-left-color: var(--critical); }
+.feed-line[data-level="success"] { border-left-color: var(--good); }
+.feed-line[data-level="event"]   { border-left-color: var(--accent); }
+
+.feed-time  { color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.feed-agent { color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.feed-text  { white-space: pre-wrap; word-break: break-word; color: var(--ink-2); }
+.feed-line[data-level="error"] .feed-text { color: #f0a3a3; }
+.feed-line[data-level="event"] .feed-text { color: var(--ink); }
+
+.feed-empty { color: var(--ink-muted); font-family: var(--sans); }
+
+/* ── Launch console ──────────────────────────────────────────────────── */
+
+.launch { display: flex; flex-direction: column; gap: 9px; }
+
+.field { display: flex; flex-direction: column; gap: 4px; }
+
+.field > span {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+
+.field select,
+.field input[type="text"],
+.field input[type="number"] {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  width: 100%;
+}
+
+.field-help { font-size: 10.5px; color: var(--ink-muted); margin: 0; }
+
+.agent-blurb {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--ink-2);
+  min-height: 2.6em;
+}
+
+.flag-field { flex-direction: row; align-items: center; gap: 7px; }
+.flag-field > span { text-transform: none; letter-spacing: 0; font-size: 12px; color: var(--ink-2); }
+
+.sim-toggle { margin-top: 2px; }
+
+.launch-button {
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+  padding: 9px;
+  border-radius: var(--radius-sm);
+}
+.launch-button:hover { background: #4b93e8; }
+.launch-button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.mode-pill {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--ink-2);
+}
+.mode-pill[data-mode="simulation"] { color: var(--warning); border-color: rgba(250, 178, 25, 0.4); }
+.mode-pill[data-mode="live"]       { color: var(--good);    border-color: rgba(12, 163, 12, 0.4); }
+
+.form-error { margin: 0; font-size: 11.5px; color: #f0a3a3; min-height: 1em; }
+
+.blocked-note {
+  margin: 0;
+  font-size: 11px;
+  color: var(--warning);
+}
+
+/* ── Autopilot ───────────────────────────────────────────────────────── */
+
+.autopilot { display: flex; flex-direction: column; gap: 10px; }
+
+.ap-objective {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.ap-detail { margin: 0; font-size: 11.5px; color: var(--ink-muted); min-height: 1em; }
+
+.meter { display: flex; flex-direction: column; gap: 4px; }
+
+.meter-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+
+.meter-head span:last-child {
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.meter-note { text-transform: none; letter-spacing: 0; opacity: 0.75; }
+
+.meter-track {
+  height: 8px;
+  background: var(--surface-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 4px;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+.meter-fill[data-tone="spend"]   { background: var(--good); }
+.meter-fill[data-tone="warning"] { background: var(--warning); }
+.meter-fill[data-tone="critical"]{ background: var(--critical); }
+
+.ap-facts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr);
+  gap: 3px 10px;
+}
+.ap-facts dt {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-muted);
+}
+.ap-facts dd { margin: 0; font-size: 11.5px; color: var(--ink-2); }
+
+.ap-controls { display: flex; gap: 6px; }
+.ap-controls button { flex: 1 1 auto; font-size: 12px; }
+.ap-controls button[data-primary="true"] {
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+}
+.ap-controls button[data-primary="true"]:hover { background: #4b93e8; }
+
+.status[data-status="backoff"]::before,
+.status[data-status="capped"]::before        { background: var(--warning); }
+.status[data-status="halted"]::before,
+.status[data-status="budget_reached"]::before { background: var(--critical); }
+.status[data-status="paused"]::before,
+.status[data-status="backlog_empty"]::before  { background: var(--ink-muted); }
+
+/* ── Runs list ───────────────────────────────────────────────────────── */
+
+.run-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 8px;
+  width: 100%;
+  text-align: left;
+  padding: 7px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+}
+.run-row:hover { background: var(--surface-2); }
+.run-row[aria-current="true"] { background: var(--accent-soft); border-color: rgba(57,135,229,0.4); }
+
+.run-title { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.run-meta { grid-column: 1 / -1; font-size: 10.5px; color: var(--ink-muted); }
+.run-cancel { padding: 2px 8px; font-size: 11px; }
+
+.empty {
+  color: var(--ink-muted);
+  font-size: 12px;
+  padding: 6px 0;
+}
+
+/* ── QA by agent (horizontal bars, single sequential hue) ────────────── */
+
+.score-row {
+  display: grid;
+  grid-template-columns: 118px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.score-name {
+  font-size: 11.5px;
+  color: var(--ink-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.score-track { height: 10px; background: var(--surface-2); border-radius: 5px; }
+
+.score-bar {
+  height: 100%;
+  border-radius: 5px;
+  background: var(--accent);
+  min-width: 3px;
+}
+
+.score-value {
+  font-size: 11.5px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+/* ── Drawer ──────────────────────────────────────────────────────────── */
+
+.drawer { position: fixed; inset: 0; z-index: 50; }
+
+.drawer-scrim { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.55); }
+
+.drawer-panel {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: min(420px, 100%);
+  background: var(--surface);
+  border-left: 1px solid var(--hairline);
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.drawer-head h2 { font-size: 15px; }
+
+.drawer-body { padding: 14px 16px; overflow: auto; display: flex; flex-direction: column; gap: 12px; }
+
+.drawer-body dl { margin: 0; display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 5px 10px; }
+.drawer-body dt { font-size: 11px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.drawer-body dd { margin: 0; font-size: 12.5px; color: var(--ink-2); word-break: break-word; }
+
+.drawer-body p { margin: 0; font-size: 12.5px; color: var(--ink-2); }
+
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.chip {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--ink-2);
+}
+.chip[data-tone="warn"] { color: var(--warning); border-color: rgba(250, 178, 25, 0.35); }
+
+.artifact-list { margin: 0; padding-left: 16px; font-size: 11.5px; color: var(--ink-2); font-family: var(--mono); }
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+
+@media (max-width: 1240px) {
+  body { overflow: auto; }
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .roster, .map-panel { max-height: 420px; }
+  .side { flex-direction: row; flex-wrap: wrap; }
+  .side > .panel { flex: 1 1 280px; }
+}
+
+@media (max-width: 720px) {
+  .topbar { flex-wrap: wrap; gap: 12px; }
+  .brand { min-width: 0; }
+  .side { flex-direction: column; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .edge[data-active="true"] { stroke-dasharray: none; }
+}
+
+
+.replay-chip {
+  font-size: 10.5px; letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--warning); border: 1px solid rgba(250, 178, 25, 0.4);
+  border-radius: 999px; padding: 3px 10px; white-space: nowrap;
+  font-family: var(--mono);
+}
+
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" id="brand-mark" aria-hidden="true">⌘</span>
+    <div>
+      <h1>NeuroForge Command Center</h1>
+      <p class="brand-sub" id="brand-sub">connecting…</p>
+    </div>
+  </div>
+
+  <div class="kpis" id="kpis" role="group" aria-label="Fleet metrics"></div>
+
+  <div class="link-state">
+    <span class="link-dot" id="link-dot" data-state="connecting" aria-hidden="true"></span>
+    <span id="link-label">connecting</span>
+  </div>
+</header>
+
+<main class="layout">
+
+  <!-- ── Fleet roster ────────────────────────────────────────────────── -->
+  <section class="panel roster" aria-labelledby="roster-title">
+    <div class="panel-head">
+      <h2 id="roster-title">Fleet</h2>
+      <label class="mini-toggle">
+        <input type="checkbox" id="only-live">
+        <span>active only</span>
+      </label>
+    </div>
+    <div class="panel-body" id="roster"></div>
+  </section>
+
+  <!-- ── Centre column ──────────────────────────────────────────────── -->
+  <div class="centre">
+
+    <section class="panel map-panel" aria-labelledby="map-title">
+      <div class="panel-head">
+        <h2 id="map-title">Architecture</h2>
+        <div class="map-controls">
+          <label class="mini-toggle">
+            <input type="checkbox" id="show-review" checked>
+            <span>QA review</span>
+          </label>
+          <label class="mini-toggle">
+            <input type="checkbox" id="show-dependency">
+            <span>dependencies</span>
+          </label>
+          <div class="btn-group">
+            <button type="button" id="zoom-out" title="Zoom out" aria-label="Zoom out">−</button>
+            <button type="button" id="zoom-fit" title="Fit to view">fit</button>
+            <button type="button" id="zoom-in" title="Zoom in" aria-label="Zoom in">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="map-shell" id="map-shell">
+        <svg id="map" role="img" aria-labelledby="map-title map-desc">
+          <desc id="map-desc">Live map of the NeuroForge agent fleet. Each box is
+            an agent; its status is written inside it. Solid lines carry work,
+            faint lines are QA reviews and external dependencies.</desc>
+        </svg>
+        <div class="map-legend" id="map-legend"></div>
+      </div>
+    </section>
+
+    <section class="panel timeline-panel" aria-labelledby="timeline-title">
+      <div class="panel-head">
+        <h2 id="timeline-title">Mission timeline</h2>
+        <span class="panel-note" id="timeline-note">no run selected</span>
+      </div>
+      <div class="panel-body" id="timeline"></div>
+    </section>
+
+    <section class="panel feed-panel" aria-labelledby="feed-title">
+      <div class="panel-head">
+        <h2 id="feed-title">Live feed</h2>
+        <div class="feed-controls">
+          <label class="mini-toggle">
+            <input type="checkbox" id="follow" checked>
+            <span>follow</span>
+          </label>
+          <select id="feed-filter" aria-label="Filter feed by level">
+            <option value="all">everything</option>
+            <option value="event">events only</option>
+            <option value="warn">warnings &amp; errors</option>
+          </select>
+        </div>
+      </div>
+      <div class="panel-body feed" id="feed" role="log" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <!-- ── Command column ─────────────────────────────────────────────── -->
+  <div class="side">
+    <section class="panel autopilot-panel" aria-labelledby="autopilot-title">
+      <div class="panel-head">
+        <h2 id="autopilot-title">Autopilot</h2>
+        <span class="status" id="ap-status" data-status="idle">idle</span>
+      </div>
+      <div class="panel-body autopilot" id="autopilot">
+        <p class="ap-objective" id="ap-objective">—</p>
+        <p class="ap-detail" id="ap-detail"></p>
+
+        <div class="meter">
+          <div class="meter-head">
+            <span>mission book</span>
+            <span id="ap-book-value">—</span>
+          </div>
+          <div class="meter-track"><div class="meter-fill" id="ap-book-bar"></div></div>
+        </div>
+
+        <div class="meter">
+          <div class="meter-head">
+            <span>budget <span class="meter-note">estimated</span></span>
+            <span id="ap-budget-value">—</span>
+          </div>
+          <div class="meter-track">
+            <div class="meter-fill" id="ap-budget-bar" data-tone="spend"></div>
+          </div>
+        </div>
+
+        <dl class="ap-facts">
+          <dt>next</dt><dd id="ap-next">—</dd>
+          <dt>today</dt><dd id="ap-today">—</dd>
+          <dt>learning</dt><dd id="ap-learning">—</dd>
+        </dl>
+
+        <div class="ap-controls">
+          <button type="button" id="ap-toggle">Start</button>
+          <button type="button" id="ap-skip">Skip objective</button>
+        </div>
+        <p class="form-error" id="ap-error" role="alert"></p>
+      </div>
+    </section>
+
+    <section class="panel launch-panel" aria-labelledby="launch-title">
+      <div class="panel-head">
+        <h2 id="launch-title">Launch</h2>
+        <span class="mode-pill" id="mode-pill">—</span>
+      </div>
+      <form class="panel-body launch" id="launch-form">
+        <label class="field">
+          <span>Agent</span>
+          <select id="launch-agent" required></select>
+        </label>
+        <p class="agent-blurb" id="launch-blurb"></p>
+        <div id="launch-params"></div>
+        <label class="mini-toggle sim-toggle">
+          <input type="checkbox" id="launch-simulate">
+          <span>simulate this run</span>
+        </label>
+        <button type="submit" class="launch-button" id="launch-button">Deploy agent</button>
+        <p class="form-error" id="launch-error" role="alert"></p>
+      </form>
+    </section>
+
+    <section class="panel runs-panel" aria-labelledby="runs-title">
+      <div class="panel-head">
+        <h2 id="runs-title">Runs</h2>
+        <span class="panel-note" id="runs-note"></span>
+      </div>
+      <div class="panel-body" id="runs"></div>
+    </section>
+
+    <section class="panel scores-panel" aria-labelledby="scores-title">
+      <div class="panel-head">
+        <h2 id="scores-title">QA by agent</h2>
+        <span class="panel-note">out of 50</span>
+      </div>
+      <div class="panel-body" id="scores"></div>
+    </section>
+  </div>
+</main>
+
+<!-- Agent detail drawer -->
+<div class="drawer" id="drawer" hidden>
+  <div class="drawer-scrim" id="drawer-scrim"></div>
+  <aside class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+    <header class="drawer-head">
+      <h2 id="drawer-title">Agent</h2>
+      <button type="button" id="drawer-close" aria-label="Close">✕</button>
+    </header>
+    <div class="drawer-body" id="drawer-body"></div>
+  </aside>
+</div>
+
+<script>
+
+/* Replay transport.
+ *
+ * The console above is unmodified. Only fetch and EventSource are replaced —
+ * fetch answers from a baked snapshot, EventSource plays a recorded run on a
+ * clock. There is no dispatch path: a POST restarts the recording instead of
+ * reaching a process, because a hosted page must never be able to launch one.
+ */
+(() => {
+  const SNAPSHOT = {"fleet": {"agents": [{"id": "commander", "name": "Agent Commander", "squad": "command", "kind": "command", "glyph": "\u2318", "summary": "Dispatches every agent, supervises runs, streams live telemetry.", "doc": "The control plane you are looking at. Runs locally, holds no secrets of its own, and can only launch commands declared in this registry.", "dispatchable": false, "readiness": "operational", "missing_env": [], "params": [], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "mission", "name": "Full Mission", "squad": "command", "kind": "command", "glyph": "\u25b6", "summary": "Runs the complete forge chain for one topic: research \u2192 funnel.", "doc": "The standard production run. Five artifacts plus QA reports, roughly $0.17 of tokens per topic.", "dispatchable": true, "readiness": "unconfigured", "missing_env": ["ANTHROPIC_API_KEY"], "params": [{"name": "topic", "label": "Topic", "kind": "string", "required": true, "default": "Stop Overthinking", "choices": [], "help": "Content topic, e.g. \"Stop Overthinking\""}, {"name": "faculty", "label": "Faculty", "kind": "choice", "required": true, "default": "Dr. Nova Vale", "choices": ["Dr. Nova Vale", "Kai Ren", "Marcus Voss", "Luna Hart", "Dr. Orion Hale"], "help": "Which faculty voice writes this"}, {"name": "pillar", "label": "Pillar", "kind": "string", "required": false, "default": null, "choices": [], "help": "Content pillar override (defaults from faculty)"}, {"name": "no_qa", "label": "Skip QA", "kind": "flag", "required": false, "default": null, "choices": [], "help": "Skip the QA agent after each step (~50% fewer tokens)"}, {"name": "resume", "label": "Resume", "kind": "flag", "required": false, "default": null, "choices": [], "help": "Reuse outputs already on disk instead of regenerating"}], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "research", "name": "Research Agent", "squad": "forge", "kind": "llm", "glyph": "\ud83d\udd2c", "summary": "Builds the structured strategy brief every later agent reads.", "doc": "Prompt: prompts/01_research_agent.md", "dispatchable": true, "readiness": "unconfigured", "missing_env": ["ANTHROPIC_API_KEY"], "params": [{"name": "topic", "label": "Topic", "kind": "string", "required": true, "default": "Stop Overthinking", "choices": [], "help": "Content topic, e.g. \"Stop Overthinking\""}, {"name": "faculty", "label": "Faculty", "kind": "choice", "required": true, "default": "Dr. Nova Vale", "choices": ["Dr. Nova Vale", "Kai Ren", "Marcus Voss", "Luna Hart", "Dr. Orion Hale"], "help": "Which faculty voice writes this"}, {"name": "pillar", "label": "Pillar", "kind": "string", "required": false, "default": null, "choices": [], "help": "Content pillar override (defaults from faculty)"}, {"name": "no_qa", "label": "Skip QA", "kind": "flag", "required": false, "default": null, "choices": [], "help": "Skip the QA agent after each step (~50% fewer tokens)"}], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "architect", "name": "Book Architect", "squad": "forge", "kind": "llm", "glyph": "\ud83d\udcd0", "summary": "Turns the brief into a full book blueprint and transformation arc.", "doc": "Prompt: prompts/02_book_architect_agent.md", "dispatchable": true, "readiness": "unconfigured", "missing_env": ["ANTHROPIC_API_KEY"], "params": [{"name": "topic", "label": "Topic", "kind": "string", "required": true, "default": "Stop Overthinking", "choices": [], "help": "Content topic, e.g. \"Stop Overthinking\""}, {"name": "faculty", "label": "Faculty", "kind": "choice", "required": true, "default": "Dr. Nova Vale", "choices": ["Dr. Nova Vale", "Kai Ren", "Marcus Voss", "Luna Hart", "Dr. Orion Hale"], "help": "Which faculty voice writes this"}, {"name": "pillar", "label": "Pillar", "kind": "string", "required": false, "default": null, "choices": [], "help": "Content pillar override (defaults from faculty)"}, {"name": "no_qa", "label": "Skip QA", "kind": "flag", "required": false, "default": null, "choices": [], "help": "Skip the QA agent after each step (~50% fewer tokens)"}], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "manuscript", "name": "Manuscript Agent", "squad": "forge", "kind": "llm", "glyph": "\u270d", "summary": "Writes chapters in faculty voice; chapter 1 anchors every other voice.", "doc": "Prompt: prompts/03_manuscript_agent.md", "dispatchable": true, "readiness": "unconfigured", "missing_env": ["ANTHROPIC_API_KEY"], "params": [{"name": "topic", "label": "Topic", "kind": "string", "required": true, "default": "Stop Overthinking", "choices": [], "help": "Content topic, e.g. \"Stop Overthinking\""}, {"name": "faculty", "label": "Faculty", "kind": "choice", "required": true, "default": "Dr. Nova Vale", "choices": ["Dr. Nova Vale", "Kai Ren", "Marcus Voss", "Luna Hart", "Dr. Orion Hale"], "help": "Which faculty voice writes this"}, {"name": "pillar", "label": "Pillar", "kind": "string", "required": false, "default": null, "choices": [], "help": "Content pillar override (defaults from faculty)"}, {"name": "chapter", "label": "Chapter", "kind": "int", "required": false, "default": 1, "choices": [], "help": "Chapter number to write"}, {"name": "no_qa", "label": "Skip QA", "kind": "flag", "required": false, "default": null, "choices": [], "help": "Skip the QA agent after each step (~50% fewer tokens)"}], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "shorts", "name": "Shorts Script Agent", "squad": "forge", "kind": "llm", "glyph": "\ud83c\udfac", "summary": "Produces 20\u201340 short-form scripts plus quote and carousel concepts.", "doc": "Prompt: prompts/04_shorts_script_agent.md", "dispatchable": true, "readiness": "unconfigured", "missing_env": ["ANTHROPIC_API_KEY"], "params": [{"name": "topic", "label": "Topic", "kind": "string", "required": true, "default": "Stop Overthinking", "choices": [], "help": "Content topic, e.g. \"Stop Overthinking\""}, {"name": "faculty", "label": "Faculty", "kind": "choice", "required": true, "default": "Dr. Nova Vale", "choices": ["Dr. Nova Vale", "Kai Ren", "Marcus Voss", "Luna Hart", "Dr. Orion Hale"], "help": "Which faculty voice writes this"}, {"name": "pillar", "label": "Pillar", "kind": "string", "required": false, "default": null, "choices": [], "help": "Content pillar override (defaults from faculty)"}, {"name": "no_qa", "label": "Skip QA", "kind": "flag", "required": false, "default": null, "choices": [], "help": "Skip the QA agent after each step (~50% fewer tokens)"}], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "funnel", "name": "Funnel Agent", "squad": "forge", "kind": "llm", "glyph": "\ud83d\udcb0", "summary": "Landing page, thank-you page, 5-email sequence and ad copy.", "doc": "Prompt: prompts/05_funnel_agent.md", "dispatchable": true, "readiness": "unconfigured", "missing_env": ["ANTHROPIC_API_KEY"], "params": [{"name": "topic", "label": "Topic", "kind": "string", "required": true, "default": "Stop Overthinking", "choices": [], "help": "Content topic, e.g. \"Stop Overthinking\""}, {"name": "faculty", "label": "Faculty", "kind": "choice", "required": true, "default": "Dr. Nova Vale", "choices": ["Dr. Nova Vale", "Kai Ren", "Marcus Voss", "Luna Hart", "Dr. Orion Hale"], "help": "Which faculty voice writes this"}, {"name": "pillar", "label": "Pillar", "kind": "string", "required": false, "default": null, "choices": [], "help": "Content pillar override (defaults from faculty)"}, {"name": "no_qa", "label": "Skip QA", "kind": "flag", "required": false, "default": null, "choices": [], "help": "Skip the QA agent after each step (~50% fewer tokens)"}], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "qa", "name": "QA Agent", "squad": "forge", "kind": "llm", "glyph": "\ud83d\udd0d", "summary": "Scores every artifact out of 50 and writes a prompt improvement note.", "doc": "Prompt: prompts/06_qa_agent.md. A score below 35/50 halts a full mission.", "dispatchable": true, "readiness": "unconfigured", "missing_env": ["ANTHROPIC_API_KEY"], "params": [{"name": "topic", "label": "Topic", "kind": "string", "required": true, "default": "Stop Overthinking", "choices": [], "help": "Content topic, e.g. \"Stop Overthinking\""}, {"name": "faculty", "label": "Faculty", "kind": "choice", "required": true, "default": "Dr. Nova Vale", "choices": ["Dr. Nova Vale", "Kai Ren", "Marcus Voss", "Luna Hart", "Dr. Orion Hale"], "help": "Which faculty voice writes this"}, {"name": "file", "label": "File", "kind": "string", "required": true, "default": null, "choices": [], "help": "Path to the artifact to review"}, {"name": "content_type", "label": "Content type", "kind": "choice", "required": false, "default": "Manuscript Chapter", "choices": ["Research Brief", "Book Blueprint", "Manuscript Chapter", "Short-Form Scripts", "Funnel Copy"], "help": ""}], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "parse_scripts", "name": "Script Parser", "squad": "production", "kind": "tool", "glyph": "\u29c9", "summary": "Splits a shorts batch file into one JSON per script.", "doc": "Pure local parsing \u2014 no API calls, safe to re-run.", "dispatchable": true, "readiness": "operational", "missing_env": [], "params": [{"name": "file", "label": "Batch file", "kind": "string", "required": true, "default": null, "choices": [], "help": "Path to a 04_shorts_scripts_*.md file"}, {"name": "topic", "label": "Topic", "kind": "string", "required": true, "default": "Stop Overthinking", "choices": [], "help": "Content topic, e.g. \"Stop Overthinking\""}, {"name": "faculty", "label": "Faculty", "kind": "choice", "required": false, "default": "Dr. Nova Vale", "choices": ["Dr. Nova Vale", "Kai Ren", "Marcus Voss", "Luna Hart", "Dr. Orion Hale"], "help": ""}], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "heygen_setup", "name": "HeyGen Setup", "squad": "production", "kind": "tool", "glyph": "\u2699", "summary": "Matches each faculty member to a stock avatar and voice ID.", "doc": "", "dispatchable": true, "readiness": "unconfigured", "missing_env": ["HEYGEN_API_KEY"], "params": [{"name": "faculty", "label": "Faculty", "kind": "choice", "required": false, "default": null, "choices": ["Dr. Nova Vale", "Kai Ren", "Marcus Voss", "Luna Hart", "Dr. Orion Hale"], "help": "Configure one faculty only"}, {"name": "save", "label": "Write .heygen.env", "kind": "flag", "required": false, "default": null, "choices": [], "help": ""}, {"name": "list", "label": "List catalogue", "kind": "flag", "required": false, "default": null, "choices": [], "help": ""}], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "heygen_producer", "name": "HeyGen Producer", "squad": "production", "kind": "sync", "glyph": "\ud83c\udfa5", "summary": "Renders avatar video for each parsed short-form script.", "doc": "", "dispatchable": true, "readiness": "unconfigured", "missing_env": ["HEYGEN_API_KEY"], "params": [{"name": "topic", "label": "Topic", "kind": "string", "required": true, "default": "Stop Overthinking", "choices": [], "help": "Content topic, e.g. \"Stop Overthinking\""}, {"name": "faculty", "label": "Faculty", "kind": "choice", "required": true, "default": "Dr. Nova Vale", "choices": ["Dr. Nova Vale", "Kai Ren", "Marcus Voss", "Luna Hart", "Dr. Orion Hale"], "help": "Which faculty voice writes this"}, {"name": "scripts", "label": "Script range", "kind": "string", "required": false, "default": null, "choices": [], "help": "Range or list, e.g. \"1-5\" or \"3,7\""}, {"name": "dry_run", "label": "Dry run", "kind": "flag", "required": false, "default": null, "choices": [], "help": "Preview only \u2014 write nothing to the remote system"}], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "orchestrator", "name": "Master Orchestrator", "squad": "distribution", "kind": "sync", "glyph": "\ud83d\udce1", "summary": "Runs the cross-system sync: forge \u2192 Florra \u2192 Opus \u2192 OpenClaw.", "doc": "", "dispatchable": true, "readiness": "unconfigured", "missing_env": ["AIRTABLE_API_KEY", "AIRTABLE_BASE_ID"], "params": [{"name": "topic", "label": "Topic", "kind": "string", "required": false, "default": null, "choices": [], "help": "Limit the sync to one topic"}, {"name": "dry_run", "label": "Dry run", "kind": "flag", "required": false, "default": null, "choices": [], "help": "Preview only \u2014 write nothing to the remote system"}], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "airtable_sync", "name": "Airtable Sync", "squad": "distribution", "kind": "sync", "glyph": "\ud83d\uddc2", "summary": "Pushes projects, pipeline runs and QA scores into the Airtable base.", "doc": "", "dispatchable": true, "readiness": "unconfigured", "missing_env": ["AIRTABLE_API_KEY", "AIRTABLE_BASE_ID"], "params": [{"name": "topic", "label": "Topic", "kind": "string", "required": false, "default": null, "choices": [], "help": "Sync one topic only"}, {"name": "dry_run", "label": "Dry run", "kind": "flag", "required": false, "default": null, "choices": [], "help": "Preview only \u2014 write nothing to the remote system"}], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "florra", "name": "Florra Logger", "squad": "distribution", "kind": "sync", "glyph": "\ud83c\udf38", "summary": "Manages the UGC creator pipeline and content library.", "doc": "", "dispatchable": true, "readiness": "unconfigured", "missing_env": ["AIRTABLE_API_KEY"], "params": [], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "opus", "name": "Opus Scheduler", "squad": "distribution", "kind": "sync", "glyph": "\ud83c\udf9e", "summary": "Clips long-form video and schedules the results per platform.", "doc": "", "dispatchable": true, "readiness": "unconfigured", "missing_env": ["OPUS_API_KEY"], "params": [], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "flowstage", "name": "Flowstage Publisher", "squad": "distribution", "kind": "sync", "glyph": "\ud83d\udce4", "summary": "Auto-posts finished clips to TikTok, Instagram and YouTube.", "doc": "", "dispatchable": true, "readiness": "unconfigured", "missing_env": ["FLOWSTAGE_API_TOKEN"], "params": [], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "meta_ads", "name": "Meta Ads", "squad": "growth", "kind": "sync", "glyph": "\ud83c\udd5c", "summary": "Builds custom and lookalike audiences, campaigns and ads.", "doc": "", "dispatchable": true, "readiness": "unconfigured", "missing_env": ["META_ADS_ACCESS_TOKEN", "META_AD_ACCOUNT_ID"], "params": [], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "tiktok_ads", "name": "TikTok Ads", "squad": "growth", "kind": "sync", "glyph": "\ud83c\udd63", "summary": "Sound and hashtag retargeting audiences, campaigns and ad groups.", "doc": "", "dispatchable": true, "readiness": "unconfigured", "missing_env": ["TIKTOK_ADS_ACCESS_TOKEN", "TIKTOK_ADVERTISER_ID"], "params": [], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "openclaw", "name": "OpenClaw", "squad": "intelligence", "kind": "sync", "glyph": "\ud83e\uddbe", "summary": "Logs interactions and proposes improvements back to the fleet.", "doc": "", "dispatchable": true, "readiness": "unconfigured", "missing_env": ["TELEGRAM_BOT_TOKEN"], "params": [], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "evidence", "name": "Evidence Agent", "squad": "intelligence", "kind": "llm", "glyph": "\ud83d\udd0e", "summary": "Checks claims in artifacts against real sources it retrieves.", "doc": "A smolagents CodeAgent \u2014 it writes and runs Python to work through the claims. That code executes in a Docker sandbox by default; --executor local runs it in-process and is refused unless EVIDENCE_ALLOW_LOCAL=1. Serves the fleet's own rule against fabricated citations, and reports real token counts rather than an estimate.", "dispatchable": true, "readiness": "unconfigured", "missing_env": ["ANTHROPIC_API_KEY"], "params": [{"name": "topic", "label": "Topic", "kind": "string", "required": true, "default": "Stop Overthinking", "choices": [], "help": "Content topic, e.g. \"Stop Overthinking\""}, {"name": "file", "label": "Artifact", "kind": "string", "required": true, "default": null, "choices": [], "help": "Path to the artifact whose claims to verify"}, {"name": "executor", "label": "Sandbox", "kind": "choice", "required": false, "default": "docker", "choices": ["docker", "e2b", "local"], "help": "Where generated code runs. Local is refused unless EVIDENCE_ALLOW_LOCAL=1."}, {"name": "max_claims", "label": "Max claims", "kind": "int", "required": false, "default": 12, "choices": [], "help": "How many claims to check"}], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "optimizer", "name": "Prompt Optimizer", "squad": "intelligence", "kind": "llm", "glyph": "\u267b", "summary": "Rewrites underperforming prompts from accumulated QA data.", "doc": "Run every ~10 topics. Backs up to prompts/versions/ before applying.", "dispatchable": true, "readiness": "unconfigured", "missing_env": ["ANTHROPIC_API_KEY"], "params": [{"name": "agent", "label": "Target agent", "kind": "choice", "required": false, "default": null, "choices": ["research", "blueprint", "manuscript", "scripts", "funnel", "qa"], "help": "Optimise a single agent prompt"}, {"name": "threshold", "label": "Score threshold", "kind": "int", "required": false, "default": 40, "choices": [], "help": "Rewrite agents scoring below this"}, {"name": "apply", "label": "Apply rewrites", "kind": "flag", "required": false, "default": null, "choices": [], "help": "Write new prompts (old versions are backed up)"}], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "anthropic_api", "name": "Anthropic API", "squad": "external", "kind": "external", "glyph": "\u2733", "summary": "Claude model endpoint behind every reasoning agent.", "doc": "", "dispatchable": false, "readiness": "unconfigured", "missing_env": ["ANTHROPIC_API_KEY"], "params": [], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "heygen_api", "name": "HeyGen", "squad": "external", "kind": "external", "glyph": "\u25c9", "summary": "Avatar IV video rendering.", "doc": "", "dispatchable": false, "readiness": "unconfigured", "missing_env": ["HEYGEN_API_KEY"], "params": [], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "airtable_api", "name": "Airtable", "squad": "external", "kind": "external", "glyph": "\u25a6", "summary": "System of record for projects, runs, QA and campaigns.", "doc": "", "dispatchable": false, "readiness": "unconfigured", "missing_env": ["AIRTABLE_API_KEY"], "params": [], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "meta_api", "name": "Meta Ads API", "squad": "external", "kind": "external", "glyph": "\u25d1", "summary": "Audiences, campaigns and ad delivery.", "doc": "", "dispatchable": false, "readiness": "unconfigured", "missing_env": ["META_ADS_ACCESS_TOKEN"], "params": [], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "tiktok_api", "name": "TikTok Ads API", "squad": "external", "kind": "external", "glyph": "\u25d0", "summary": "Sound retargeting and campaign delivery.", "doc": "", "dispatchable": false, "readiness": "unconfigured", "missing_env": ["TIKTOK_ADS_ACCESS_TOKEN"], "params": [], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}, {"id": "web_search", "name": "Web Search", "squad": "external", "kind": "external", "glyph": "\u25ce", "summary": "Keyless DuckDuckGo, or a keyed search API when one is set.", "doc": "", "dispatchable": false, "readiness": "passive", "missing_env": [], "params": [], "state": {"status": "idle", "detail": "", "run_id": null, "last_score": null, "since": 0}}], "squads": [{"id": "command", "name": "Command", "lane": 0, "accent": "#3987e5", "summary": "Mission intake and fleet supervision"}, {"id": "forge", "name": "Content Forge", "lane": 1, "accent": "#d95926", "summary": "Claude agents that write the product"}, {"id": "production", "name": "Production", "lane": 2, "accent": "#199e70", "summary": "Turns text into shippable media"}, {"id": "distribution", "name": "Distribution", "lane": 3, "accent": "#c98500", "summary": "Moves finished assets into the stack"}, {"id": "growth", "name": "Growth", "lane": 4, "accent": "#d55181", "summary": "Paid amplification and audience building"}, {"id": "intelligence", "name": "Intelligence", "lane": 5, "accent": "#008300", "summary": "Closes the loop and improves the system"}, {"id": "external", "name": "External Systems", "lane": 6, "accent": "#9085e9", "summary": "Third-party endpoints the fleet depends on"}], "mission_chain": ["research", "architect", "manuscript", "shorts", "funnel"], "uptime": 0.0004801750183105469, "profile": {"id": "florra_alpha", "name": "Florra Fleet Alpha", "callsign": "FFA", "summary": "Florra's first continuously-operating fleet. Same agent architecture as NeuroForge, its own mission book, budget and cadence. Works the backlog around the clock, gates every artifact on QA, and folds what it learns back into the prompts.", "derived_from": "neuroforge", "backlog": [{"topic": "Stop Overthinking", "faculty": "Dr. Nova Vale"}, {"topic": "Dopamine Detox", "faculty": "Kai Ren"}, {"topic": "Stop Procrastinating", "faculty": "Kai Ren"}, {"topic": "The Confidence Code", "faculty": "Luna Hart"}, {"topic": "Beat Phone Addiction", "faculty": "Kai Ren"}, {"topic": "Stop Negative Thoughts", "faculty": "Dr. Nova Vale"}, {"topic": "How to Read People", "faculty": "Luna Hart"}, {"topic": "The Discipline Blueprint", "faculty": "Marcus Voss"}, {"topic": "The Charisma Blueprint", "faculty": "Luna Hart"}, {"topic": "Beat Anxiety Fast", "faculty": "Dr. Nova Vale"}], "autopilot": {"enabled": true, "mode": "simulate", "cadence_seconds": 1800, "budget_usd": 12.0, "daily_mission_cap": 8, "qa_floor": 38, "rework_attempts": 1, "optimize_every": 5, "optimize_applies": false, "max_consecutive_failures": 3, "backoff_seconds": 600, "skip_completed": true, "no_qa": false}}, "fleets": ["florra_alpha", "neuroforge"]}, "graph": {"ir": {"version": "neuroforge.fleet/1", "width": 2008, "height": 833, "lane_label_y": 38, "lanes": [{"id": "command", "name": "Command", "lane": 0, "accent": "#3987e5", "summary": "Mission intake and fleet supervision", "count": 2, "x": 40, "y": 38, "w": 176}, {"id": "forge", "name": "Content Forge", "lane": 1, "accent": "#d95926", "summary": "Claude agents that write the product", "count": 6, "x": 332, "y": 38, "w": 176}, {"id": "production", "name": "Production", "lane": 2, "accent": "#199e70", "summary": "Turns text into shippable media", "count": 3, "x": 624, "y": 38, "w": 176}, {"id": "distribution", "name": "Distribution", "lane": 3, "accent": "#c98500", "summary": "Moves finished assets into the stack", "count": 5, "x": 916, "y": 38, "w": 176}, {"id": "growth", "name": "Growth", "lane": 4, "accent": "#d55181", "summary": "Paid amplification and audience building", "count": 2, "x": 1208, "y": 38, "w": 176}, {"id": "intelligence", "name": "Intelligence", "lane": 5, "accent": "#008300", "summary": "Closes the loop and improves the system", "count": 3, "x": 1500, "y": 38, "w": 176}, {"id": "external", "name": "External Systems", "lane": 6, "accent": "#9085e9", "summary": "Third-party endpoints the fleet depends on", "count": 6, "x": 1792, "y": 38, "w": 176}], "nodes": [{"id": "commander", "label": "Agent Commander", "kind": "command", "squad": "command", "squad_name": "Command", "accent": "#3987e5", "glyph": "\u2318", "summary": "Dispatches every agent, supervises runs, streams live telemetry.", "lane": 0, "row": 0, "x": 40, "y": 333.0, "w": 176, "h": 58, "dispatchable": false, "readiness": "operational", "state": {"status": "idle"}}, {"id": "mission", "label": "Full Mission", "kind": "command", "squad": "command", "squad_name": "Command", "accent": "#3987e5", "glyph": "\u25b6", "summary": "Runs the complete forge chain for one topic: research \u2192 funnel.", "lane": 0, "row": 1, "x": 40, "y": 425.0, "w": 176, "h": 58, "dispatchable": true, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "research", "label": "Research Agent", "kind": "llm", "squad": "forge", "squad_name": "Content Forge", "accent": "#d95926", "glyph": "\ud83d\udd2c", "summary": "Builds the structured strategy brief every later agent reads.", "lane": 1, "row": 0, "x": 332, "y": 149.0, "w": 176, "h": 58, "dispatchable": true, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "architect", "label": "Book Architect", "kind": "llm", "squad": "forge", "squad_name": "Content Forge", "accent": "#d95926", "glyph": "\ud83d\udcd0", "summary": "Turns the brief into a full book blueprint and transformation arc.", "lane": 1, "row": 1, "x": 332, "y": 241.0, "w": 176, "h": 58, "dispatchable": true, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "manuscript", "label": "Manuscript Agent", "kind": "llm", "squad": "forge", "squad_name": "Content Forge", "accent": "#d95926", "glyph": "\u270d", "summary": "Writes chapters in faculty voice; chapter 1 anchors every other voice.", "lane": 1, "row": 2, "x": 332, "y": 333.0, "w": 176, "h": 58, "dispatchable": true, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "shorts", "label": "Shorts Script Agent", "kind": "llm", "squad": "forge", "squad_name": "Content Forge", "accent": "#d95926", "glyph": "\ud83c\udfac", "summary": "Produces 20\u201340 short-form scripts plus quote and carousel concepts.", "lane": 1, "row": 3, "x": 332, "y": 425.0, "w": 176, "h": 58, "dispatchable": true, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "funnel", "label": "Funnel Agent", "kind": "llm", "squad": "forge", "squad_name": "Content Forge", "accent": "#d95926", "glyph": "\ud83d\udcb0", "summary": "Landing page, thank-you page, 5-email sequence and ad copy.", "lane": 1, "row": 4, "x": 332, "y": 517.0, "w": 176, "h": 58, "dispatchable": true, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "qa", "label": "QA Agent", "kind": "llm", "squad": "forge", "squad_name": "Content Forge", "accent": "#d95926", "glyph": "\ud83d\udd0d", "summary": "Scores every artifact out of 50 and writes a prompt improvement note.", "lane": 1, "row": 5, "x": 332, "y": 609.0, "w": 176, "h": 58, "dispatchable": true, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "parse_scripts", "label": "Script Parser", "kind": "tool", "squad": "production", "squad_name": "Production", "accent": "#199e70", "glyph": "\u29c9", "summary": "Splits a shorts batch file into one JSON per script.", "lane": 2, "row": 0, "x": 624, "y": 287.0, "w": 176, "h": 58, "dispatchable": true, "readiness": "operational", "state": {"status": "idle"}}, {"id": "heygen_setup", "label": "HeyGen Setup", "kind": "tool", "squad": "production", "squad_name": "Production", "accent": "#199e70", "glyph": "\u2699", "summary": "Matches each faculty member to a stock avatar and voice ID.", "lane": 2, "row": 1, "x": 624, "y": 379.0, "w": 176, "h": 58, "dispatchable": true, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "heygen_producer", "label": "HeyGen Producer", "kind": "sync", "squad": "production", "squad_name": "Production", "accent": "#199e70", "glyph": "\ud83c\udfa5", "summary": "Renders avatar video for each parsed short-form script.", "lane": 2, "row": 2, "x": 624, "y": 471.0, "w": 176, "h": 58, "dispatchable": true, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "orchestrator", "label": "Master Orchestrator", "kind": "sync", "squad": "distribution", "squad_name": "Distribution", "accent": "#c98500", "glyph": "\ud83d\udce1", "summary": "Runs the cross-system sync: forge \u2192 Florra \u2192 Opus \u2192 OpenClaw.", "lane": 3, "row": 0, "x": 916, "y": 195.0, "w": 176, "h": 58, "dispatchable": true, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "airtable_sync", "label": "Airtable Sync", "kind": "sync", "squad": "distribution", "squad_name": "Distribution", "accent": "#c98500", "glyph": "\ud83d\uddc2", "summary": "Pushes projects, pipeline runs and QA scores into the Airtable base.", "lane": 3, "row": 1, "x": 916, "y": 287.0, "w": 176, "h": 58, "dispatchable": true, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "florra", "label": "Florra Logger", "kind": "sync", "squad": "distribution", "squad_name": "Distribution", "accent": "#c98500", "glyph": "\ud83c\udf38", "summary": "Manages the UGC creator pipeline and content library.", "lane": 3, "row": 2, "x": 916, "y": 379.0, "w": 176, "h": 58, "dispatchable": true, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "opus", "label": "Opus Scheduler", "kind": "sync", "squad": "distribution", "squad_name": "Distribution", "accent": "#c98500", "glyph": "\ud83c\udf9e", "summary": "Clips long-form video and schedules the results per platform.", "lane": 3, "row": 3, "x": 916, "y": 471.0, "w": 176, "h": 58, "dispatchable": true, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "flowstage", "label": "Flowstage Publisher", "kind": "sync", "squad": "distribution", "squad_name": "Distribution", "accent": "#c98500", "glyph": "\ud83d\udce4", "summary": "Auto-posts finished clips to TikTok, Instagram and YouTube.", "lane": 3, "row": 4, "x": 916, "y": 563.0, "w": 176, "h": 58, "dispatchable": true, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "meta_ads", "label": "Meta Ads", "kind": "sync", "squad": "growth", "squad_name": "Growth", "accent": "#d55181", "glyph": "\ud83c\udd5c", "summary": "Builds custom and lookalike audiences, campaigns and ads.", "lane": 4, "row": 0, "x": 1208, "y": 333.0, "w": 176, "h": 58, "dispatchable": true, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "tiktok_ads", "label": "TikTok Ads", "kind": "sync", "squad": "growth", "squad_name": "Growth", "accent": "#d55181", "glyph": "\ud83c\udd63", "summary": "Sound and hashtag retargeting audiences, campaigns and ad groups.", "lane": 4, "row": 1, "x": 1208, "y": 425.0, "w": 176, "h": 58, "dispatchable": true, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "openclaw", "label": "OpenClaw", "kind": "sync", "squad": "intelligence", "squad_name": "Intelligence", "accent": "#008300", "glyph": "\ud83e\uddbe", "summary": "Logs interactions and proposes improvements back to the fleet.", "lane": 5, "row": 0, "x": 1500, "y": 287.0, "w": 176, "h": 58, "dispatchable": true, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "evidence", "label": "Evidence Agent", "kind": "llm", "squad": "intelligence", "squad_name": "Intelligence", "accent": "#008300", "glyph": "\ud83d\udd0e", "summary": "Checks claims in artifacts against real sources it retrieves.", "lane": 5, "row": 1, "x": 1500, "y": 379.0, "w": 176, "h": 58, "dispatchable": true, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "optimizer", "label": "Prompt Optimizer", "kind": "llm", "squad": "intelligence", "squad_name": "Intelligence", "accent": "#008300", "glyph": "\u267b", "summary": "Rewrites underperforming prompts from accumulated QA data.", "lane": 5, "row": 2, "x": 1500, "y": 471.0, "w": 176, "h": 58, "dispatchable": true, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "anthropic_api", "label": "Anthropic API", "kind": "external", "squad": "external", "squad_name": "External Systems", "accent": "#9085e9", "glyph": "\u2733", "summary": "Claude model endpoint behind every reasoning agent.", "lane": 6, "row": 0, "x": 1792, "y": 149.0, "w": 176, "h": 58, "dispatchable": false, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "heygen_api", "label": "HeyGen", "kind": "external", "squad": "external", "squad_name": "External Systems", "accent": "#9085e9", "glyph": "\u25c9", "summary": "Avatar IV video rendering.", "lane": 6, "row": 1, "x": 1792, "y": 241.0, "w": 176, "h": 58, "dispatchable": false, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "airtable_api", "label": "Airtable", "kind": "external", "squad": "external", "squad_name": "External Systems", "accent": "#9085e9", "glyph": "\u25a6", "summary": "System of record for projects, runs, QA and campaigns.", "lane": 6, "row": 2, "x": 1792, "y": 333.0, "w": 176, "h": 58, "dispatchable": false, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "meta_api", "label": "Meta Ads API", "kind": "external", "squad": "external", "squad_name": "External Systems", "accent": "#9085e9", "glyph": "\u25d1", "summary": "Audiences, campaigns and ad delivery.", "lane": 6, "row": 3, "x": 1792, "y": 425.0, "w": 176, "h": 58, "dispatchable": false, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "tiktok_api", "label": "TikTok Ads API", "kind": "external", "squad": "external", "squad_name": "External Systems", "accent": "#9085e9", "glyph": "\u25d0", "summary": "Sound retargeting and campaign delivery.", "lane": 6, "row": 4, "x": 1792, "y": 517.0, "w": 176, "h": 58, "dispatchable": false, "readiness": "unconfigured", "state": {"status": "idle"}}, {"id": "web_search", "label": "Web Search", "kind": "external", "squad": "external", "squad_name": "External Systems", "accent": "#9085e9", "glyph": "\u25ce", "summary": "Keyless DuckDuckGo, or a keyed search API when one is set.", "lane": 6, "row": 5, "x": 1792, "y": 609.0, "w": 176, "h": 58, "dispatchable": false, "readiness": "passive", "state": {"status": "idle"}}], "edges": [{"id": "commander->mission", "from": "commander", "to": "mission", "kind": "flow", "label": "launch", "route": "chain", "points": [[128.0, 391.0], [128.0, 425.0]], "render": "orthogonal", "label_point": [128.0, 408.0]}, {"id": "mission->research", "from": "mission", "to": "research", "kind": "flow", "label": "kickoff", "route": "step", "points": [[216, 454.0], [253.12, 454.0], [253.12, 178.0], [332, 178.0]], "render": "orthogonal", "label_point": [253.1, 316.0]}, {"id": "research->architect", "from": "research", "to": "architect", "kind": "flow", "label": "brief", "route": "chain", "points": [[420.0, 207.0], [420.0, 241.0]], "render": "orthogonal", "label_point": [420.0, 224.0]}, {"id": "research->shorts", "from": "research", "to": "shorts", "kind": "flow", "label": "brief", "route": "sidestep", "points": [[332, 178.0], [310, 178.0], [310, 454.0], [332, 454.0]], "render": "orthogonal", "label_point": [310.0, 316.0]}, {"id": "research->funnel", "from": "research", "to": "funnel", "kind": "flow", "label": "brief", "route": "sidestep", "points": [[332, 178.0], [288, 178.0], [288, 546.0], [332, 546.0]], "render": "orthogonal", "label_point": [288.0, 362.0]}, {"id": "research->qa", "from": "research", "to": "qa", "kind": "review", "label": "", "route": "curve", "points": [[508, 178.0], [622.0, 178.0], [622.0, 638.0], [508, 638.0]], "render": "curve", "label_point": null}, {"id": "architect->manuscript", "from": "architect", "to": "manuscript", "kind": "flow", "label": "blueprint", "route": "chain", "points": [[420.0, 299.0], [420.0, 333.0]], "render": "orthogonal", "label_point": [420.0, 316.0]}, {"id": "architect->funnel", "from": "architect", "to": "funnel", "kind": "flow", "label": "blueprint", "route": "sidestep", "points": [[332, 270.0], [266, 270.0], [266, 546.0], [332, 546.0]], "render": "orthogonal", "label_point": [266.0, 408.0]}, {"id": "architect->qa", "from": "architect", "to": "qa", "kind": "review", "label": "", "route": "curve", "points": [[508, 270.0], [610.0, 270.0], [610.0, 638.0], [508, 638.0]], "render": "curve", "label_point": null}, {"id": "manuscript->shorts", "from": "manuscript", "to": "shorts", "kind": "flow", "label": "voice anchor", "route": "chain", "points": [[420.0, 391.0], [420.0, 425.0]], "render": "orthogonal", "label_point": [420.0, 408.0]}, {"id": "manuscript->funnel", "from": "manuscript", "to": "funnel", "kind": "flow", "label": "voice anchor", "route": "sidestep", "points": [[332, 362.0], [244, 362.0], [244, 546.0], [332, 546.0]], "render": "orthogonal", "label_point": [244.0, 501.8]}, {"id": "manuscript->qa", "from": "manuscript", "to": "qa", "kind": "review", "label": "", "route": "curve", "points": [[508, 362.0], [598.0, 362.0], [598.0, 638.0], [508, 638.0]], "render": "curve", "label_point": null}, {"id": "shorts->parse_scripts", "from": "shorts", "to": "parse_scripts", "kind": "flow", "label": "script batch", "route": "step", "points": [[508, 454.0], [545.12, 454.0], [545.12, 316.0], [624, 316.0]], "render": "orthogonal", "label_point": [545.1, 405.7]}, {"id": "shorts->qa", "from": "shorts", "to": "qa", "kind": "review", "label": "", "route": "curve", "points": [[508, 454.0], [586.0, 454.0], [586.0, 638.0], [508, 638.0]], "render": "curve", "label_point": null}, {"id": "funnel->qa", "from": "funnel", "to": "qa", "kind": "review", "label": "", "route": "curve", "points": [[508, 546.0], [574.0, 546.0], [574.0, 638.0], [508, 638.0]], "render": "curve", "label_point": null}, {"id": "funnel->meta_ads", "from": "funnel", "to": "meta_ads", "kind": "flow", "label": "ad copy", "route": "overpass", "points": [[420.0, 517.0], [420.0, 132], [1296.0, 132], [1296.0, 333.0]], "render": "orthogonal", "label_point": [858.0, 132.0]}, {"id": "qa->optimizer", "from": "qa", "to": "optimizer", "kind": "flow", "label": "scores", "route": "overpass", "points": [[420.0, 609.0], [420.0, 115], [1588.0, 115], [1588.0, 471.0]], "render": "orthogonal", "label_point": [1004.0, 115.0]}, {"id": "qa->airtable_sync", "from": "qa", "to": "airtable_sync", "kind": "flow", "label": "", "route": "overpass", "points": [[420.0, 609.0], [420.0, 98], [1004.0, 98], [1004.0, 287.0]], "render": "orthogonal", "label_point": null}, {"id": "parse_scripts->heygen_producer", "from": "parse_scripts", "to": "heygen_producer", "kind": "flow", "label": "script JSON", "route": "sidestep", "points": [[624, 316.0], [602, 316.0], [602, 500.0], [624, 500.0]], "render": "orthogonal", "label_point": [602.0, 360.2]}, {"id": "heygen_setup->heygen_producer", "from": "heygen_setup", "to": "heygen_producer", "kind": "flow", "label": "avatar IDs", "route": "chain", "points": [[712.0, 437.0], [712.0, 471.0]], "render": "orthogonal", "label_point": [712.0, 454.0]}, {"id": "heygen_producer->heygen_api", "from": "heygen_producer", "to": "heygen_api", "kind": "dependency", "label": "", "route": "curve", "points": [[800, 500.0], [1246.4, 500.0], [1345.6, 270.0], [1792, 270.0]], "render": "curve", "label_point": null}, {"id": "heygen_producer->flowstage", "from": "heygen_producer", "to": "flowstage", "kind": "flow", "label": "video", "route": "step", "points": [[800, 500.0], [837.12, 500.0], [837.12, 592.0], [916, 592.0]], "render": "orthogonal", "label_point": [876.6, 592.0]}, {"id": "heygen_producer->opus", "from": "heygen_producer", "to": "opus", "kind": "flow", "label": "", "route": "step", "points": [[800, 500.0], [916, 500.0]], "render": "orthogonal", "label_point": null}, {"id": "orchestrator->airtable_sync", "from": "orchestrator", "to": "airtable_sync", "kind": "flow", "label": "", "route": "chain", "points": [[1004.0, 253.0], [1004.0, 287.0]], "render": "orthogonal", "label_point": null}, {"id": "orchestrator->florra", "from": "orchestrator", "to": "florra", "kind": "flow", "label": "", "route": "sidestep", "points": [[916, 224.0], [894, 224.0], [894, 408.0], [916, 408.0]], "render": "orthogonal", "label_point": null}, {"id": "orchestrator->opus", "from": "orchestrator", "to": "opus", "kind": "flow", "label": "", "route": "sidestep", "points": [[916, 224.0], [872, 224.0], [872, 500.0], [916, 500.0]], "render": "orthogonal", "label_point": null}, {"id": "orchestrator->openclaw", "from": "orchestrator", "to": "openclaw", "kind": "flow", "label": "", "route": "overpass", "points": [[1004.0, 195.0], [1004.0, 81], [1588.0, 81], [1588.0, 287.0]], "render": "orthogonal", "label_point": null}, {"id": "airtable_sync->airtable_api", "from": "airtable_sync", "to": "airtable_api", "kind": "dependency", "label": "", "route": "curve", "points": [[1092, 316.0], [1407.0, 316.0], [1477.0, 362.0], [1792, 362.0]], "render": "curve", "label_point": null}, {"id": "florra->airtable_api", "from": "florra", "to": "airtable_api", "kind": "dependency", "label": "", "route": "curve", "points": [[1092, 408.0], [1407.0, 408.0], [1477.0, 362.0], [1792, 362.0]], "render": "curve", "label_point": null}, {"id": "florra->opus", "from": "florra", "to": "opus", "kind": "flow", "label": "", "route": "chain", "points": [[1004.0, 437.0], [1004.0, 471.0]], "render": "orthogonal", "label_point": null}, {"id": "opus->flowstage", "from": "opus", "to": "flowstage", "kind": "flow", "label": "", "route": "chain", "points": [[1004.0, 529.0], [1004.0, 563.0]], "render": "orthogonal", "label_point": null}, {"id": "opus->openclaw", "from": "opus", "to": "openclaw", "kind": "flow", "label": "performance", "route": "overpass", "points": [[1004.0, 471.0], [1004.0, 64], [1588.0, 64], [1588.0, 287.0]], "render": "orthogonal", "label_point": [1296.0, 64.0]}, {"id": "opus->airtable_api", "from": "opus", "to": "airtable_api", "kind": "dependency", "label": "", "route": "curve", "points": [[1092, 500.0], [1407.0, 500.0], [1477.0, 362.0], [1792, 362.0]], "render": "curve", "label_point": null}, {"id": "flowstage->tiktok_ads", "from": "flowstage", "to": "tiktok_ads", "kind": "flow", "label": "sound signal", "route": "step", "points": [[1092, 592.0], [1129.12, 592.0], [1129.12, 454.0], [1208, 454.0]], "render": "orthogonal", "label_point": [1129.1, 543.7]}, {"id": "flowstage->meta_ads", "from": "flowstage", "to": "meta_ads", "kind": "flow", "label": "", "route": "step", "points": [[1092, 592.0], [1145.12, 592.0], [1145.12, 362.0], [1208, 362.0]], "render": "orthogonal", "label_point": null}, {"id": "meta_ads->meta_api", "from": "meta_ads", "to": "meta_api", "kind": "dependency", "label": "", "route": "curve", "points": [[1384, 362.0], [1567.6, 362.0], [1608.4, 454.0], [1792, 454.0]], "render": "curve", "label_point": null}, {"id": "tiktok_ads->tiktok_api", "from": "tiktok_ads", "to": "tiktok_api", "kind": "dependency", "label": "", "route": "curve", "points": [[1384, 454.0], [1567.6, 454.0], [1608.4, 546.0], [1792, 546.0]], "render": "curve", "label_point": null}, {"id": "openclaw->optimizer", "from": "openclaw", "to": "optimizer", "kind": "flow", "label": "improvement notes", "route": "sidestep", "points": [[1500, 316.0], [1478, 316.0], [1478, 500.0], [1500, 500.0]], "render": "orthogonal", "label_point": [1478.0, 360.2]}, {"id": "openclaw->airtable_api", "from": "openclaw", "to": "airtable_api", "kind": "dependency", "label": "", "route": "curve", "points": [[1676, 316.0], [1736.0, 316.0], [1732.0, 362.0], [1792, 362.0]], "render": "curve", "label_point": null}, {"id": "evidence->research", "from": "evidence", "to": "research", "kind": "flow", "label": "verified sources", "route": "feedback", "points": [[1588.0, 437.0], [1588.0, 684], [420.0, 684], [420.0, 207.0]], "render": "orthogonal", "label_point": [1004.0, 684.0]}, {"id": "evidence->qa", "from": "evidence", "to": "qa", "kind": "review", "label": "", "route": "curve", "points": [[1500, 408.0], [1053.6, 408.0], [954.4000000000001, 638.0], [508, 638.0]], "render": "curve", "label_point": null}, {"id": "evidence->web_search", "from": "evidence", "to": "web_search", "kind": "dependency", "label": "", "route": "curve", "points": [[1676, 408.0], [1736.0, 408.0], [1732.0, 638.0], [1792, 638.0]], "render": "curve", "label_point": null}, {"id": "optimizer->research", "from": "optimizer", "to": "research", "kind": "flow", "label": "rewritten prompts", "route": "feedback", "points": [[1588.0, 529.0], [1588.0, 701], [420.0, 701], [420.0, 207.0]], "render": "orthogonal", "label_point": [1004.0, 701.0]}, {"id": "optimizer->architect", "from": "optimizer", "to": "architect", "kind": "flow", "label": "", "route": "feedback", "points": [[1588.0, 529.0], [1588.0, 718], [420.0, 718], [420.0, 299.0]], "render": "orthogonal", "label_point": null}, {"id": "optimizer->manuscript", "from": "optimizer", "to": "manuscript", "kind": "flow", "label": "", "route": "feedback", "points": [[1588.0, 529.0], [1588.0, 735], [420.0, 735], [420.0, 391.0]], "render": "orthogonal", "label_point": null}, {"id": "optimizer->shorts", "from": "optimizer", "to": "shorts", "kind": "flow", "label": "", "route": "feedback", "points": [[1588.0, 529.0], [1588.0, 752], [420.0, 752], [420.0, 483.0]], "render": "orthogonal", "label_point": null}, {"id": "optimizer->funnel", "from": "optimizer", "to": "funnel", "kind": "flow", "label": "", "route": "feedback", "points": [[1588.0, 529.0], [1588.0, 769], [420.0, 769], [420.0, 575.0]], "render": "orthogonal", "label_point": null}, {"id": "optimizer->qa", "from": "optimizer", "to": "qa", "kind": "review", "label": "", "route": "curve", "points": [[1500, 500.0], [1053.6, 500.0], [954.4000000000001, 638.0], [508, 638.0]], "render": "curve", "label_point": null}, {"id": "mission~anthropic_api", "from": "mission", "to": "anthropic_api", "kind": "dependency", "label": "", "route": "curve", "points": [[216, 454.0], [925.2, 454.0], [1082.8, 178.0], [1792, 178.0]], "render": "curve", "label_point": null}, {"id": "research~anthropic_api", "from": "research", "to": "anthropic_api", "kind": "dependency", "label": "", "route": "curve", "points": [[508, 178.0], [1085.8000000000002, 178.0], [1214.1999999999998, 178.0], [1792, 178.0]], "render": "curve", "label_point": null}, {"id": "architect~anthropic_api", "from": "architect", "to": "anthropic_api", "kind": "dependency", "label": "", "route": "curve", "points": [[508, 270.0], [1085.8000000000002, 270.0], [1214.1999999999998, 178.0], [1792, 178.0]], "render": "curve", "label_point": null}, {"id": "manuscript~anthropic_api", "from": "manuscript", "to": "anthropic_api", "kind": "dependency", "label": "", "route": "curve", "points": [[508, 362.0], [1085.8000000000002, 362.0], [1214.1999999999998, 178.0], [1792, 178.0]], "render": "curve", "label_point": null}, {"id": "shorts~anthropic_api", "from": "shorts", "to": "anthropic_api", "kind": "dependency", "label": "", "route": "curve", "points": [[508, 454.0], [1085.8000000000002, 454.0], [1214.1999999999998, 178.0], [1792, 178.0]], "render": "curve", "label_point": null}, {"id": "funnel~anthropic_api", "from": "funnel", "to": "anthropic_api", "kind": "dependency", "label": "", "route": "curve", "points": [[508, 546.0], [1085.8000000000002, 546.0], [1214.1999999999998, 178.0], [1792, 178.0]], "render": "curve", "label_point": null}, {"id": "qa~anthropic_api", "from": "qa", "to": "anthropic_api", "kind": "dependency", "label": "", "route": "curve", "points": [[508, 638.0], [1085.8000000000002, 638.0], [1214.1999999999998, 178.0], [1792, 178.0]], "render": "curve", "label_point": null}, {"id": "heygen_setup~heygen_api", "from": "heygen_setup", "to": "heygen_api", "kind": "dependency", "label": "", "route": "curve", "points": [[800, 408.0], [1246.4, 408.0], [1345.6, 270.0], [1792, 270.0]], "render": "curve", "label_point": null}, {"id": "orchestrator~airtable_api", "from": "orchestrator", "to": "airtable_api", "kind": "dependency", "label": "", "route": "curve", "points": [[1092, 224.0], [1407.0, 224.0], [1477.0, 362.0], [1792, 362.0]], "render": "curve", "label_point": null}, {"id": "evidence~anthropic_api", "from": "evidence", "to": "anthropic_api", "kind": "dependency", "label": "", "route": "curve", "points": [[1676, 408.0], [1736.0, 408.0], [1732.0, 178.0], [1792, 178.0]], "render": "curve", "label_point": null}, {"id": "optimizer~anthropic_api", "from": "optimizer", "to": "anthropic_api", "kind": "dependency", "label": "", "route": "curve", "points": [[1676, 500.0], [1736.0, 500.0], [1732.0, 178.0], [1792, 178.0]], "render": "curve", "label_point": null}], "mission_chain": ["research", "architect", "manuscript", "shorts", "funnel"], "edge_kinds": ["flow", "review", "dependency"]}, "validation": {"ok": true, "errors": [], "warnings": []}, "registry_errors": []}, "metrics": {"runs_total": 1, "runs_active": 0, "runs_failed": 0, "artifacts_logged": 29, "topics": 5, "qa_average": 41.0, "qa_by_agent": {"Book Architect Agent": 42.2, "Funnel Agent": 42.0, "Manuscript Agent Ch1": 41.0, "Research Agent": 41.0, "Shorts Script Agent": 39.0}, "qa_by_topic": {"Beat Phone Addiction": 39.0, "Dopamine Detox": 40.4, "Stop Overthinking": 40.4, "Stop Procrastinating": 41.4, "The Confidence Code": 42.4}, "qa_timeline": [{"ts": "2026-03-15T03:28:26.889714", "topic": "Stop Overthinking", "agent": "Research Agent", "score": 42}, {"ts": "2026-03-15T03:34:00.474194", "topic": "Stop Overthinking", "agent": "Book Architect Agent", "score": 43}, {"ts": "2026-03-15T03:36:30.906621", "topic": "Stop Overthinking", "agent": "Manuscript Agent Ch1", "score": 38}, {"ts": "2026-03-15T03:42:19.298518", "topic": "Stop Overthinking", "agent": "Shorts Script Agent", "score": 37}, {"ts": "2026-03-15T03:46:34.183738", "topic": "Stop Overthinking", "agent": "Funnel Agent", "score": 42}, {"ts": "2026-03-15T03:54:42.783463", "topic": "Dopamine Detox", "agent": "Research Agent", "score": 40}, {"ts": "2026-03-15T04:00:15.505141", "topic": "Dopamine Detox", "agent": "Book Architect Agent", "score": 42}, {"ts": "2026-03-15T04:02:40.726434", "topic": "Dopamine Detox", "agent": "Manuscript Agent Ch1", "score": 41}, {"ts": "2026-03-15T04:07:33.126665", "topic": "Stop Procrastinating", "agent": "Research Agent", "score": 40}, {"ts": "2026-03-15T04:08:08.734100", "topic": "Dopamine Detox", "agent": "Shorts Script Agent", "score": 37}, {"ts": "2026-03-15T04:12:31.421198", "topic": "Dopamine Detox", "agent": "Funnel Agent", "score": 42}, {"ts": "2026-03-15T04:13:17.597316", "topic": "Stop Procrastinating", "agent": "Book Architect Agent", "score": 43}, {"ts": "2026-03-15T04:15:25.703084", "topic": "Stop Procrastinating", "agent": "Manuscript Agent Ch1", "score": 42}, {"ts": "2026-03-15T04:20:52.561781", "topic": "Stop Procrastinating", "agent": "Shorts Script Agent", "score": 40}, {"ts": "2026-03-15T04:25:25.341783", "topic": "Stop Procrastinating", "agent": "Funnel Agent", "score": 42}, {"ts": "2026-03-15T04:27:50.971594", "topic": "The Confidence Code", "agent": "Research Agent", "score": 44}, {"ts": "2026-03-15T04:34:32.981025", "topic": "The Confidence Code", "agent": "Book Architect Agent", "score": 41}, {"ts": "2026-03-15T04:36:40.646648", "topic": "The Confidence Code", "agent": "Manuscript Agent Ch1", "score": 43}, {"ts": "2026-03-15T04:41:45.510995", "topic": "The Confidence Code", "agent": "Shorts Script Agent", "score": 42}, {"ts": "2026-03-15T04:45:47.361916", "topic": "The Confidence Code", "agent": "Funnel Agent", "score": 42}, {"ts": "2026-03-15T04:48:29.874734", "topic": "Beat Phone Addiction", "agent": "Research Agent", "score": 39}], "estimated_spend_usd": 0.85, "uptime": 0.0022068023681640625}, "runs": {"runs": [{"id": "run_1410eddac3", "agent": "mission", "agent_name": "Full Mission", "squad": "command", "params": {"topic": "Stop Negative Thoughts", "faculty": "Dr. Nova Vale"}, "argv": ["/usr/local/bin/python3", "-m", "commander.simulator", "--agent", "mission", "--topic", "Stop Negative Thoughts", "--faculty", "Dr. Nova Vale"], "simulated": true, "status": "queued", "queued_at": 1786801409.4375095, "started_at": null, "finished_at": null, "exit_code": 0, "stages": [], "artifacts": [], "scores": {}, "error": null}]}, "health": {"ok": true, "cursor": 0, "simulate": true, "active_runs": 0, "watchers": 1, "uptime": 0}, "autopilot": {"fleet": {"id": "florra_alpha", "name": "Florra Fleet Alpha", "callsign": "FFA", "summary": "Florra's first continuously-operating fleet. Same agent architecture as NeuroForge, its own mission book, budget and cadence. Works the backlog around the clock, gates every artifact on QA, and folds what it learns back into the prompts.", "derived_from": "neuroforge"}, "status": "paused", "detail": "recording \u2014 press Start to replay", "mode": "simulate", "objective": "Stop Negative Thoughts", "faculty": "Dr. Nova Vale", "active_run": null, "active_kind": null, "cursor": 0, "backlog_total": 10, "settled": 0, "completed": 0, "preexisting": 0, "quarantined": 0, "missions": 0, "failures": 0, "today_missions": 0, "daily_cap": 8, "spend_estimate": 0.0, "budget_usd": 12.0, "budget_remaining": 12.0, "missions_affordable": 70, "cadence_seconds": 1800, "next_action_at": 0.0, "optimizations": [], "optimize_every": 5, "optimize_applies": false, "qa_floor": 38, "history": []}, "topics": {"topics": [{"slug": "the_confidence_code", "title": "The Confidence Code", "artifacts": 10, "qa_reports": 5, "updated": 1786244435.1730106, "stages": ["01_research_brief", "02_book_blueprint", "03_chapter_01", "04_shorts_scripts", "05_funnel_copy"]}, {"slug": "stop_procrastinating", "title": "Stop Procrastinating", "artifacts": 10, "qa_reports": 5, "updated": 1786244435.1684473, "stages": ["01_research_brief", "02_book_blueprint", "03_chapter_01", "04_shorts_scripts", "05_funnel_copy"]}, {"slug": "stop_overthinking", "title": "Stop Overthinking", "artifacts": 15, "qa_reports": 5, "updated": 1786244435.1603937, "stages": ["01_research_brief", "02_book_blueprint", "03_chapter_01", "04_shorts_scripts", "05_funnel_copy"]}, {"slug": "dopamine_detox", "title": "Dopamine Detox", "artifacts": 10, "qa_reports": 5, "updated": 1786244435.1529443, "stages": ["01_research_brief", "02_book_blueprint", "03_chapter_01", "04_shorts_scripts", "05_funnel_copy"]}, {"slug": "beat_phone_addiction", "title": "Beat Phone Addiction", "artifacts": 6, "qa_reports": 1, "updated": 1786244435.1493626, "stages": ["01_research_brief", "02_book_blueprint", "03_chapter_01", "04_shorts_scripts", "05_funnel_copy"]}]}};
+  const EVENTS = [{"seq": 1, "ts": 1786801409.4382336, "type": "run.queued", "run_id": "run_1410eddac3", "agent": "mission", "agent_name": "Full Mission", "params": {"topic": "Stop Negative Thoughts", "faculty": "Dr. Nova Vale"}, "simulated": true, "at": 900}, {"seq": 2, "ts": 1786801409.4385035, "type": "fleet", "agent": "mission", "status": "queued", "run_id": "run_1410eddac3", "detail": "queued", "state": {"status": "queued", "since": 1786801409.4384987, "run_id": "run_1410eddac3", "detail": "queued", "last_score": null}, "at": 900}, {"seq": 3, "ts": 1786801409.4398153, "type": "run.started", "run_id": "run_1410eddac3", "agent": "mission", "agent_name": "Full Mission", "argv": ["/usr/local/bin/python3", "-m", "commander.simulator", "--agent", "mission", "--topic", "Stop Negative Thoughts", "--faculty", "Dr. Nova Vale"], "simulated": true, "at": 901}, {"seq": 4, "ts": 1786801409.4399037, "type": "fleet", "agent": "mission", "status": "running", "run_id": "run_1410eddac3", "detail": "running", "state": {"status": "running", "since": 1786801409.4399006, "run_id": "run_1410eddac3", "detail": "running", "last_score": null}, "at": 901}, {"seq": 5, "ts": 1786801409.6128361, "type": "run.log", "run_id": "run_1410eddac3", "agent": "mission", "line": "============================================================", "level": "info", "at": 1073}, {"seq": 6, "ts": 1786801409.6130414, "type": "run.log", "run_id": "run_1410eddac3", "agent": "mission", "line": "  NEUROFORGE OS \u2014 FULL PIPELINE  [SIMULATED]", "level": "info", "at": 1073}, {"seq": 7, "ts": 1786801409.6131065, "type": "run.log", "run_id": "run_1410eddac3", "agent": "mission", "line": "  Topic:   Stop Negative Thoughts", "level": "info", "at": 1073}, {"seq": 8, "ts": 1786801409.6131556, "type": "run.log", "run_id": "run_1410eddac3", "agent": "mission", "line": "  Faculty: Dr. Nova Vale", "level": "info", "at": 1073}, {"seq": 9, "ts": 1786801409.613204, "type": "run.log", "run_id": "run_1410eddac3", "agent": "mission", "line": "  QA:      enabled", "level": "info", "at": 1073}, {"seq": 10, "ts": 1786801409.6132605, "type": "run.log", "run_id": "run_1410eddac3", "agent": "mission", "line": "============================================================", "level": "info", "at": 1073}, {"seq": 11, "ts": 1786801409.6133213, "type": "run.log", "run_id": "run_1410eddac3", "agent": "mission", "line": "\ud83d\udd2c RESEARCH AGENT \u2014 Starting", "level": "info", "at": 1073}, {"seq": 12, "ts": 1786801409.6133618, "type": "stage.started", "run_id": "run_1410eddac3", "agent": "research", "stage": "Research Agent", "detail": "Starting", "at": 1073}, {"seq": 13, "ts": 1786801409.613397, "type": "fleet", "agent": "research", "status": "running", "run_id": "run_1410eddac3", "detail": "Research Agent", "state": {"status": "running", "since": 1786801409.613394, "run_id": "run_1410eddac3", "detail": "Research Agent", "last_score": null}, "at": 1073}, {"seq": 14, "ts": 1786801409.7131512, "type": "run.log", "run_id": "run_1410eddac3", "agent": "research", "line": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", "level": "info", "at": 1172}, {"seq": 15, "ts": 1786801409.7133408, "type": "run.log", "run_id": "run_1410eddac3", "agent": "research", "line": "  Calling: Research Agent", "level": "info", "at": 1172}, {"seq": 16, "ts": 1786801409.7134578, "type": "run.log", "run_id": "run_1410eddac3", "agent": "research", "line": "  Model:   claude-sonnet-4-6", "level": "info", "at": 1172}, {"seq": 17, "ts": 1786801409.7135217, "type": "run.log", "run_id": "run_1410eddac3", "agent": "research", "line": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", "level": "info", "at": 1172}, {"seq": 18, "ts": 1786801410.0637393, "type": "run.log", "run_id": "run_1410eddac3", "agent": "research", "line": "  \u2713 Saved: ./output/stop_negative_thoughts/01_research_brief_20260815_134330.md", "level": "success", "at": 1522}, {"seq": 19, "ts": 1786801410.0639658, "type": "artifact", "run_id": "run_1410eddac3", "agent": "research", "path": "./output/stop_negative_thoughts/01_research_brief_20260815_134330.md", "is_qa": false, "at": 1522}, {"seq": 20, "ts": 1786801410.1890404, "type": "run.log", "run_id": "run_1410eddac3", "agent": "research", "line": "\ud83d\udd0d QA AGENT \u2014 Reviewing Research Brief", "level": "info", "at": 1647}, {"seq": 21, "ts": 1786801410.1892235, "type": "stage.finished", "run_id": "run_1410eddac3", "agent": "research", "stage": "Research Agent", "status": "ok", "at": 1647}, {"seq": 22, "ts": 1786801410.189274, "type": "fleet", "agent": "research", "status": "ok", "run_id": "run_1410eddac3", "detail": "Research Agent done", "state": {"status": "ok", "since": 1786801410.18927, "run_id": "run_1410eddac3", "detail": "Research Agent done", "last_score": null}, "at": 1647}, {"seq": 23, "ts": 1786801410.1893153, "type": "stage.started", "run_id": "run_1410eddac3", "agent": "qa", "stage": "QA Agent", "detail": "Reviewing Research Brief", "at": 1647}, {"seq": 24, "ts": 1786801410.189345, "type": "fleet", "agent": "qa", "status": "running", "run_id": "run_1410eddac3", "detail": "QA Agent", "state": {"status": "running", "since": 1786801410.189343, "run_id": "run_1410eddac3", "detail": "QA Agent", "last_score": null}, "at": 1647}, {"seq": 25, "ts": 1786801410.1894417, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", "level": "info", "at": 1647}, {"seq": 26, "ts": 1786801410.1895192, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  Calling: QA Agent", "level": "info", "at": 1647}, {"seq": 27, "ts": 1786801410.1895583, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  Model:   claude-sonnet-4-6", "level": "info", "at": 1647}, {"seq": 28, "ts": 1786801410.1896071, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", "level": "info", "at": 1647}, {"seq": 29, "ts": 1786801410.4393866, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  \u2713 Saved: ./output/stop_negative_thoughts/01_research_brief_QA_20260815_134330.md", "level": "success", "at": 1896}, {"seq": 30, "ts": 1786801410.439559, "type": "artifact", "run_id": "run_1410eddac3", "agent": "qa", "path": "./output/stop_negative_thoughts/01_research_brief_QA_20260815_134330.md", "is_qa": true, "at": 1896}, {"seq": 31, "ts": 1786801410.4396634, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "\u2705 Research Brief complete. QA Score: 42/50", "level": "success", "at": 1896}, {"seq": 32, "ts": 1786801410.439719, "type": "metric", "run_id": "run_1410eddac3", "agent": "qa", "metric": "qa_score", "label": "Research Brief", "value": 42, "rollup": false, "failed": false, "at": 1896}, {"seq": 33, "ts": 1786801410.439766, "type": "fleet", "agent": "qa", "status": "ok", "run_id": "run_1410eddac3", "detail": "Research Brief 42/50", "state": {"status": "ok", "since": 1786801410.4397616, "run_id": "run_1410eddac3", "detail": "Research Brief 42/50", "last_score": 42}, "at": 1896}, {"seq": 34, "ts": 1786801410.439827, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "\ud83d\udcd0 BOOK ARCHITECT AGENT \u2014 Starting", "level": "info", "at": 1896}, {"seq": 35, "ts": 1786801410.439924, "type": "stage.finished", "run_id": "run_1410eddac3", "agent": "qa", "stage": "QA Agent", "status": "ok", "at": 1896}, {"seq": 36, "ts": 1786801410.4399664, "type": "fleet", "agent": "qa", "status": "ok", "run_id": "run_1410eddac3", "detail": "QA Agent done", "state": {"status": "ok", "since": 1786801410.4399633, "run_id": "run_1410eddac3", "detail": "QA Agent done", "last_score": 42}, "at": 1896}, {"seq": 37, "ts": 1786801410.4400206, "type": "stage.started", "run_id": "run_1410eddac3", "agent": "architect", "stage": "Book Architect", "detail": "Starting", "at": 1896}, {"seq": 38, "ts": 1786801410.4400501, "type": "fleet", "agent": "architect", "status": "running", "run_id": "run_1410eddac3", "detail": "Book Architect", "state": {"status": "running", "since": 1786801410.4400482, "run_id": "run_1410eddac3", "detail": "Book Architect", "last_score": null}, "at": 1896}, {"seq": 39, "ts": 1786801410.5395958, "type": "run.log", "run_id": "run_1410eddac3", "agent": "architect", "line": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", "level": "info", "at": 1995}, {"seq": 40, "ts": 1786801410.5397975, "type": "run.log", "run_id": "run_1410eddac3", "agent": "architect", "line": "  Calling: Book Architect Agent", "level": "info", "at": 1995}, {"seq": 41, "ts": 1786801410.5399013, "type": "run.log", "run_id": "run_1410eddac3", "agent": "architect", "line": "  Model:   claude-sonnet-4-6", "level": "info", "at": 1995}, {"seq": 42, "ts": 1786801410.5399704, "type": "run.log", "run_id": "run_1410eddac3", "agent": "architect", "line": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", "level": "info", "at": 1995}, {"seq": 43, "ts": 1786801410.8899968, "type": "run.log", "run_id": "run_1410eddac3", "agent": "architect", "line": "  \u2713 Saved: ./output/stop_negative_thoughts/02_book_blueprint_20260815_134330.md", "level": "success", "at": 2345}, {"seq": 44, "ts": 1786801410.890239, "type": "artifact", "run_id": "run_1410eddac3", "agent": "architect", "path": "./output/stop_negative_thoughts/02_book_blueprint_20260815_134330.md", "is_qa": false, "at": 2345}, {"seq": 45, "ts": 1786801411.0151997, "type": "run.log", "run_id": "run_1410eddac3", "agent": "architect", "line": "\ud83d\udd0d QA AGENT \u2014 Reviewing Book Blueprint", "level": "info", "at": 2469}, {"seq": 46, "ts": 1786801411.015377, "type": "stage.finished", "run_id": "run_1410eddac3", "agent": "architect", "stage": "Book Architect", "status": "ok", "at": 2469}, {"seq": 47, "ts": 1786801411.015422, "type": "fleet", "agent": "architect", "status": "ok", "run_id": "run_1410eddac3", "detail": "Book Architect done", "state": {"status": "ok", "since": 1786801411.0154188, "run_id": "run_1410eddac3", "detail": "Book Architect done", "last_score": null}, "at": 2469}, {"seq": 48, "ts": 1786801411.015468, "type": "stage.started", "run_id": "run_1410eddac3", "agent": "qa", "stage": "QA Agent", "detail": "Reviewing Book Blueprint", "at": 2469}, {"seq": 49, "ts": 1786801411.0154996, "type": "fleet", "agent": "qa", "status": "running", "run_id": "run_1410eddac3", "detail": "QA Agent", "state": {"status": "running", "since": 1786801411.0154974, "run_id": "run_1410eddac3", "detail": "QA Agent", "last_score": 42}, "at": 2469}, {"seq": 50, "ts": 1786801411.0155652, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", "level": "info", "at": 2469}, {"seq": 51, "ts": 1786801411.0156138, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  Calling: QA Agent", "level": "info", "at": 2469}, {"seq": 52, "ts": 1786801411.015661, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  Model:   claude-sonnet-4-6", "level": "info", "at": 2469}, {"seq": 53, "ts": 1786801411.015709, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", "level": "info", "at": 2469}, {"seq": 54, "ts": 1786801411.2655797, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  \u2713 Saved: ./output/stop_negative_thoughts/02_book_blueprint_QA_20260815_134331.md", "level": "success", "at": 2718}, {"seq": 55, "ts": 1786801411.2657437, "type": "artifact", "run_id": "run_1410eddac3", "agent": "qa", "path": "./output/stop_negative_thoughts/02_book_blueprint_QA_20260815_134331.md", "is_qa": true, "at": 2718}, {"seq": 56, "ts": 1786801411.265869, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "\u2705 Book Blueprint complete. QA Score: 36/50", "level": "success", "at": 2718}, {"seq": 57, "ts": 1786801411.2659245, "type": "metric", "run_id": "run_1410eddac3", "agent": "qa", "metric": "qa_score", "label": "Book Blueprint", "value": 36, "rollup": false, "failed": false, "at": 2718}, {"seq": 58, "ts": 1786801411.2659647, "type": "fleet", "agent": "qa", "status": "ok", "run_id": "run_1410eddac3", "detail": "Book Blueprint 36/50", "state": {"status": "ok", "since": 1786801411.2659612, "run_id": "run_1410eddac3", "detail": "Book Blueprint 36/50", "last_score": 36}, "at": 2718}, {"seq": 59, "ts": 1786801411.2660255, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "\u270d\ufe0f  MANUSCRIPT AGENT \u2014 Chapter 1", "level": "info", "at": 2718}, {"seq": 60, "ts": 1786801411.2660608, "type": "stage.finished", "run_id": "run_1410eddac3", "agent": "qa", "stage": "QA Agent", "status": "ok", "at": 2718}, {"seq": 61, "ts": 1786801411.2660875, "type": "fleet", "agent": "qa", "status": "ok", "run_id": "run_1410eddac3", "detail": "QA Agent done", "state": {"status": "ok", "since": 1786801411.2660859, "run_id": "run_1410eddac3", "detail": "QA Agent done", "last_score": 36}, "at": 2718}, {"seq": 62, "ts": 1786801411.2661934, "type": "stage.started", "run_id": "run_1410eddac3", "agent": "manuscript", "stage": "Manuscript Agent", "detail": "Chapter 1", "at": 2718}, {"seq": 63, "ts": 1786801411.2662442, "type": "fleet", "agent": "manuscript", "status": "running", "run_id": "run_1410eddac3", "detail": "Manuscript Agent", "state": {"status": "running", "since": 1786801411.266242, "run_id": "run_1410eddac3", "detail": "Manuscript Agent", "last_score": null}, "at": 2718}, {"seq": 64, "ts": 1786801411.365907, "type": "run.log", "run_id": "run_1410eddac3", "agent": "manuscript", "line": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", "level": "info", "at": 2817}, {"seq": 65, "ts": 1786801411.3662083, "type": "run.log", "run_id": "run_1410eddac3", "agent": "manuscript", "line": "  Calling: Manuscript Agent", "level": "info", "at": 2817}, {"seq": 66, "ts": 1786801411.3662906, "type": "run.log", "run_id": "run_1410eddac3", "agent": "manuscript", "line": "  Model:   claude-sonnet-4-6", "level": "info", "at": 2817}, {"seq": 67, "ts": 1786801411.3663538, "type": "run.log", "run_id": "run_1410eddac3", "agent": "manuscript", "line": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", "level": "info", "at": 2817}, {"seq": 68, "ts": 1786801411.716202, "type": "run.log", "run_id": "run_1410eddac3", "agent": "manuscript", "line": "  \u2713 Saved: ./output/stop_negative_thoughts/03_chapter_01_20260815_134331.md", "level": "success", "at": 3166}, {"seq": 69, "ts": 1786801411.716379, "type": "artifact", "run_id": "run_1410eddac3", "agent": "manuscript", "path": "./output/stop_negative_thoughts/03_chapter_01_20260815_134331.md", "is_qa": false, "at": 3166}, {"seq": 70, "ts": 1786801411.8414867, "type": "run.log", "run_id": "run_1410eddac3", "agent": "manuscript", "line": "\ud83d\udd0d QA AGENT \u2014 Reviewing Manuscript Chapter", "level": "info", "at": 3291}, {"seq": 71, "ts": 1786801411.8417313, "type": "stage.finished", "run_id": "run_1410eddac3", "agent": "manuscript", "stage": "Manuscript Agent", "status": "ok", "at": 3291}, {"seq": 72, "ts": 1786801411.8418818, "type": "fleet", "agent": "manuscript", "status": "ok", "run_id": "run_1410eddac3", "detail": "Manuscript Agent done", "state": {"status": "ok", "since": 1786801411.8418758, "run_id": "run_1410eddac3", "detail": "Manuscript Agent done", "last_score": null}, "at": 3291}, {"seq": 73, "ts": 1786801411.841949, "type": "stage.started", "run_id": "run_1410eddac3", "agent": "qa", "stage": "QA Agent", "detail": "Reviewing Manuscript Chapter", "at": 3291}, {"seq": 74, "ts": 1786801411.8419907, "type": "fleet", "agent": "qa", "status": "running", "run_id": "run_1410eddac3", "detail": "QA Agent", "state": {"status": "running", "since": 1786801411.8419883, "run_id": "run_1410eddac3", "detail": "QA Agent", "last_score": 36}, "at": 3291}, {"seq": 75, "ts": 1786801411.8420877, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", "level": "info", "at": 3291}, {"seq": 76, "ts": 1786801411.8422732, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  Calling: QA Agent", "level": "info", "at": 3291}, {"seq": 77, "ts": 1786801411.8423386, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  Model:   claude-sonnet-4-6", "level": "info", "at": 3291}, {"seq": 78, "ts": 1786801411.8424127, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", "level": "info", "at": 3291}, {"seq": 79, "ts": 1786801412.0918307, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  \u2713 Saved: ./output/stop_negative_thoughts/03_chapter_01_QA_20260815_134332.md", "level": "success", "at": 3540}, {"seq": 80, "ts": 1786801412.092027, "type": "artifact", "run_id": "run_1410eddac3", "agent": "qa", "path": "./output/stop_negative_thoughts/03_chapter_01_QA_20260815_134332.md", "is_qa": true, "at": 3540}, {"seq": 81, "ts": 1786801412.0921254, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "\u2705 Manuscript Chapter complete. QA Score: 47/50", "level": "success", "at": 3540}, {"seq": 82, "ts": 1786801412.092185, "type": "metric", "run_id": "run_1410eddac3", "agent": "qa", "metric": "qa_score", "label": "Manuscript Chapter", "value": 47, "rollup": false, "failed": false, "at": 3540}, {"seq": 83, "ts": 1786801412.0922372, "type": "fleet", "agent": "qa", "status": "ok", "run_id": "run_1410eddac3", "detail": "Manuscript Chapter 47/50", "state": {"status": "ok", "since": 1786801412.0922337, "run_id": "run_1410eddac3", "detail": "Manuscript Chapter 47/50", "last_score": 47}, "at": 3540}, {"seq": 84, "ts": 1786801412.0923045, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "\ud83c\udfac SHORTS SCRIPT AGENT \u2014 20 scripts", "level": "info", "at": 3540}, {"seq": 85, "ts": 1786801412.0923393, "type": "stage.finished", "run_id": "run_1410eddac3", "agent": "qa", "stage": "QA Agent", "status": "ok", "at": 3540}, {"seq": 86, "ts": 1786801412.0923655, "type": "fleet", "agent": "qa", "status": "ok", "run_id": "run_1410eddac3", "detail": "QA Agent done", "state": {"status": "ok", "since": 1786801412.092364, "run_id": "run_1410eddac3", "detail": "QA Agent done", "last_score": 47}, "at": 3540}, {"seq": 87, "ts": 1786801412.0923963, "type": "stage.started", "run_id": "run_1410eddac3", "agent": "shorts", "stage": "Shorts Script Agent", "detail": "20 scripts", "at": 3540}, {"seq": 88, "ts": 1786801412.0924213, "type": "fleet", "agent": "shorts", "status": "running", "run_id": "run_1410eddac3", "detail": "Shorts Script Agent", "state": {"status": "running", "since": 1786801412.0924199, "run_id": "run_1410eddac3", "detail": "Shorts Script Agent", "last_score": null}, "at": 3540}, {"seq": 89, "ts": 1786801412.1920922, "type": "run.log", "run_id": "run_1410eddac3", "agent": "shorts", "line": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", "level": "info", "at": 3639}, {"seq": 90, "ts": 1786801412.192328, "type": "run.log", "run_id": "run_1410eddac3", "agent": "shorts", "line": "  Calling: Shorts Script Agent", "level": "info", "at": 3639}, {"seq": 91, "ts": 1786801412.1924603, "type": "run.log", "run_id": "run_1410eddac3", "agent": "shorts", "line": "  Model:   claude-sonnet-4-6", "level": "info", "at": 3639}, {"seq": 92, "ts": 1786801412.19253, "type": "run.log", "run_id": "run_1410eddac3", "agent": "shorts", "line": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", "level": "info", "at": 3639}, {"seq": 93, "ts": 1786801412.5425045, "type": "run.log", "run_id": "run_1410eddac3", "agent": "shorts", "line": "  \u2713 Saved: ./output/stop_negative_thoughts/04_shorts_scripts_20260815_134332.md", "level": "success", "at": 3988}, {"seq": 94, "ts": 1786801412.5428326, "type": "artifact", "run_id": "run_1410eddac3", "agent": "shorts", "path": "./output/stop_negative_thoughts/04_shorts_scripts_20260815_134332.md", "is_qa": false, "at": 3988}, {"seq": 95, "ts": 1786801412.6676774, "type": "run.log", "run_id": "run_1410eddac3", "agent": "shorts", "line": "\ud83d\udd0d QA AGENT \u2014 Reviewing Short-Form Scripts", "level": "info", "at": 4112}, {"seq": 96, "ts": 1786801412.6679332, "type": "stage.finished", "run_id": "run_1410eddac3", "agent": "shorts", "stage": "Shorts Script Agent", "status": "ok", "at": 4112}, {"seq": 97, "ts": 1786801412.6680424, "type": "fleet", "agent": "shorts", "status": "ok", "run_id": "run_1410eddac3", "detail": "Shorts Script Agent done", "state": {"status": "ok", "since": 1786801412.6680384, "run_id": "run_1410eddac3", "detail": "Shorts Script Agent done", "last_score": null}, "at": 4112}, {"seq": 98, "ts": 1786801412.66812, "type": "stage.started", "run_id": "run_1410eddac3", "agent": "qa", "stage": "QA Agent", "detail": "Reviewing Short-Form Scripts", "at": 4112}, {"seq": 99, "ts": 1786801412.668174, "type": "fleet", "agent": "qa", "status": "running", "run_id": "run_1410eddac3", "detail": "QA Agent", "state": {"status": "running", "since": 1786801412.668171, "run_id": "run_1410eddac3", "detail": "QA Agent", "last_score": 47}, "at": 4112}, {"seq": 100, "ts": 1786801412.6682816, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", "level": "info", "at": 4112}, {"seq": 101, "ts": 1786801412.6683676, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  Calling: QA Agent", "level": "info", "at": 4112}, {"seq": 102, "ts": 1786801412.66845, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  Model:   claude-sonnet-4-6", "level": "info", "at": 4112}, {"seq": 103, "ts": 1786801412.6685398, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", "level": "info", "at": 4112}, {"seq": 104, "ts": 1786801412.918248, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  \u2713 Saved: ./output/stop_negative_thoughts/04_shorts_scripts_QA_20260815_134332.md", "level": "success", "at": 4361}, {"seq": 105, "ts": 1786801412.9185348, "type": "artifact", "run_id": "run_1410eddac3", "agent": "qa", "path": "./output/stop_negative_thoughts/04_shorts_scripts_QA_20260815_134332.md", "is_qa": true, "at": 4361}, {"seq": 106, "ts": 1786801412.9187887, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "\u2705 Short-Form Scripts complete. QA Score: 45/50", "level": "success", "at": 4361}, {"seq": 107, "ts": 1786801412.9189076, "type": "metric", "run_id": "run_1410eddac3", "agent": "qa", "metric": "qa_score", "label": "Short-Form Scripts", "value": 45, "rollup": false, "failed": false, "at": 4361}, {"seq": 108, "ts": 1786801412.9189959, "type": "fleet", "agent": "qa", "status": "ok", "run_id": "run_1410eddac3", "detail": "Short-Form Scripts 45/50", "state": {"status": "ok", "since": 1786801412.9189909, "run_id": "run_1410eddac3", "detail": "Short-Form Scripts 45/50", "last_score": 45}, "at": 4361}, {"seq": 109, "ts": 1786801412.919188, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "\ud83d\udcb0 FUNNEL AGENT \u2014 Starting", "level": "info", "at": 4361}, {"seq": 110, "ts": 1786801412.919299, "type": "stage.finished", "run_id": "run_1410eddac3", "agent": "qa", "stage": "QA Agent", "status": "ok", "at": 4361}, {"seq": 111, "ts": 1786801412.9193573, "type": "fleet", "agent": "qa", "status": "ok", "run_id": "run_1410eddac3", "detail": "QA Agent done", "state": {"status": "ok", "since": 1786801412.9193535, "run_id": "run_1410eddac3", "detail": "QA Agent done", "last_score": 45}, "at": 4361}, {"seq": 112, "ts": 1786801412.9194176, "type": "stage.started", "run_id": "run_1410eddac3", "agent": "funnel", "stage": "Funnel Agent", "detail": "Starting", "at": 4361}, {"seq": 113, "ts": 1786801412.9194632, "type": "fleet", "agent": "funnel", "status": "running", "run_id": "run_1410eddac3", "detail": "Funnel Agent", "state": {"status": "running", "since": 1786801412.9194605, "run_id": "run_1410eddac3", "detail": "Funnel Agent", "last_score": null}, "at": 4361}, {"seq": 114, "ts": 1786801413.018354, "type": "run.log", "run_id": "run_1410eddac3", "agent": "funnel", "line": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", "level": "info", "at": 4459}, {"seq": 115, "ts": 1786801413.0186193, "type": "run.log", "run_id": "run_1410eddac3", "agent": "funnel", "line": "  Calling: Funnel Agent", "level": "info", "at": 4459}, {"seq": 116, "ts": 1786801413.0188165, "type": "run.log", "run_id": "run_1410eddac3", "agent": "funnel", "line": "  Model:   claude-sonnet-4-6", "level": "info", "at": 4459}, {"seq": 117, "ts": 1786801413.0189233, "type": "run.log", "run_id": "run_1410eddac3", "agent": "funnel", "line": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", "level": "info", "at": 4459}, {"seq": 118, "ts": 1786801413.3688257, "type": "run.log", "run_id": "run_1410eddac3", "agent": "funnel", "line": "  \u2713 Saved: ./output/stop_negative_thoughts/05_funnel_copy_20260815_134333.md", "level": "success", "at": 4808}, {"seq": 119, "ts": 1786801413.3690493, "type": "artifact", "run_id": "run_1410eddac3", "agent": "funnel", "path": "./output/stop_negative_thoughts/05_funnel_copy_20260815_134333.md", "is_qa": false, "at": 4808}, {"seq": 120, "ts": 1786801413.493911, "type": "run.log", "run_id": "run_1410eddac3", "agent": "funnel", "line": "\ud83d\udd0d QA AGENT \u2014 Reviewing Funnel Copy", "level": "info", "at": 4932}, {"seq": 121, "ts": 1786801413.494082, "type": "stage.finished", "run_id": "run_1410eddac3", "agent": "funnel", "stage": "Funnel Agent", "status": "ok", "at": 4932}, {"seq": 122, "ts": 1786801413.4941912, "type": "fleet", "agent": "funnel", "status": "ok", "run_id": "run_1410eddac3", "detail": "Funnel Agent done", "state": {"status": "ok", "since": 1786801413.4941876, "run_id": "run_1410eddac3", "detail": "Funnel Agent done", "last_score": null}, "at": 4932}, {"seq": 123, "ts": 1786801413.494261, "type": "stage.started", "run_id": "run_1410eddac3", "agent": "qa", "stage": "QA Agent", "detail": "Reviewing Funnel Copy", "at": 4932}, {"seq": 124, "ts": 1786801413.494294, "type": "fleet", "agent": "qa", "status": "running", "run_id": "run_1410eddac3", "detail": "QA Agent", "state": {"status": "running", "since": 1786801413.4942923, "run_id": "run_1410eddac3", "detail": "QA Agent", "last_score": 45}, "at": 4932}, {"seq": 125, "ts": 1786801413.49436, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", "level": "info", "at": 4932}, {"seq": 126, "ts": 1786801413.4944103, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  Calling: QA Agent", "level": "info", "at": 4932}, {"seq": 127, "ts": 1786801413.494446, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  Model:   claude-sonnet-4-6", "level": "info", "at": 4932}, {"seq": 128, "ts": 1786801413.494493, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", "level": "info", "at": 4932}, {"seq": 129, "ts": 1786801413.7443898, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  \u2713 Saved: ./output/stop_negative_thoughts/05_funnel_copy_QA_20260815_134333.md", "level": "success", "at": 5181}, {"seq": 130, "ts": 1786801413.7446706, "type": "artifact", "run_id": "run_1410eddac3", "agent": "qa", "path": "./output/stop_negative_thoughts/05_funnel_copy_QA_20260815_134333.md", "is_qa": true, "at": 5181}, {"seq": 131, "ts": 1786801413.7448685, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "\u2705 Funnel Copy complete. QA Score: 38/50", "level": "success", "at": 5181}, {"seq": 132, "ts": 1786801413.7449608, "type": "metric", "run_id": "run_1410eddac3", "agent": "qa", "metric": "qa_score", "label": "Funnel Copy", "value": 38, "rollup": false, "failed": false, "at": 5181}, {"seq": 133, "ts": 1786801413.7450259, "type": "fleet", "agent": "qa", "status": "ok", "run_id": "run_1410eddac3", "detail": "Funnel Copy 38/50", "state": {"status": "ok", "since": 1786801413.7450216, "run_id": "run_1410eddac3", "detail": "Funnel Copy 38/50", "last_score": 38}, "at": 5181}, {"seq": 134, "ts": 1786801413.7451246, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "============================================================", "level": "info", "at": 5181}, {"seq": 135, "ts": 1786801413.7452025, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  PIPELINE COMPLETE \u2014 Stop Negative Thoughts", "level": "info", "at": 5181}, {"seq": 136, "ts": 1786801413.7452686, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "============================================================", "level": "info", "at": 5181}, {"seq": 137, "ts": 1786801413.7453394, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  Research Brief       42/50", "level": "info", "at": 5181}, {"seq": 138, "ts": 1786801413.745396, "type": "metric", "run_id": "run_1410eddac3", "agent": "qa", "metric": "qa_score", "label": "Research Brief", "value": 42, "rollup": false, "failed": false, "at": 5181}, {"seq": 139, "ts": 1786801413.745445, "type": "fleet", "agent": "qa", "status": "ok", "run_id": "run_1410eddac3", "detail": "Research Brief 42/50", "state": {"status": "ok", "since": 1786801413.7454422, "run_id": "run_1410eddac3", "detail": "Research Brief 42/50", "last_score": 42}, "at": 5181}, {"seq": 140, "ts": 1786801413.745525, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  Book Blueprint       36/50", "level": "info", "at": 5181}, {"seq": 141, "ts": 1786801413.7456543, "type": "metric", "run_id": "run_1410eddac3", "agent": "qa", "metric": "qa_score", "label": "Book Blueprint", "value": 36, "rollup": false, "failed": false, "at": 5181}, {"seq": 142, "ts": 1786801413.7457256, "type": "fleet", "agent": "qa", "status": "ok", "run_id": "run_1410eddac3", "detail": "Book Blueprint 36/50", "state": {"status": "ok", "since": 1786801413.7457225, "run_id": "run_1410eddac3", "detail": "Book Blueprint 36/50", "last_score": 36}, "at": 5181}, {"seq": 143, "ts": 1786801413.745814, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  Manuscript Chapter   47/50", "level": "info", "at": 5181}, {"seq": 144, "ts": 1786801413.7458725, "type": "metric", "run_id": "run_1410eddac3", "agent": "qa", "metric": "qa_score", "label": "Manuscript Chapter", "value": 47, "rollup": false, "failed": false, "at": 5181}, {"seq": 145, "ts": 1786801413.7459204, "type": "fleet", "agent": "qa", "status": "ok", "run_id": "run_1410eddac3", "detail": "Manuscript Chapter 47/50", "state": {"status": "ok", "since": 1786801413.7459183, "run_id": "run_1410eddac3", "detail": "Manuscript Chapter 47/50", "last_score": 47}, "at": 5181}, {"seq": 146, "ts": 1786801413.7460048, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  Short-Form Scripts   45/50", "level": "info", "at": 5181}, {"seq": 147, "ts": 1786801413.7460585, "type": "metric", "run_id": "run_1410eddac3", "agent": "qa", "metric": "qa_score", "label": "Short-Form Scripts", "value": 45, "rollup": false, "failed": false, "at": 5181}, {"seq": 148, "ts": 1786801413.7461672, "type": "fleet", "agent": "qa", "status": "ok", "run_id": "run_1410eddac3", "detail": "Short-Form Scripts 45/50", "state": {"status": "ok", "since": 1786801413.7461023, "run_id": "run_1410eddac3", "detail": "Short-Form Scripts 45/50", "last_score": 45}, "at": 5181}, {"seq": 149, "ts": 1786801413.7462783, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  Funnel Copy          38/50", "level": "info", "at": 5181}, {"seq": 150, "ts": 1786801413.7463586, "type": "metric", "run_id": "run_1410eddac3", "agent": "qa", "metric": "qa_score", "label": "Funnel Copy", "value": 38, "rollup": false, "failed": false, "at": 5181}, {"seq": 151, "ts": 1786801413.746404, "type": "fleet", "agent": "qa", "status": "ok", "run_id": "run_1410eddac3", "detail": "Funnel Copy 38/50", "state": {"status": "ok", "since": 1786801413.7464018, "run_id": "run_1410eddac3", "detail": "Funnel Copy 38/50", "last_score": 38}, "at": 5181}, {"seq": 152, "ts": 1786801413.7464676, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  Average QA Score:     41/50", "level": "info", "at": 5181}, {"seq": 153, "ts": 1786801413.7465053, "type": "metric", "run_id": "run_1410eddac3", "agent": "qa", "metric": "qa_score", "label": "Average QA Score", "value": 41, "rollup": true, "failed": false, "at": 5181}, {"seq": 154, "ts": 1786801413.7465606, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "  All outputs saved to: ./output/stop_negative_thoughts/", "level": "info", "at": 5181}, {"seq": 155, "ts": 1786801413.7466857, "type": "run.log", "run_id": "run_1410eddac3", "agent": "qa", "line": "============================================================", "level": "info", "at": 5181}, {"seq": 156, "ts": 1786801413.7565186, "type": "stage.finished", "run_id": "run_1410eddac3", "agent": "qa", "stage": "QA Agent", "status": "ok", "at": 5190}, {"seq": 157, "ts": 1786801413.75672, "type": "fleet", "agent": "qa", "status": "ok", "run_id": "run_1410eddac3", "detail": "QA Agent done", "state": {"status": "ok", "since": 1786801413.7567158, "run_id": "run_1410eddac3", "detail": "QA Agent done", "last_score": 38}, "at": 5190}, {"seq": 158, "ts": 1786801413.7568104, "type": "fleet", "agent": "qa", "status": "ok", "run_id": "run_1410eddac3", "detail": "finished", "state": {"status": "ok", "since": 1786801413.7568085, "run_id": "run_1410eddac3", "detail": "finished", "last_score": 38}, "at": 5190}, {"seq": 159, "ts": 1786801413.7568524, "type": "fleet", "agent": "funnel", "status": "ok", "run_id": "run_1410eddac3", "detail": "finished", "state": {"status": "ok", "since": 1786801413.7568507, "run_id": "run_1410eddac3", "detail": "finished", "last_score": null}, "at": 5190}, {"seq": 160, "ts": 1786801413.7569025, "type": "fleet", "agent": "shorts", "status": "ok", "run_id": "run_1410eddac3", "detail": "finished", "state": {"status": "ok", "since": 1786801413.7569008, "run_id": "run_1410eddac3", "detail": "finished", "last_score": null}, "at": 5190}, {"seq": 161, "ts": 1786801413.7569373, "type": "fleet", "agent": "research", "status": "ok", "run_id": "run_1410eddac3", "detail": "finished", "state": {"status": "ok", "since": 1786801413.7569351, "run_id": "run_1410eddac3", "detail": "finished", "last_score": null}, "at": 5190}, {"seq": 162, "ts": 1786801413.7569695, "type": "fleet", "agent": "architect", "status": "ok", "run_id": "run_1410eddac3", "detail": "finished", "state": {"status": "ok", "since": 1786801413.756968, "run_id": "run_1410eddac3", "detail": "finished", "last_score": null}, "at": 5190}, {"seq": 163, "ts": 1786801413.7570019, "type": "fleet", "agent": "manuscript", "status": "ok", "run_id": "run_1410eddac3", "detail": "finished", "state": {"status": "ok", "since": 1786801413.7570004, "run_id": "run_1410eddac3", "detail": "finished", "last_score": null}, "at": 5190}, {"seq": 164, "ts": 1786801413.758029, "type": "run.finished", "run_id": "run_1410eddac3", "agent": "mission", "agent_name": "Full Mission", "status": "ok", "exit_code": 0, "error": null, "duration": 4.317939043045044, "scores": {"Research Brief": 42, "Book Blueprint": 36, "Manuscript Chapter": 47, "Short-Form Scripts": 45, "Funnel Copy": 38}, "artifacts": ["./output/stop_negative_thoughts/01_research_brief_20260815_134330.md", "./output/stop_negative_thoughts/01_research_brief_QA_20260815_134330.md", "./output/stop_negative_thoughts/02_book_blueprint_20260815_134330.md", "./output/stop_negative_thoughts/02_book_blueprint_QA_20260815_134331.md", "./output/stop_negative_thoughts/03_chapter_01_20260815_134331.md", "./output/stop_negative_thoughts/03_chapter_01_QA_20260815_134332.md", "./output/stop_negative_thoughts/04_shorts_scripts_20260815_134332.md", "./output/stop_negative_thoughts/04_shorts_scripts_QA_20260815_134332.md", "./output/stop_negative_thoughts/05_funnel_copy_20260815_134333.md", "./output/stop_negative_thoughts/05_funnel_copy_QA_20260815_134333.md"], "at": 5191}, {"seq": 165, "ts": 1786801413.758234, "type": "fleet", "agent": "mission", "status": "ok", "run_id": null, "detail": "ok", "state": {"status": "ok", "since": 1786801413.75823, "run_id": null, "detail": "ok", "last_score": null}, "at": 5191}];
+  const DURATION = EVENTS.length ? EVENTS[EVENTS.length - 1].at : 0;
+
+  const json = (body, status = 200) => new Response(JSON.stringify(body), {
+    status, headers: { 'Content-Type': 'application/json' },
+  });
+
+  let listeners = [];
+  let timers = [];
+  let running = false;
+
+  function stopReplay() {
+    timers.forEach(clearTimeout);
+    timers = [];
+    running = false;
+  }
+
+  /* The runs panel re-fetches on lifecycle events, so the baked snapshot has
+     to move with the replay or it would contradict the feed beside it. */
+  function syncRun(event) {
+    const run = (SNAPSHOT.runs.runs || [])[0];
+    if (!run || event.run_id !== run.id) return;
+    if (event.type === 'run.started') {
+      run.status = 'running';
+      run.started_at = Date.now() / 1000;
+    } else if (event.type === 'run.finished' || event.type === 'run.cancelled') {
+      run.status = event.status || 'ok';
+      run.finished_at = Date.now() / 1000;
+      run.scores = event.scores || {};
+      run.artifacts = event.artifacts || [];
+    }
+  }
+
+  function startReplay() {
+    stopReplay();
+    const run = (SNAPSHOT.runs.runs || [])[0];
+    if (run) { run.status = 'queued'; run.started_at = null; run.finished_at = null; }
+    running = true;
+    EVENTS.forEach((event, index) => {
+      timers.push(setTimeout(() => {
+        const payload = { ...event, ts: Date.now() / 1000, seq: index + 1 };
+        syncRun(payload);
+        listeners.forEach((fn) => fn({ data: JSON.stringify(payload) }));
+        if (index === EVENTS.length - 1) running = false;
+      }, event.at));
+    });
+  }
+
+  const route = (path) => {
+    if (path.startsWith('/api/health')) return SNAPSHOT.health;
+    if (path.startsWith('/api/fleet')) return SNAPSHOT.fleet;
+    if (path.startsWith('/api/graph')) return SNAPSHOT.graph;
+    if (path.startsWith('/api/metrics')) {
+      // Polled on a timer, so it has to follow the replay rather than report
+      // a frozen count beside a run that is visibly in flight.
+      const run = (SNAPSHOT.runs.runs || [])[0] || {};
+      const live = ['queued', 'running'].includes(run.status) ? 1 : 0;
+      return { ...SNAPSHOT.metrics, runs_active: live };
+    }
+    if (path.startsWith('/api/topics')) return SNAPSHOT.topics;
+    if (path.startsWith('/api/autopilot')) return SNAPSHOT.autopilot;
+    const run = path.match(/^\/api\/runs\/([\w-]+)$/);
+    if (run) {
+      const found = (SNAPSHOT.runs.runs || []).find((r) => r.id === run[1]);
+      return found ? { ...found, log: [] } : null;
+    }
+    if (path.startsWith('/api/runs')) return SNAPSHOT.runs;
+    return null;
+  };
+
+  window.fetch = async (input, options = {}) => {
+    const path = String(input).replace(/^https?:\/\/[^/]+/, '');
+    const method = (options.method || 'GET').toUpperCase();
+
+    if (method === 'POST') {
+      if (path.startsWith('/api/autopilot/')) {
+        const command = path.split('/').pop();
+        if (SNAPSHOT.autopilot) {
+          SNAPSHOT.autopilot = {
+            ...SNAPSHOT.autopilot,
+            status: command === 'start' ? 'running' : 'paused',
+            detail: command === 'start'
+              ? 'replaying a recorded mission'
+              : 'recording — press Start to replay',
+          };
+        }
+        if (command === 'start') startReplay();
+        if (command === 'pause') stopReplay();
+        return json(SNAPSHOT.autopilot || {});
+      }
+      if (path === '/api/runs') {
+        startReplay();
+        return json({ run: (SNAPSHOT.runs.runs || [])[0] || {} }, 202);
+      }
+      return json({ error: 'This is a recording — nothing is dispatched here.' }, 409);
+    }
+
+    const body = route(path);
+    return body === null || body === undefined
+      ? json({ error: 'not found' }, 404)
+      : json(body);
+  };
+
+  window.EventSource = class {
+    constructor() {
+      this.onmessage = null;
+      this.onopen = null;
+      this.onerror = null;
+      const push = (event) => this.onmessage && this.onmessage(event);
+      listeners.push(push);
+      this._push = push;
+      setTimeout(() => this.onopen && this.onopen(), 0);
+      if (!running && !timers.length) startReplay();
+    }
+    close() {
+      listeners = listeners.filter((fn) => fn !== this._push);
+    }
+  };
+
+  // Say plainly what this is, in the interface rather than only in a caption.
+  window.addEventListener('DOMContentLoaded', () => {
+    const bar = document.querySelector('.link-state');
+    if (!bar) return;
+    const chip = document.createElement('span');
+    chip.className = 'replay-chip';
+    chip.textContent = 'recorded · read-only';
+    chip.title = 'A recorded mission playing back. No agents run here.';
+    bar.parentNode.insertBefore(chip, bar);
+
+    const launch = document.getElementById('launch-button');
+    if (launch) launch.textContent = 'Replay mission';
+    const blurb = document.getElementById('launch-blurb');
+    if (blurb) {
+      blurb.dataset.replay = '1';
+    }
+  });
+})();
+
+</script>
+
+<script>
+/* Fleet map renderer.
+ *
+ * Draws the validated IR the server produced and nothing more — no layout
+ * decisions happen here, so what you see is exactly what the validator
+ * checked. The renderer only owns presentation: zoom, pan, hover tracing,
+ * edge-class filtering and live status.
+ */
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const CORNER_RADIUS = 9;
+
+function el(name, attrs = {}, parent = null) {
+  const node = document.createElementNS(SVG_NS, name);
+  for (const [key, value] of Object.entries(attrs)) {
+    if (value !== null && value !== undefined) node.setAttribute(key, String(value));
+  }
+  if (parent) parent.appendChild(node);
+  return node;
+}
+
+/* Orthogonal polyline with rounded corners. */
+function orthPath(points, radius = CORNER_RADIUS) {
+  if (points.length < 2) return '';
+  let d = `M ${points[0][0]} ${points[0][1]}`;
+  for (let i = 1; i < points.length - 1; i += 1) {
+    const [px, py] = points[i - 1];
+    const [cx, cy] = points[i];
+    const [nx, ny] = points[i + 1];
+    const inLen = Math.hypot(cx - px, cy - py);
+    const outLen = Math.hypot(nx - cx, ny - cy);
+    const r = Math.min(radius, inLen / 2, outLen / 2);
+    if (r < 1) { d += ` L ${cx} ${cy}`; continue; }
+    const ax = cx - ((cx - px) / (inLen || 1)) * r;
+    const ay = cy - ((cy - py) / (inLen || 1)) * r;
+    const bx = cx + ((nx - cx) / (outLen || 1)) * r;
+    const by = cy + ((ny - cy) / (outLen || 1)) * r;
+    d += ` L ${ax} ${ay} Q ${cx} ${cy} ${bx} ${by}`;
+  }
+  const last = points[points.length - 1];
+  return `${d} L ${last[0]} ${last[1]}`;
+}
+
+function curvePath(points) {
+  const [a, c1, c2, b] = points;
+  return `M ${a[0]} ${a[1]} C ${c1[0]} ${c1[1]}, ${c2[0]} ${c2[1]}, ${b[0]} ${b[1]}`;
+}
+
+function truncate(text, max) {
+  return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+}
+
+class FleetMap {
+  constructor(svg, shell, { onSelect } = {}) {
+    this.svg = svg;
+    this.shell = shell;
+    this.onSelect = onSelect || (() => {});
+    this.ir = null;
+    this.nodeEls = new Map();
+    this.edgeEls = new Map();
+    this.view = { x: 0, y: 0, w: 100, h: 100 };
+    this.selected = null;
+    this.filters = { review: true, dependency: false };
+    this._bindInteractions();
+  }
+
+  /* ── rendering ───────────────────────────────────────────────────── */
+
+  render(ir) {
+    this.ir = ir;
+    this.svg.replaceChildren();
+    this.nodeEls.clear();
+    this.edgeEls.clear();
+
+    this.svg.setAttribute('width', '100%');
+    this.svg.setAttribute('height', '100%');
+    this.svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+    this._defs();
+    this.root = el('g', { class: 'map-root' }, this.svg);
+
+    this._drawLanes();
+    this.edgeLayer = el('g', { class: 'edge-layer' }, this.root);
+    this.labelLayer = el('g', { class: 'label-layer' }, this.root);
+    this.nodeLayer = el('g', { class: 'node-layer' }, this.root);
+
+    ir.edges.forEach((edge) => this._drawEdge(edge));
+    ir.nodes.forEach((node) => this._drawNode(node));
+
+    this.applyFilters(this.filters);
+    this.fit();
+  }
+
+  _defs() {
+    const defs = el('defs', {}, this.svg);
+    const markers = [
+      ['arrow-flow', 'var(--rule)'],
+      ['arrow-active', 'var(--accent)'],
+      ['arrow-review', 'var(--serious)'],
+      ['arrow-dependency', 'var(--ink-muted)'],
+    ];
+    for (const [id, fill] of markers) {
+      const marker = el('marker', {
+        id, viewBox: '0 0 8 8', refX: 7, refY: 4,
+        markerWidth: 6, markerHeight: 6, orient: 'auto-start-reverse',
+      }, defs);
+      el('path', { d: 'M 0 0 L 8 4 L 0 8 z', fill }, marker);
+    }
+  }
+
+  _drawLanes() {
+    const layer = el('g', { class: 'lane-layer' }, this.root);
+    for (const lane of this.ir.lanes) {
+      el('line', {
+        class: 'lane-rule',
+        x1: lane.x, y1: lane.y + 7, x2: lane.x + 26, y2: lane.y + 7,
+        stroke: lane.accent,
+      }, layer);
+      const text = el('text', {
+        class: 'lane-head', x: lane.x + 34, y: lane.y + 11,
+      }, layer);
+      text.textContent = lane.name.toUpperCase();
+    }
+  }
+
+  _drawEdge(edge) {
+    const path = el('path', {
+      class: 'edge',
+      'data-kind': edge.kind,
+      'data-from': edge.from,
+      'data-to': edge.to,
+      d: edge.render === 'curve' ? curvePath(edge.points) : orthPath(edge.points),
+      'marker-end': `url(#arrow-${edge.kind === 'flow' ? 'flow' : edge.kind})`,
+    }, this.edgeLayer);
+    this.edgeEls.set(edge.id, { el: path, edge });
+
+    if (edge.label && edge.label_point) {
+      const [lx, ly] = edge.label_point;
+      const width = Math.max(28, edge.label.length * 5.8) + 12;
+      el('rect', {
+        class: 'edge-label-bg',
+        x: lx - width / 2, y: ly - 7.5, width, height: 15, rx: 4,
+      }, this.labelLayer);
+      const text = el('text', { class: 'edge-label', x: lx, y: ly }, this.labelLayer);
+      text.textContent = edge.label;
+    }
+  }
+
+  _drawNode(node) {
+    const group = el('g', {
+      class: 'node',
+      'data-id': node.id,
+      'data-status': node.state?.status || 'idle',
+      'data-readiness': node.readiness,
+      transform: `translate(${node.x} ${node.y})`,
+    }, this.nodeLayer);
+
+    const hit = el('g', {
+      class: 'node-hit',
+      tabindex: '0',
+      role: 'button',
+      'aria-label': `${node.label} — ${node.summary}`,
+    }, group);
+
+    el('rect', {
+      class: 'node-halo',
+      x: -3, y: -3, width: node.w + 6, height: node.h + 6, rx: 10,
+      style: 'transform-origin: center; transform-box: fill-box;',
+    }, hit);
+
+    el('rect', {
+      class: 'node-box', x: 0, y: 0, width: node.w, height: node.h, rx: 8,
+    }, hit);
+
+    // Squad hue lives on a thin strip; it never encodes status.
+    el('rect', {
+      x: 0, y: 0, width: 3.5, height: node.h, rx: 1.5, fill: node.accent,
+    }, hit);
+
+    const glyph = el('text', {
+      class: 'node-glyph', x: 14, y: 24, fill: node.accent,
+    }, hit);
+    glyph.textContent = node.glyph;
+
+    const label = el('text', { class: 'node-label', x: 34, y: 24 }, hit);
+    label.textContent = truncate(node.label, 20);
+
+    const status = el('text', { class: 'node-status', x: 14, y: 42 }, hit);
+    status.textContent = this._statusText(node.state, node.readiness);
+    this.nodeEls.set(node.id, { group, status, node });
+
+    const title = el('title', {}, hit);
+    title.textContent = `${node.label}\n${node.summary}`;
+
+    hit.addEventListener('click', () => this.select(node.id));
+    hit.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        this.select(node.id);
+      }
+    });
+    hit.addEventListener('pointerenter', () => this._trace(node.id));
+    hit.addEventListener('pointerleave', () => this._trace(this.selected));
+  }
+
+  _statusText(state, readiness) {
+    const status = state?.status || 'idle';
+    if (status === 'idle' && readiness === 'unconfigured') return 'no credentials';
+    const detail = state?.detail;
+    if (detail && status === 'running') return truncate(detail, 24);
+    if (state?.last_score && (status === 'ok' || status === 'warn')) {
+      return `${status} · ${state.last_score}/50`;
+    }
+    return status;
+  }
+
+  /* ── live updates ────────────────────────────────────────────────── */
+
+  setAgentState(agentId, state) {
+    const entry = this.nodeEls.get(agentId);
+    if (!entry) return;
+    entry.node.state = state;
+    entry.group.setAttribute('data-status', state.status || 'idle');
+    entry.status.textContent = this._statusText(state, entry.node.readiness);
+    this._refreshActiveEdges();
+  }
+
+  _refreshActiveEdges() {
+    const live = new Set();
+    for (const [id, entry] of this.nodeEls) {
+      if (entry.node.state?.status === 'running') live.add(id);
+    }
+    for (const { el: path, edge } of this.edgeEls.values()) {
+      // An edge is "carrying work" when its downstream end is running.
+      const active = live.has(edge.to) && edge.kind === 'flow';
+      if (active) path.setAttribute('data-active', 'true');
+      else path.removeAttribute('data-active');
+    }
+  }
+
+  /* ── interaction ─────────────────────────────────────────────────── */
+
+  select(agentId) {
+    this.selected = this.selected === agentId ? null : agentId;
+    this._trace(this.selected);
+    this.onSelect(this.selected);
+  }
+
+  setSelected(agentId) {
+    this.selected = agentId;
+    this._trace(agentId);
+  }
+
+  _trace(agentId) {
+    const root = this.root;
+    if (!root) return;
+    root.classList.toggle('map-dim', Boolean(agentId));
+    for (const { group } of this.nodeEls.values()) group.classList.remove('related');
+    for (const { el: path } of this.edgeEls.values()) path.classList.remove('related');
+    if (!agentId) return;
+
+    const related = new Set([agentId]);
+    for (const { el: path, edge } of this.edgeEls.values()) {
+      if (edge.from === agentId || edge.to === agentId) {
+        path.classList.add('related');
+        related.add(edge.from);
+        related.add(edge.to);
+      }
+    }
+    for (const id of related) this.nodeEls.get(id)?.group.classList.add('related');
+  }
+
+  applyFilters(filters) {
+    this.filters = { ...this.filters, ...filters };
+    for (const { el: path, edge } of this.edgeEls.values()) {
+      const visible = edge.kind === 'flow'
+        || (edge.kind === 'review' && this.filters.review)
+        || (edge.kind === 'dependency' && this.filters.dependency);
+      path.style.display = visible ? '' : 'none';
+    }
+  }
+
+  /* ── viewport ────────────────────────────────────────────────────── */
+
+  fit() {
+    if (!this.ir) return;
+    const pad = 16;
+    this._setView({
+      x: -pad, y: -pad,
+      w: this.ir.width + pad * 2,
+      h: this.ir.height + pad * 2,
+    });
+  }
+
+  zoom(factor, origin) {
+    const { x, y, w, h } = this.view;
+    const nw = Math.max(240, Math.min(this.ir.width * 3, w * factor));
+    const nh = nw * (h / w);
+    const ox = origin ? origin.x : x + w / 2;
+    const oy = origin ? origin.y : y + h / 2;
+    this._setView({
+      x: ox - ((ox - x) * nw) / w,
+      y: oy - ((oy - y) * nh) / h,
+      w: nw, h: nh,
+    });
+  }
+
+  _setView(view) {
+    this.view = view;
+    this.svg.setAttribute(
+      'viewBox',
+      `${view.x.toFixed(1)} ${view.y.toFixed(1)} ${view.w.toFixed(1)} ${view.h.toFixed(1)}`,
+    );
+  }
+
+  _toUser(event) {
+    const rect = this.svg.getBoundingClientRect();
+    if (!rect.width || !rect.height) return { x: 0, y: 0 };
+    // preserveAspectRatio meet: the shorter axis is letterboxed.
+    const scale = Math.max(this.view.w / rect.width, this.view.h / rect.height);
+    const offsetX = (rect.width - this.view.w / scale) / 2;
+    const offsetY = (rect.height - this.view.h / scale) / 2;
+    return {
+      x: this.view.x + (event.clientX - rect.left - offsetX) * scale,
+      y: this.view.y + (event.clientY - rect.top - offsetY) * scale,
+    };
+  }
+
+  _bindInteractions() {
+    let dragging = null;
+
+    this.shell.addEventListener('pointerdown', (event) => {
+      if (event.target.closest('.node-hit')) return;
+      dragging = { x: event.clientX, y: event.clientY, view: { ...this.view } };
+      this.shell.classList.add('dragging');
+      this.shell.setPointerCapture(event.pointerId);
+    });
+
+    this.shell.addEventListener('pointermove', (event) => {
+      if (!dragging) return;
+      const rect = this.svg.getBoundingClientRect();
+      const scale = this.view.w / (rect.width || 1);
+      this._setView({
+        ...this.view,
+        x: dragging.view.x - (event.clientX - dragging.x) * scale,
+        y: dragging.view.y - (event.clientY - dragging.y) * scale,
+      });
+    });
+
+    const endDrag = (event) => {
+      if (!dragging) return;
+      dragging = null;
+      this.shell.classList.remove('dragging');
+      try { this.shell.releasePointerCapture(event.pointerId); } catch { /* ignore */ }
+    };
+    this.shell.addEventListener('pointerup', endDrag);
+    this.shell.addEventListener('pointercancel', endDrag);
+
+    this.shell.addEventListener('wheel', (event) => {
+      if (!this.ir) return;
+      event.preventDefault();
+      this.zoom(event.deltaY > 0 ? 1.12 : 0.89, this._toUser(event));
+    }, { passive: false });
+  }
+}
+
+window.FleetMap = FleetMap;
+
+</script>
+
+<script>
+/* Command center controller.
+ *
+ * Boots from REST snapshots, then keeps itself current from the event stream.
+ * Every event carries a sequence number, so a dropped connection resumes from
+ * the last one applied rather than losing the middle of a mission.
+ */
+
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const MAX_FEED = 500;
+
+  const state = {
+    cursor: 0,
+    link: 'connecting',
+    simulateMode: false,
+    fleet: null,
+    agents: new Map(),
+    runs: [],
+    runsById: new Map(),
+    stagesByRun: new Map(),
+    metrics: null,
+    autopilot: null,
+    profile: null,
+    selectedAgent: null,
+    selectedRun: null,
+    feed: [],
+    feedFilter: 'all',
+    follow: true,
+  };
+
+  let map;
+  let source;
+  let retryDelay = 1000;
+
+  /* ── helpers ───────────────────────────────────────────────────────── */
+
+  // When the commander is started with --token, the console carries it in its
+  // own URL; every request and the event stream reuse it from there.
+  const TOKEN = new URLSearchParams(location.search).get('token') || '';
+
+  const withToken = (path) => {
+    if (!TOKEN) return path;
+    return path + (path.includes('?') ? '&' : '?') + `token=${encodeURIComponent(TOKEN)}`;
+  };
+
+  const api = async (path, options) => {
+    const headers = { 'Content-Type': 'application/json' };
+    if (TOKEN) headers.Authorization = `Bearer ${TOKEN}`;
+    const response = await fetch(withToken(path), { headers, ...options });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(body.error || `request failed (${response.status})`);
+    return body;
+  };
+
+  const clock = (ts) => new Date((ts || 0) * 1000).toLocaleTimeString([], {
+    hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit',
+  });
+
+  const duration = (seconds) => {
+    if (seconds === null || seconds === undefined) return '—';
+    if (seconds < 1) return `${Math.round(seconds * 1000)}ms`;
+    if (seconds < 60) return `${seconds.toFixed(1)}s`;
+    const mins = Math.floor(seconds / 60);
+    return `${mins}m ${String(Math.round(seconds % 60)).padStart(2, '0')}s`;
+  };
+
+  const ago = (ts) => {
+    if (!ts) return '—';
+    const delta = Date.now() / 1000 - ts;
+    if (delta < 60) return `${Math.max(0, Math.round(delta))}s ago`;
+    if (delta < 3600) return `${Math.round(delta / 60)}m ago`;
+    if (delta < 86400) return `${Math.round(delta / 3600)}h ago`;
+    return `${Math.round(delta / 86400)}d ago`;
+  };
+
+  const node = (tag, className, text) => {
+    const element = document.createElement(tag);
+    if (className) element.className = className;
+    if (text !== undefined) element.textContent = text;
+    return element;
+  };
+
+  /* ── boot ──────────────────────────────────────────────────────────── */
+
+  async function boot() {
+    map = new window.FleetMap($('map'), $('map-shell'), {
+      onSelect: (agentId) => {
+        state.selectedAgent = agentId;
+        renderRoster();
+        if (agentId) openDrawer(agentId); else closeDrawer();
+      },
+    });
+
+    bindControls();
+
+    try {
+      const health = await api('/api/health');
+      // Open with recent history rather than a blank feed: an unattended fleet
+      // has usually already done something by the time anyone looks.
+      state.cursor = Math.max(0, (health.cursor || 0) - 200);
+      state.simulateMode = Boolean(health.simulate);
+    } catch (error) {
+      setLink('lost', error.message);
+    }
+
+    await Promise.all([refreshFleet(), refreshRuns(), refreshMetrics(),
+                       refreshAutopilot()]);
+    await refreshGraph();
+    renderFeed();
+    connect();
+
+    // Metrics come from files on disk, so they are polled rather than pushed.
+    setInterval(refreshMetrics, 20000);
+    setInterval(renderRuns, 10000);
+    // The countdown to the next mission ticks locally; state changes arrive
+    // as events, so this only needs to refresh the clock.
+    setInterval(() => {
+      if (state.autopilot) $('ap-next').textContent = nextActionText(state.autopilot);
+    }, 1000);
+  }
+
+  async function refreshFleet() {
+    const fleet = await api('/api/fleet');
+    state.fleet = fleet;
+    state.profile = fleet.profile || null;
+    state.agents = new Map(fleet.agents.map((agent) => [agent.id, agent]));
+    renderRoster();
+    renderLaunchAgents();
+    updateModePill();
+    renderKpis();
+    applyBranding();
+  }
+
+  async function refreshAutopilot() {
+    state.autopilot = await api('/api/autopilot');
+    renderAutopilot();
+  }
+
+  function applyBranding() {
+    const profile = state.profile;
+    if (!profile) return;
+    document.title = `${profile.name} — Command Center`;
+    document.querySelector('.topbar h1').textContent = profile.name;
+    $('brand-mark').textContent = profile.callsign;
+    $('brand-mark').classList.add('is-callsign');
+
+    const lineage = profile.derived_from ? `cloned from ${profile.derived_from} · ` : '';
+    $('brand-sub').textContent = state.simulateMode
+      ? `${lineage}simulation mode — no API calls, no writes`
+      : `${lineage}${state.agents.size} agents under command`;
+  }
+
+  async function refreshGraph() {
+    const payload = await api('/api/graph');
+    map.render(payload.ir);
+    map.applyFilters({
+      review: $('show-review').checked,
+      dependency: $('show-dependency').checked,
+    });
+    renderLegend(payload.validation);
+    for (const agent of state.agents.values()) {
+      map.setAgentState(agent.id, agent.state || { status: 'idle' });
+    }
+  }
+
+  async function refreshRuns() {
+    const payload = await api('/api/runs?limit=40');
+    state.runs = payload.runs;
+    state.runsById = new Map(payload.runs.map((run) => [run.id, run]));
+    for (const run of payload.runs) {
+      if (run.stages?.length) state.stagesByRun.set(run.id, run.stages);
+    }
+    if (!state.selectedRun && payload.runs.length) selectRun(payload.runs[0].id, false);
+    renderRuns();
+  }
+
+  async function refreshMetrics() {
+    try {
+      state.metrics = await api('/api/metrics');
+      renderKpis();
+      renderScores();
+    } catch { /* a metrics hiccup must not blank the console */ }
+  }
+
+  /* ── event stream ──────────────────────────────────────────────────── */
+
+  function connect() {
+    if (source) source.close();
+    setLink('connecting');
+    source = new EventSource(withToken(`/api/events?since=${state.cursor}`));
+
+    source.onopen = () => { retryDelay = 1000; setLink('live'); };
+
+    source.onmessage = (message) => {
+      let event;
+      try { event = JSON.parse(message.data); } catch { return; }
+      if (event.type === 'heartbeat') { setLink('live'); return; }
+      if (event.seq) state.cursor = Math.max(state.cursor, event.seq);
+      applyEvent(event);
+    };
+
+    source.onerror = () => {
+      setLink('lost');
+      source.close();
+      // Reconnect from the last applied cursor so nothing is missed.
+      setTimeout(connect, retryDelay);
+      retryDelay = Math.min(retryDelay * 2, 15000);
+    };
+  }
+
+  function setLink(status, detail) {
+    state.link = status;
+    $('link-dot').dataset.state = status;
+    $('link-label').textContent = status === 'live' ? 'live' : status;
+    if (detail) $('brand-sub').textContent = detail;
+  }
+
+  function applyEvent(event) {
+    switch (event.type) {
+      case 'fleet': {
+        const agent = state.agents.get(event.agent);
+        if (agent) {
+          agent.state = event.state || { status: event.status };
+          map.setAgentState(agent.id, agent.state);
+          renderRoster();
+        }
+        break;
+      }
+
+      case 'run.queued':
+      case 'run.started': {
+        pushFeed(event, `${event.agent_name} ${event.type === 'run.queued' ? 'queued' : 'started'}`
+          + (event.simulated ? ' (simulated)' : ''), 'event');
+        refreshRuns().catch(() => {});
+        if (event.type === 'run.started') selectRun(event.run_id, false);
+        break;
+      }
+
+      case 'run.log':
+        pushFeed(event, event.line, event.level || 'info');
+        break;
+
+      case 'stage.started': {
+        const stages = state.stagesByRun.get(event.run_id) || [];
+        stages.push({
+          name: event.stage, agent: event.agent, started_at: event.ts,
+          finished_at: null, status: 'running', score: null,
+        });
+        state.stagesByRun.set(event.run_id, stages);
+        pushFeed(event, `▸ ${event.stage}${event.detail ? ` — ${event.detail}` : ''}`, 'event');
+        renderTimeline();
+        break;
+      }
+
+      case 'stage.finished': {
+        const stages = state.stagesByRun.get(event.run_id) || [];
+        for (let i = stages.length - 1; i >= 0; i -= 1) {
+          if (stages[i].name === event.stage) {
+            stages[i].finished_at = event.ts;
+            stages[i].status = event.status;
+            break;
+          }
+        }
+        renderTimeline();
+        break;
+      }
+
+      case 'metric': {
+        if (event.metric === 'qa_score' && !event.rollup) {
+          const stages = state.stagesByRun.get(event.run_id) || [];
+          const open = stages.filter((s) => s.finished_at === null);
+          const target = open.length ? open[open.length - 1] : stages[stages.length - 1];
+          if (target) target.score = event.value;
+          pushFeed(event, `${event.label}: ${event.value}/50`,
+            event.failed ? 'warn' : 'event');
+          renderTimeline();
+        }
+        break;
+      }
+
+      case 'artifact':
+        pushFeed(event, `saved ${event.path}`, 'event');
+        break;
+
+      case 'run.finished':
+      case 'run.cancelled': {
+        pushFeed(event,
+          `${event.agent_name} ${event.status} in ${duration(event.duration)}`,
+          event.status === 'error' ? 'error' : 'event');
+        refreshRuns().catch(() => {});
+        refreshMetrics();
+        break;
+      }
+
+      default:
+        if (event.type.startsWith('autopilot.')) applyAutopilotEvent(event);
+        break;
+    }
+  }
+
+  function applyAutopilotEvent(event) {
+    if (event.state) {
+      state.autopilot = event.state;
+      renderAutopilot();
+    }
+
+    const notes = {
+      'autopilot.dispatched': () => event.kind === 'optimize'
+        ? 'autopilot: optimizing prompts from QA history'
+        : `autopilot: launching ${event.objective} · ${event.faculty}`,
+      'autopilot.completed': () =>
+        `autopilot: ${event.objective} complete (avg ${event.average}/50)`,
+      'autopilot.rework': () =>
+        `autopilot: ${event.objective} scored ${event.average}/50 — reworking`,
+      'autopilot.quarantined': () =>
+        `autopilot: ${event.objective} held at ${event.average}/50 — needs review`,
+      'autopilot.optimized': () =>
+        `autopilot: optimizer ${event.status}` +
+        `${event.applied ? ' (prompts rewritten)' : ' (proposals logged)'}`,
+      'autopilot.optimizer_skipped': () => `autopilot: optimizer unavailable — ${event.detail}`,
+      'autopilot.failed': () =>
+        `autopilot: ${event.detail} (${event.consecutive} in a row)`,
+      'autopilot.status': () => `autopilot: ${event.status}${event.detail ? ` — ${event.detail}` : ''}`,
+      'autopilot.error': () => `autopilot error: ${event.detail}`,
+      'autopilot.skipped': () => 'autopilot: objective skipped by operator',
+    };
+
+    const note = notes[event.type];
+    if (!note) return;
+    const level = ['autopilot.failed', 'autopilot.error'].includes(event.type) ? 'error'
+      : ['autopilot.rework', 'autopilot.quarantined'].includes(event.type) ? 'warn'
+        : 'event';
+    pushFeed({ ...event, agent: 'autopilot' }, note(), level);
+  }
+
+  /* ── Autopilot ─────────────────────────────────────────────────────── */
+
+  // Statuses the fleet stops itself in and will not leave without an operator.
+  const AP_STOPPED = ['idle', 'paused', 'halted', 'budget_reached', 'backlog_empty'];
+
+  const AP_EXPLAIN = {
+    idle: 'Held. Nothing dispatches until you start it.',
+    running: 'Working the mission book.',
+    paused: 'Held by operator.',
+    backoff: 'Backing off after a failure.',
+    capped: 'Daily mission cap reached — resumes tomorrow.',
+    budget_reached: 'Budget ceiling reached. Raise it to continue.',
+    backlog_empty: 'Mission book complete.',
+    halted: 'Stopped after repeated failures — needs a look.',
+  };
+
+  function renderAutopilot() {
+    const ap = state.autopilot;
+    if (!ap) return;
+
+    const badge = $('ap-status');
+    badge.dataset.status = ap.status;
+    badge.textContent = ap.status.replace('_', ' ');
+
+    $('ap-objective').textContent = ap.objective
+      ? `${ap.objective} · ${ap.faculty}`
+      : (ap.status === 'backlog_empty' ? 'Mission book complete' : 'No objective');
+
+    $('ap-detail').textContent = ap.detail || AP_EXPLAIN[ap.status] || '';
+
+    const bookPct = ap.backlog_total
+      ? (ap.settled / ap.backlog_total) * 100 : 0;
+    $('ap-book-bar').style.width = `${bookPct.toFixed(1)}%`;
+    const bookNotes = [];
+    if (ap.preexisting) bookNotes.push(`${ap.preexisting} pre-existing`);
+    if (ap.quarantined) bookNotes.push(`${ap.quarantined} held`);
+    $('ap-book-value').textContent = `${ap.settled}/${ap.backlog_total}`
+      + (bookNotes.length ? ` · ${bookNotes.join(' · ')}` : '');
+
+    const spendPct = ap.budget_usd ? (ap.spend_estimate / ap.budget_usd) * 100 : 0;
+    const budgetBar = $('ap-budget-bar');
+    budgetBar.style.width = `${Math.min(100, spendPct).toFixed(1)}%`;
+    budgetBar.dataset.tone = spendPct >= 100 ? 'critical'
+      : spendPct >= 80 ? 'warning' : 'spend';
+    $('ap-budget-value').textContent =
+      `$${ap.spend_estimate.toFixed(2)} / $${ap.budget_usd.toFixed(2)}`;
+
+    $('ap-next').textContent = nextActionText(ap);
+    $('ap-today').textContent = `${ap.today_missions}/${ap.daily_cap} missions · ${ap.mode}`;
+    $('ap-learning').textContent =
+      `optimizer every ${ap.optimize_every} · ` +
+      `${ap.optimize_applies ? 'applies rewrites' : 'proposes only'} · ` +
+      `QA floor ${ap.qa_floor}`;
+
+    const toggle = $('ap-toggle');
+    const stopped = AP_STOPPED.includes(ap.status);
+    toggle.textContent = stopped ? 'Start' : 'Hold';
+    toggle.dataset.primary = String(stopped);
+    toggle.disabled = ap.status === 'budget_reached';
+    $('ap-skip').disabled = !ap.objective;
+
+    $('ap-error').textContent = ap.status === 'budget_reached'
+      ? 'Raise the ceiling in the fleet profile to continue.' : '';
+  }
+
+  function nextActionText(ap) {
+    if (ap.active_run) {
+      return ap.active_kind === 'optimize' ? 'optimizing prompts' : 'mission in flight';
+    }
+    if (AP_STOPPED.includes(ap.status)) return '—';
+    const seconds = (ap.next_action_at || 0) - Date.now() / 1000;
+    if (seconds <= 0) return 'imminent';
+    if (seconds < 90) return `in ${Math.round(seconds)}s`;
+    return `in ${Math.round(seconds / 60)}m`;
+  }
+
+  async function autopilotCommand(command, body) {
+    $('ap-error').textContent = '';
+    try {
+      state.autopilot = await api(`/api/autopilot/${command}`, {
+        method: 'POST',
+        body: JSON.stringify(body || {}),
+      });
+      renderAutopilot();
+    } catch (error) {
+      $('ap-error').textContent = error.message;
+    }
+  }
+
+  /* ── KPI strip ─────────────────────────────────────────────────────── */
+
+  function renderKpis() {
+    const metrics = state.metrics;
+    if (!metrics) return;
+    const container = $('kpis');
+    container.replaceChildren();
+
+    const ready = [...state.agents.values()]
+      .filter((a) => a.dispatchable && a.readiness === 'operational').length;
+    const dispatchable = [...state.agents.values()].filter((a) => a.dispatchable).length;
+
+    const tiles = [
+      ['active runs', String(metrics.runs_active), null],
+      ['qa average', metrics.qa_average === null ? '—' : metrics.qa_average.toFixed(1),
+        '/50', metrics.qa_timeline],
+      ['topics', String(metrics.topics), null],
+      ['artifacts', String(metrics.artifacts_logged), null],
+      // Lifetime estimate from the QA log — distinct from the autopilot's own
+      // budget meter, which tracks only what this fleet has spent.
+      ['logged spend', `$${metrics.estimated_spend_usd.toFixed(2)}`, null],
+      ['agents ready', `${ready}`, `/${dispatchable}`],
+    ];
+
+    for (const [label, value, unit, series] of tiles) {
+      const tile = node('div', 'kpi');
+      tile.appendChild(node('span', 'kpi-label', label));
+      const figure = node('span', 'kpi-value', value);
+      if (unit) {
+        const suffix = node('span', 'unit', unit);
+        figure.appendChild(suffix);
+      }
+      tile.appendChild(figure);
+      if (series && series.length > 1) tile.appendChild(sparkline(series));
+      container.appendChild(tile);
+    }
+  }
+
+  /* Single-series sparkline: QA score over the last runs. No legend needed —
+     the tile label names the series. */
+  function sparkline(series) {
+    const width = 84;
+    const height = 18;
+    const scores = series.map((point) => point.score);
+    const min = Math.min(...scores, 30);
+    const max = Math.max(...scores, 50);
+    const span = Math.max(1, max - min);
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'kpi-spark');
+    svg.setAttribute('width', width);
+    svg.setAttribute('height', height);
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    svg.setAttribute('aria-hidden', 'true');
+
+    const points = scores.map((score, index) => {
+      const x = scores.length === 1 ? width : (index / (scores.length - 1)) * width;
+      const y = height - 2 - ((score - min) / span) * (height - 4);
+      return [x, y];
+    });
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', points.map((p, i) => `${i ? 'L' : 'M'} ${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' '));
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', 'var(--accent)');
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('stroke-linejoin', 'round');
+    path.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(path);
+
+    const last = points[points.length - 1];
+    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    dot.setAttribute('cx', last[0].toFixed(1));
+    dot.setAttribute('cy', last[1].toFixed(1));
+    dot.setAttribute('r', '2.4');
+    dot.setAttribute('fill', 'var(--accent)');
+    svg.appendChild(dot);
+    return svg;
+  }
+
+  /* ── roster ────────────────────────────────────────────────────────── */
+
+  function renderRoster() {
+    if (!state.fleet) return;
+    const container = $('roster');
+    const onlyLive = $('only-live').checked;
+    container.replaceChildren();
+
+    for (const squad of state.fleet.squads) {
+      const members = [...state.agents.values()].filter((a) => a.squad === squad.id);
+      const visible = onlyLive
+        ? members.filter((a) => ['running', 'queued'].includes(a.state?.status))
+        : members;
+      if (!visible.length) continue;
+
+      const block = node('div', 'squad-block');
+      const heading = node('div', 'squad-label');
+      const swatch = node('span', 'squad-swatch');
+      swatch.style.background = squad.accent;
+      heading.append(swatch, node('span', null, squad.name));
+      block.appendChild(heading);
+
+      for (const agent of visible) {
+        const row = node('button', 'agent-row');
+        row.type = 'button';
+        row.setAttribute('aria-current', String(state.selectedAgent === agent.id));
+        row.appendChild(node('span', 'agent-glyph', agent.glyph));
+
+        const middle = node('span');
+        middle.appendChild(node('span', 'agent-name', agent.name));
+        const status = agent.state?.status || 'idle';
+        const sub = status === 'idle' && agent.readiness === 'unconfigured'
+          ? 'needs credentials'
+          : agent.summary;
+        middle.appendChild(node('span', 'agent-sub', truncate(sub, 34)));
+        middle.style.display = 'grid';
+        row.appendChild(middle);
+
+        const badge = node('span', 'status',
+          agent.readiness === 'unconfigured' && status === 'idle' ? 'dark' : status);
+        badge.dataset.status = agent.readiness === 'unconfigured' && status === 'idle'
+          ? 'unconfigured' : status;
+        row.appendChild(badge);
+
+        row.addEventListener('click', () => {
+          state.selectedAgent = state.selectedAgent === agent.id ? null : agent.id;
+          map.setSelected(state.selectedAgent);
+          renderRoster();
+          if (state.selectedAgent) openDrawer(agent.id); else closeDrawer();
+        });
+        block.appendChild(row);
+      }
+      container.appendChild(block);
+    }
+
+    if (!container.children.length) {
+      container.appendChild(node('p', 'empty', 'No agents match this filter.'));
+    }
+  }
+
+  const truncate = (text, max) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
+
+  /* ── legend ────────────────────────────────────────────────────────── */
+
+  function renderLegend(validation) {
+    const legend = $('map-legend');
+    legend.replaceChildren();
+    const entries = [
+      ['', 'work'],
+      ['review', 'QA review'],
+      ['dependency', 'external call'],
+    ];
+    for (const [cls, label] of entries) {
+      const item = node('span', 'legend-item');
+      const swatch = node('span', `legend-swatch ${cls}`.trim());
+      item.append(swatch, node('span', null, label));
+      legend.appendChild(item);
+    }
+    const verdict = node('span', 'legend-item',
+      validation.ok
+        ? `map validated · ${validation.warnings.length} warning(s)`
+        : `map invalid · ${validation.errors.length} error(s)`);
+    legend.appendChild(verdict);
+  }
+
+  /* ── launch console ────────────────────────────────────────────────── */
+
+  function renderLaunchAgents() {
+    const select = $('launch-agent');
+    const previous = select.value;
+    select.replaceChildren();
+
+    for (const squad of state.fleet.squads) {
+      const members = [...state.agents.values()]
+        .filter((a) => a.squad === squad.id && a.dispatchable);
+      if (!members.length) continue;
+      const group = document.createElement('optgroup');
+      group.label = squad.name;
+      for (const agent of members) {
+        const option = document.createElement('option');
+        option.value = agent.id;
+        option.textContent = agent.name;
+        group.appendChild(option);
+      }
+      select.appendChild(group);
+    }
+
+    select.value = previous || 'mission';
+    if (!select.value) select.selectedIndex = 0;
+    renderLaunchParams();
+  }
+
+  function renderLaunchParams() {
+    const agent = state.agents.get($('launch-agent').value);
+    const container = $('launch-params');
+    container.replaceChildren();
+    $('launch-error').textContent = '';
+    if (!agent) return;
+
+    $('launch-blurb').textContent = agent.summary;
+
+    if (agent.readiness === 'unconfigured') {
+      const note = node('p', 'blocked-note',
+        `Needs ${agent.missing_env.join(', ')} — simulate to rehearse it.`);
+      container.appendChild(note);
+      $('launch-simulate').checked = true;
+    } else {
+      $('launch-simulate').checked = state.simulateMode;
+    }
+
+    for (const param of agent.params) {
+      if (param.kind === 'flag') {
+        const label = node('label', 'field flag-field');
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.dataset.param = param.name;
+        input.checked = Boolean(param.default);
+        label.append(input, node('span', null, param.label));
+        container.appendChild(label);
+        continue;
+      }
+
+      const label = node('label', 'field');
+      label.appendChild(node('span', null,
+        param.label + (param.required ? ' *' : '')));
+
+      let input;
+      if (param.kind === 'choice') {
+        input = document.createElement('select');
+        if (!param.required) {
+          const blank = document.createElement('option');
+          blank.value = '';
+          blank.textContent = '—';
+          input.appendChild(blank);
+        }
+        for (const choice of param.choices) {
+          const option = document.createElement('option');
+          option.value = choice;
+          option.textContent = choice;
+          input.appendChild(option);
+        }
+      } else {
+        input = document.createElement('input');
+        input.type = param.kind === 'int' ? 'number' : 'text';
+      }
+      input.dataset.param = param.name;
+      if (param.default !== null && param.default !== undefined) {
+        input.value = param.default;
+      }
+      if (param.required) input.required = true;
+      label.appendChild(input);
+      if (param.help) label.appendChild(node('p', 'field-help', param.help));
+      container.appendChild(label);
+    }
+  }
+
+  async function launch(event) {
+    event.preventDefault();
+    const button = $('launch-button');
+    const error = $('launch-error');
+    error.textContent = '';
+
+    const agentId = $('launch-agent').value;
+    const params = {};
+    for (const input of $('launch-params').querySelectorAll('[data-param]')) {
+      const name = input.dataset.param;
+      if (input.type === 'checkbox') {
+        if (input.checked) params[name] = true;
+      } else if (input.value !== '') {
+        params[name] = input.value;
+      }
+    }
+
+    button.disabled = true;
+    button.textContent = 'Deploying…';
+    try {
+      const payload = await api('/api/runs', {
+        method: 'POST',
+        body: JSON.stringify({
+          agent: agentId,
+          params,
+          simulate: $('launch-simulate').checked,
+        }),
+      });
+      selectRun(payload.run.id, false);
+      await refreshRuns();
+    } catch (failure) {
+      error.textContent = failure.message;
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Deploy agent';
+    }
+  }
+
+  function updateModePill() {
+    const pill = $('mode-pill');
+    pill.dataset.mode = state.simulateMode ? 'simulation' : 'live';
+    pill.textContent = state.simulateMode ? 'simulation' : 'live';
+    $('brand-sub').textContent = state.simulateMode
+      ? 'simulation mode — no API calls, no writes'
+      : `${state.agents.size} agents under command`;
+  }
+
+  /* ── runs ──────────────────────────────────────────────────────────── */
+
+  function renderRuns() {
+    const container = $('runs');
+    container.replaceChildren();
+
+    if (!state.runs.length) {
+      container.appendChild(node('p', 'empty', 'Nothing has run yet.'));
+      $('runs-note').textContent = '';
+      return;
+    }
+
+    const active = state.runs.filter((r) => ['queued', 'running'].includes(r.status));
+    $('runs-note').textContent = active.length ? `${active.length} active` : '';
+
+    for (const run of state.runs.slice(0, 25)) {
+      const row = node('button', 'run-row');
+      row.type = 'button';
+      row.setAttribute('aria-current', String(state.selectedRun === run.id));
+
+      const title = node('span', 'run-title', run.agent_name);
+      row.appendChild(title);
+
+      if (['queued', 'running'].includes(run.status)) {
+        const cancel = node('button', 'run-cancel', 'stop');
+        cancel.type = 'button';
+        cancel.addEventListener('click', async (event) => {
+          event.stopPropagation();
+          try { await api(`/api/runs/${run.id}/cancel`, { method: 'POST' }); }
+          catch { /* the run finished on its own */ }
+        });
+        row.appendChild(cancel);
+      } else {
+        const badge = node('span', 'status', run.status);
+        badge.dataset.status = run.status;
+        row.appendChild(badge);
+      }
+
+      const topic = run.params?.topic ? `${run.params.topic} · ` : '';
+      const when = run.started_at ? ago(run.started_at) : 'queued';
+      const sim = run.simulated ? ' · sim' : '';
+      row.appendChild(node('span', 'run-meta', `${topic}${when}${sim}`));
+
+      row.addEventListener('click', () => selectRun(run.id, true));
+      container.appendChild(row);
+    }
+  }
+
+  async function selectRun(runId, scrollFeed) {
+    state.selectedRun = runId;
+    renderRuns();
+    renderTimeline();
+    if (!state.stagesByRun.has(runId)) {
+      try {
+        const detail = await api(`/api/runs/${runId}`);
+        // Live events may have filled the stage list while this was in flight.
+        if (!state.stagesByRun.has(runId)) {
+          state.stagesByRun.set(runId, detail.stages || []);
+        }
+        if (scrollFeed && detail.log?.length) {
+          state.feed = detail.log.map((entry) => ({
+            ts: entry.ts, agent: detail.agent_name, text: entry.line, level: entry.level,
+          }));
+          renderFeed();
+        }
+        renderTimeline();
+      } catch { /* run may have aged out of history */ }
+    }
+  }
+
+  /* ── timeline ──────────────────────────────────────────────────────── */
+
+  function renderTimeline() {
+    const container = $('timeline');
+    const runId = state.selectedRun;
+    const stages = runId ? state.stagesByRun.get(runId) || [] : [];
+    const run = state.runsById.get(runId);
+
+    container.replaceChildren();
+    $('timeline-note').textContent = run
+      ? `${run.agent_name}${run.params?.topic ? ` · ${run.params.topic}` : ''}`
+      : 'no run selected';
+
+    if (!stages.length) {
+      container.appendChild(node('p', 'empty',
+        run ? 'Waiting for the first stage…' : 'Select a run to see its stages.'));
+      return;
+    }
+
+    const now = Date.now() / 1000;
+    const start = Math.min(...stages.map((s) => s.started_at || now));
+    const end = Math.max(...stages.map((s) => s.finished_at || now));
+    const span = Math.max(1, end - start);
+
+    for (const stage of stages) {
+      const row = node('div', 'timeline-row');
+      row.appendChild(node('span', 'timeline-name', stage.name));
+
+      const track = node('div', 'timeline-track');
+      const bar = node('div', 'timeline-bar');
+      const from = ((stage.started_at || start) - start) / span;
+      const to = ((stage.finished_at || now) - start) / span;
+      bar.style.left = `${(from * 100).toFixed(2)}%`;
+      bar.style.width = `${Math.max(1.5, (to - from) * 100).toFixed(2)}%`;
+      bar.dataset.status = stage.status || 'running';
+      track.appendChild(bar);
+      row.appendChild(track);
+
+      const elapsed = (stage.finished_at || now) - (stage.started_at || now);
+      row.appendChild(node('span', 'timeline-meta',
+        stage.score ? `${stage.score}/50` : duration(elapsed)));
+      container.appendChild(row);
+    }
+  }
+
+  /* ── feed ──────────────────────────────────────────────────────────── */
+
+  function pushFeed(event, text, level) {
+    const agent = state.agents.get(event.agent);
+    state.feed.push({
+      ts: event.ts,
+      agent: agent ? agent.name : event.agent || 'commander',
+      text,
+      level,
+    });
+    if (state.feed.length > MAX_FEED) state.feed.splice(0, state.feed.length - MAX_FEED);
+    appendFeedLine(state.feed[state.feed.length - 1]);
+  }
+
+  function feedVisible(entry) {
+    if (state.feedFilter === 'all') return true;
+    if (state.feedFilter === 'event') return entry.level === 'event';
+    return entry.level === 'warn' || entry.level === 'error';
+  }
+
+  function appendFeedLine(entry) {
+    const container = $('feed');
+    const placeholder = container.querySelector('.feed-empty');
+    if (placeholder) placeholder.remove();
+    if (!feedVisible(entry)) return;
+
+    const line = node('div', 'feed-line');
+    line.dataset.level = entry.level;
+    line.append(
+      node('span', 'feed-time', clock(entry.ts)),
+      node('span', 'feed-agent', entry.agent),
+      node('span', 'feed-text', entry.text),
+    );
+    container.appendChild(line);
+    while (container.children.length > MAX_FEED) container.firstChild.remove();
+    if (state.follow) container.scrollTop = container.scrollHeight;
+  }
+
+  function renderFeed() {
+    const container = $('feed');
+    container.replaceChildren();
+    const visible = state.feed.filter(feedVisible);
+    if (!visible.length) {
+      container.appendChild(node('p', 'feed-empty', 'Nothing on the wire yet.'));
+      return;
+    }
+    for (const entry of visible) appendFeedLine(entry);
+  }
+
+  /* ── QA by agent ───────────────────────────────────────────────────── */
+
+  function renderScores() {
+    const container = $('scores');
+    container.replaceChildren();
+    const byAgent = state.metrics?.qa_by_agent || {};
+    const rows = Object.entries(byAgent).filter(([, value]) => value !== null);
+
+    if (!rows.length) {
+      container.appendChild(node('p', 'empty', 'No QA scores logged yet.'));
+      return;
+    }
+
+    rows.sort((a, b) => b[1] - a[1]);
+    for (const [name, average] of rows) {
+      const row = node('div', 'score-row');
+      row.appendChild(node('span', 'score-name', name.replace(/ Agent.*$/, '')));
+      const track = node('div', 'score-track');
+      const bar = node('div', 'score-bar');
+      bar.style.width = `${Math.min(100, (average / 50) * 100).toFixed(1)}%`;
+      track.appendChild(bar);
+      row.appendChild(track);
+      row.appendChild(node('span', 'score-value', average.toFixed(1)));
+      container.appendChild(row);
+    }
+  }
+
+  /* ── drawer ────────────────────────────────────────────────────────── */
+
+  function openDrawer(agentId) {
+    const agent = state.agents.get(agentId);
+    if (!agent) return;
+
+    $('drawer-title').textContent = agent.name;
+    const body = $('drawer-body');
+    body.replaceChildren();
+    body.appendChild(node('p', null, agent.summary));
+    if (agent.doc) body.appendChild(node('p', null, agent.doc));
+
+    const list = document.createElement('dl');
+    const facts = [
+      ['squad', state.fleet.squads.find((s) => s.id === agent.squad)?.name || agent.squad],
+      ['kind', agent.kind],
+      ['status', agent.state?.status || 'idle'],
+      ['readiness', agent.readiness],
+    ];
+    if (agent.state?.detail) facts.push(['last', agent.state.detail]);
+    if (agent.state?.last_score) facts.push(['last QA', `${agent.state.last_score}/50`]);
+    for (const [term, value] of facts) {
+      list.appendChild(node('dt', null, term));
+      list.appendChild(node('dd', null, String(value)));
+    }
+    body.appendChild(list);
+
+    if (agent.missing_env.length) {
+      const chips = node('div', 'chip-row');
+      for (const key of agent.missing_env) {
+        const chip = node('span', 'chip', key);
+        chip.dataset.tone = 'warn';
+        chips.appendChild(chip);
+      }
+      body.appendChild(node('p', null, 'Missing credentials:'));
+      body.appendChild(chips);
+    }
+
+    if (agent.dispatchable) {
+      const button = node('button', 'launch-button', `Load ${agent.name} into launcher`);
+      button.type = 'button';
+      button.addEventListener('click', () => {
+        $('launch-agent').value = agent.id;
+        renderLaunchParams();
+        closeDrawer();
+        $('launch-agent').focus();
+      });
+      body.appendChild(button);
+    }
+
+    $('drawer').hidden = false;
+  }
+
+  function closeDrawer() {
+    $('drawer').hidden = true;
+    if (state.selectedAgent) {
+      state.selectedAgent = null;
+      map.setSelected(null);
+      renderRoster();
+    }
+  }
+
+  /* ── controls ──────────────────────────────────────────────────────── */
+
+  function bindControls() {
+    $('launch-form').addEventListener('submit', launch);
+    $('launch-agent').addEventListener('change', renderLaunchParams);
+    $('only-live').addEventListener('change', renderRoster);
+
+    $('show-review').addEventListener('change', (event) => {
+      map.applyFilters({ review: event.target.checked });
+    });
+    $('show-dependency').addEventListener('change', (event) => {
+      map.applyFilters({ dependency: event.target.checked });
+    });
+
+    $('zoom-in').addEventListener('click', () => map.zoom(0.82));
+    $('zoom-out').addEventListener('click', () => map.zoom(1.22));
+    $('zoom-fit').addEventListener('click', () => map.fit());
+
+    $('follow').addEventListener('change', (event) => {
+      state.follow = event.target.checked;
+    });
+    $('feed-filter').addEventListener('change', (event) => {
+      state.feedFilter = event.target.value;
+      renderFeed();
+    });
+
+    $('ap-toggle').addEventListener('click', () => {
+      const stopped = AP_STOPPED.includes(state.autopilot?.status);
+      autopilotCommand(stopped ? 'start' : 'pause');
+    });
+    $('ap-skip').addEventListener('click', () => autopilotCommand('skip'));
+
+    $('drawer-close').addEventListener('click', closeDrawer);
+    $('drawer-scrim').addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !$('drawer').hidden) closeDrawer();
+    });
+
+    window.addEventListener('resize', () => {
+      if (map?.ir) map.fit();
+    });
+  }
+
+  boot().catch((error) => {
+    setLink('lost', error.message);
+    $('feed').appendChild(node('p', 'feed-empty', `Failed to start: ${error.message}`));
+  });
+})();
+
+</script>
+</body>
+</html>
