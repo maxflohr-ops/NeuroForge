@@ -1,0 +1,33 @@
+{
+  "id": "neuroforge",
+  "name": "NeuroForge",
+  "callsign": "NF",
+  "summary": "The base fleet. Every other fleet derives from this one, so architectural changes reach all of them while each keeps its own mission book and operating policy.",
+  "backlog": [
+    { "topic": "Stop Overthinking",       "faculty": "Dr. Nova Vale" },
+    { "topic": "Dopamine Detox",          "faculty": "Kai Ren" },
+    { "topic": "Stop Procrastinating",    "faculty": "Kai Ren" },
+    { "topic": "The Confidence Code",     "faculty": "Luna Hart" },
+    { "topic": "Beat Phone Addiction",    "faculty": "Kai Ren" },
+    { "topic": "Stop Negative Thoughts",  "faculty": "Dr. Nova Vale" },
+    { "topic": "How to Read People",      "faculty": "Luna Hart" },
+    { "topic": "The Discipline Blueprint","faculty": "Marcus Voss" },
+    { "topic": "The Charisma Blueprint",  "faculty": "Luna Hart" },
+    { "topic": "Beat Anxiety Fast",       "faculty": "Dr. Nova Vale" }
+  ],
+  "autopilot": {
+    "enabled": false,
+    "mode": "simulate",
+    "cadence_seconds": 900,
+    "budget_usd": 5.0,
+    "daily_mission_cap": 6,
+    "qa_floor": 35,
+    "rework_attempts": 1,
+    "optimize_every": 10,
+    "optimize_applies": false,
+    "max_consecutive_failures": 3,
+    "backoff_seconds": 300,
+    "skip_completed": true,
+    "no_qa": false
+  }
+}

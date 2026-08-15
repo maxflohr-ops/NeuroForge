@@ -1,0 +1,30 @@
+{
+  "id": "florra_alpha",
+  "name": "Florra Fleet Alpha",
+  "callsign": "FFA",
+  "derived_from": "neuroforge",
+  "summary": "Florra's first continuously-operating fleet. Same agent architecture as NeuroForge, its own mission book, budget and cadence. Works the backlog around the clock, gates every artifact on QA, and folds what it learns back into the prompts.",
+
+  "autopilot": {
+    "enabled": true,
+    "mode": "simulate",
+    "cadence_seconds": 1800,
+    "budget_usd": 12.0,
+    "daily_mission_cap": 8,
+    "qa_floor": 38,
+    "rework_attempts": 1,
+    "optimize_every": 5,
+    "optimize_applies": false,
+    "max_consecutive_failures": 3,
+    "backoff_seconds": 600,
+    "skip_completed": true,
+    "no_qa": false
+  },
+
+  "_notes": {
+    "mode": "Starts in simulate: the loop runs end to end, spends nothing and writes nothing. Switch to 'live' when you are ready to pay for tokens.",
+    "budget_usd": "Hard ceiling on ESTIMATED spend (~$0.17 per full mission). The fleet stops itself when it is reached; it does not ask.",
+    "qa_floor": "38/50 — above the pipeline's own 35 halt threshold, so the fleet reworks a weak topic before a human would have to.",
+    "optimize_applies": "false means the optimizer proposes prompt rewrites and logs them for review. Set true to let the fleet edit its own prompts (old versions are backed up to prompts/versions/)."
+  }
+}

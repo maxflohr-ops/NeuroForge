@@ -26,13 +26,8 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(PROJECT_DIR))
     __package__ = "commander"
 
-from commander import registry  # noqa: E402
+from commander import profiles, registry  # noqa: E402
 from commander.server import serve  # noqa: E402
-
-BANNER = r"""
-  ███  NEUROFORGE COMMAND CENTER
-  Agent commander + real-time fleet visualisation
-"""
 
 
 def load_dotenv(path: Path) -> int:
@@ -67,6 +62,15 @@ def main() -> int:
                         help="Dispatch simulated runs instead of real agents")
     parser.add_argument("--token", default=os.getenv("COMMANDER_TOKEN"),
                         help="Require this bearer token on every request")
+    parser.add_argument("--fleet", default=os.getenv("COMMANDER_FLEET",
+                                                     profiles.DEFAULT_FLEET),
+                        help="Fleet profile to command (see commander/fleets/)")
+    autonomy = parser.add_mutually_exclusive_group()
+    autonomy.add_argument("--autopilot", dest="autopilot", action="store_true",
+                          default=None,
+                          help="Work the mission book continuously on start")
+    autonomy.add_argument("--no-autopilot", dest="autopilot", action="store_false",
+                          help="Start with autopilot held, whatever the profile says")
     parser.add_argument("--no-env", action="store_true",
                         help="Skip loading .env")
     parser.add_argument("--verbose", action="store_true",
@@ -88,24 +92,48 @@ def main() -> int:
         server = serve(PROJECT_DIR, host=args.host, port=args.port,
                        max_concurrent=args.max_concurrent,
                        simulate=args.simulate, token=args.token,
-                       verbose=args.verbose)
+                       verbose=args.verbose, fleet=args.fleet,
+                       autopilot=args.autopilot)
     except OSError as exc:
         print(f"  ✗ cannot bind {args.host}:{args.port} — {exc}", file=sys.stderr)
         return 1
-    except RuntimeError as exc:
+    except (RuntimeError, ValueError, FileNotFoundError) as exc:
         print(f"  ✗ {exc}", file=sys.stderr)
         return 1
 
+    profile = server.commander.profile
+    policy = profile.autopilot
+    pilot = server.commander.autopilot
     dispatchable = [a for a in registry.AGENTS if a.dispatchable]
     ready = [a for a in dispatchable if not registry.missing_env(a)]
+    settled = len(pilot.state["completed"]) + len(pilot.state["quarantined"])
 
-    print(BANNER)
+    print(f"\n  ███  {profile.name.upper()}  [{profile.callsign}]")
+    print(f"  Agent commander + real-time fleet visualisation")
+    if profile.derived_from:
+        print(f"  cloned from {profile.derived_from}\n")
+    else:
+        print()
+
     print(f"  fleet      {len(registry.AGENTS)} agents · "
           f"{len(dispatchable)} launchable · {len(ready)} credentialled")
     print(f"  mode       {'SIMULATION — no API calls, no writes' if args.simulate else 'LIVE'}")
     print(f"  auth       {'bearer token required' if args.token else 'open (loopback)'}")
     print(f"  console    http://{args.host}:{args.port}/")
+    print()
+    print(f"  autopilot  {pilot.state['status']} · {policy.mode} · "
+          f"1 mission / {policy.cadence_seconds // 60}min")
+    print(f"  book       {settled}/{len(profile.backlog)} objectives settled")
+    print(f"  budget     ${pilot.state['spend_estimate']:.2f} of "
+          f"${policy.budget_usd:.2f} estimated · "
+          f"cap {policy.daily_mission_cap}/day · QA floor {policy.qa_floor}/50")
+    print(f"  learning   optimizer every {policy.optimize_every} missions, "
+          f"{'applying rewrites' if policy.optimize_applies else 'proposing only'}")
     print("\n  Ctrl-C to stop.\n")
+
+    if policy.mode == "live" and not args.simulate:
+        print("  ⚠ LIVE autopilot: this fleet will spend real tokens unattended,\n"
+              f"    up to ${policy.budget_usd:.2f} estimated. It stops itself there.\n")
 
     if not args.simulate and len(ready) < len(dispatchable):
         blocked = len(dispatchable) - len(ready)
@@ -123,7 +151,9 @@ def main() -> int:
     try:
         stop.wait()
     finally:
-        print("\n  stopping agents…")
+        print("\n  standing down autopilot…")
+        server.commander.autopilot.shutdown()
+        print("  stopping agents…")
         server.commander.runner.shutdown()
         server.shutdown()
         server.server_close()

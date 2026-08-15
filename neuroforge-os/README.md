@@ -30,23 +30,33 @@ Every output is saved to disk. Every QA score is logged to a JSON database. The 
 
 ---
 
-## Command Center
+## Command Center & Florra Fleet Alpha
 
 There is a control plane for all of this: an agent commander that launches and
-supervises every agent in `scripts/`, and a real-time console that shows where
-work actually is on a live architecture map.
+supervises every agent in `scripts/`, a real-time console that shows where work
+actually is on a live architecture map, and an autopilot that works a mission
+book around the clock.
+
+**Florra Fleet Alpha** (`FFA`) is a clone of the NeuroForge fleet: the same
+agent architecture, its own identity, budget and cadence. It runs the loop this
+pipeline was designed for without anyone driving it — next topic → full mission
+→ QA every artifact → prompt optimizer → next topic.
 
 ```bash
-python -m commander --simulate    # rehearse the fleet, no API keys needed
-python -m commander               # live
-docker compose up commander
+python -m commander --fleet florra_alpha   # autopilot on, simulated
+docker compose up -d florra-alpha          # 24/7, restarts with the host
 ```
 
 Then open <http://127.0.0.1:8787>.
 
-It needs no dependencies beyond what the pipeline already has. Full
-documentation — dispatch safety, the event protocol, how to add an agent — is
-in [`commander/README.md`](commander/README.md).
+It ships in **simulate** mode: the whole loop runs end to end, spends nothing
+and writes nothing, so you can watch a full day of operation before it costs a
+cent. Going live is one setting, and the fleet still stops itself at its budget
+ceiling, its daily cap and after repeated failures.
+
+No dependencies beyond what the pipeline already has. Full documentation —
+fleet cloning, the rails, dispatch safety, how to add an agent — is in
+[`commander/README.md`](commander/README.md).
 
 ---
 

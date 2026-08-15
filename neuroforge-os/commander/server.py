@@ -24,13 +24,15 @@ from __future__ import annotations
 import json
 import re
 import threading
+from dataclasses import replace
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
-from . import graph, registry
+from . import graph, profiles, registry
+from .autopilot import Autopilot
 from .eventbus import EventBus
 from .runner import DispatchError, Runner
 from .store import FleetStore
@@ -54,15 +56,25 @@ class Commander:
     """Wires the pieces together and owns their lifetime."""
 
     def __init__(self, project_dir: Path, max_concurrent: int = 2,
-                 simulate: bool = False, token: str | None = None):
+                 simulate: bool = False, token: str | None = None,
+                 fleet: str = profiles.DEFAULT_FLEET,
+                 autopilot: bool | None = None):
         self.project_dir = project_dir
         self.state_dir = project_dir / "commander" / "state"
+        self.profile = profiles.load(fleet)
         self.bus = EventBus(self.state_dir / "events.jsonl")
         self.store = FleetStore(project_dir, self.state_dir)
         self.runner = Runner(project_dir, self.bus, self.store,
                              max_concurrent=max_concurrent, simulate=simulate)
         self.simulate = simulate
         self.token = token
+
+        if autopilot is not None:
+            self.profile = replace(
+                self.profile,
+                autopilot=replace(self.profile.autopilot, enabled=autopilot))
+        self.autopilot = Autopilot(self.profile, self.runner, self.store,
+                                   self.bus, self.state_dir)
 
     def graph_payload(self) -> dict[str, Any]:
         state = {spec.id: self.store.agent_state(spec.id) for spec in registry.AGENTS}
@@ -163,7 +175,14 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if route == "/api/fleet":
-            self._send_json(self.commander.store.fleet_snapshot())
+            snapshot = self.commander.store.fleet_snapshot()
+            snapshot["profile"] = self.commander.profile.to_dict()
+            snapshot["fleets"] = profiles.available()
+            self._send_json(snapshot)
+            return
+
+        if route == "/api/autopilot":
+            self._send_json(self.commander.autopilot.snapshot())
             return
 
         if route == "/api/graph":
@@ -217,6 +236,11 @@ class Handler(BaseHTTPRequestHandler):
             self._dispatch(body)
             return
 
+        autopilot = re.fullmatch(r"/api/autopilot/(start|pause|skip|budget)", route)
+        if autopilot:
+            self._autopilot_command(autopilot.group(1), body)
+            return
+
         cancel = re.fullmatch(r"/api/runs/([\w-]+)/cancel", route)
         if cancel:
             run_id = cancel.group(1)
@@ -254,6 +278,26 @@ class Handler(BaseHTTPRequestHandler):
 
         self._send_json({"run": {k: v for k, v in run.items() if k != "log"}},
                         HTTPStatus.ACCEPTED)
+
+    def _autopilot_command(self, command: str, body: dict[str, Any]) -> None:
+        pilot = self.commander.autopilot
+        if command == "start":
+            self._send_json(pilot.start())
+        elif command == "pause":
+            self._send_json(pilot.pause())
+        elif command == "skip":
+            self._send_json(pilot.skip())
+        else:  # budget — raising the ceiling is always an operator decision
+            try:
+                budget = float(body.get("budget_usd", 0))
+            except (TypeError, ValueError):
+                self._send_error_json("budget_usd must be a number",
+                                      HTTPStatus.BAD_REQUEST)
+                return
+            try:
+                self._send_json(pilot.raise_budget(budget))
+            except ValueError as exc:
+                self._send_error_json(str(exc), HTTPStatus.BAD_REQUEST)
 
     def _stream_events(self, since: int) -> None:
         self.send_response(HTTPStatus.OK)
@@ -315,10 +359,13 @@ class CommanderServer(ThreadingHTTPServer):
 
 def serve(project_dir: Path, host: str = "127.0.0.1", port: int = 8787,
           max_concurrent: int = 2, simulate: bool = False,
-          token: str | None = None, verbose: bool = False) -> CommanderServer:
+          token: str | None = None, verbose: bool = False,
+          fleet: str = profiles.DEFAULT_FLEET,
+          autopilot: bool | None = None) -> CommanderServer:
     """Start the commander. Returns the server so callers can shut it down."""
     commander = Commander(project_dir, max_concurrent=max_concurrent,
-                          simulate=simulate, token=token)
+                          simulate=simulate, token=token, fleet=fleet,
+                          autopilot=autopilot)
     server = CommanderServer((host, port), commander, verbose=verbose)
 
     report = commander.graph_payload()
@@ -330,4 +377,5 @@ def serve(project_dir: Path, host: str = "127.0.0.1", port: int = 8787,
     thread = threading.Thread(target=server.serve_forever, name="commander-http",
                               daemon=True)
     thread.start()
+    commander.autopilot.start_thread()
     return server

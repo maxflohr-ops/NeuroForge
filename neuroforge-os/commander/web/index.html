@@ -11,7 +11,7 @@
 
 <header class="topbar">
   <div class="brand">
-    <span class="brand-mark" aria-hidden="true">⌘</span>
+    <span class="brand-mark" id="brand-mark" aria-hidden="true">⌘</span>
     <div>
       <h1>NeuroForge Command Center</h1>
       <p class="brand-sub" id="brand-sub">connecting…</p>
@@ -101,6 +101,47 @@
 
   <!-- ── Command column ─────────────────────────────────────────────── -->
   <div class="side">
+    <section class="panel autopilot-panel" aria-labelledby="autopilot-title">
+      <div class="panel-head">
+        <h2 id="autopilot-title">Autopilot</h2>
+        <span class="status" id="ap-status" data-status="idle">idle</span>
+      </div>
+      <div class="panel-body autopilot" id="autopilot">
+        <p class="ap-objective" id="ap-objective">—</p>
+        <p class="ap-detail" id="ap-detail"></p>
+
+        <div class="meter">
+          <div class="meter-head">
+            <span>mission book</span>
+            <span id="ap-book-value">—</span>
+          </div>
+          <div class="meter-track"><div class="meter-fill" id="ap-book-bar"></div></div>
+        </div>
+
+        <div class="meter">
+          <div class="meter-head">
+            <span>budget <span class="meter-note">estimated</span></span>
+            <span id="ap-budget-value">—</span>
+          </div>
+          <div class="meter-track">
+            <div class="meter-fill" id="ap-budget-bar" data-tone="spend"></div>
+          </div>
+        </div>
+
+        <dl class="ap-facts">
+          <dt>next</dt><dd id="ap-next">—</dd>
+          <dt>today</dt><dd id="ap-today">—</dd>
+          <dt>learning</dt><dd id="ap-learning">—</dd>
+        </dl>
+
+        <div class="ap-controls">
+          <button type="button" id="ap-toggle">Start</button>
+          <button type="button" id="ap-skip">Skip objective</button>
+        </div>
+        <p class="form-error" id="ap-error" role="alert"></p>
+      </div>
+    </section>
+
     <section class="panel launch-panel" aria-labelledby="launch-title">
       <div class="panel-head">
         <h2 id="launch-title">Launch</h2>

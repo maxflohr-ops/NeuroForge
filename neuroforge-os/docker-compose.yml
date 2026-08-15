@@ -16,12 +16,40 @@ services:
   commander:
     build: .
     entrypoint: ["python", "-m", "commander"]
-    command: ["--host", "0.0.0.0"]
+    command: ["--host", "0.0.0.0", "--no-autopilot"]
     env_file: .env
     ports:
       - "127.0.0.1:8787:8787"
     volumes:
       - ./output:/app/output
+      - ./neuroforge_db.json:/app/neuroforge_db.json
+      - ./commander/state:/app/commander/state
+
+  # ─────────────────────────────────────────
+  # Florra Fleet Alpha — the same fleet, running itself around the clock.
+  # Usage:
+  #   docker compose up -d florra-alpha      # survives reboots
+  #   docker compose logs -f florra-alpha
+  #   open http://localhost:8788
+  #
+  # The profile in commander/fleets/florra_alpha.json ships in SIMULATE mode:
+  # the loop runs end to end, spends nothing, writes nothing. Set
+  # "mode": "live" there when you are ready to pay for tokens. The fleet stops
+  # itself at its budget ceiling, at its daily cap, and after repeated
+  # failures — none of which it can lift on its own.
+  # ─────────────────────────────────────────
+  florra-alpha:
+    build: .
+    entrypoint: ["python", "-m", "commander"]
+    command: ["--host", "0.0.0.0", "--fleet", "florra_alpha", "--autopilot"]
+    env_file: .env
+    restart: unless-stopped
+    stop_grace_period: 60s
+    ports:
+      - "127.0.0.1:8788:8787"
+    volumes:
+      - ./output:/app/output
+      - ./prompts:/app/prompts
       - ./neuroforge_db.json:/app/neuroforge_db.json
       - ./commander/state:/app/commander/state
 

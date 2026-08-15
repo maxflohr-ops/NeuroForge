@@ -91,6 +91,12 @@ input:focus-visible {
   font-size: 18px;
 }
 
+.brand-mark.is-callsign {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
 .topbar h1 { font-size: 15px; letter-spacing: 0.01em; }
 
 .brand-sub {
@@ -206,9 +212,10 @@ input:focus-visible {
 .map-panel   { flex: 1 1 64%; min-height: 320px; }
 .timeline-panel { flex: 0 1 auto; max-height: 190px; }
 .feed-panel  { flex: 1 1 26%; min-height: 140px; }
+.autopilot-panel { flex: 0 0 auto; }
 .launch-panel { flex: 0 0 auto; }
-.runs-panel  { flex: 1 1 auto; min-height: 140px; }
-.scores-panel { flex: 0 0 auto; max-height: 210px; }
+.runs-panel  { flex: 1 1 auto; min-height: 120px; }
+.scores-panel { flex: 0 0 auto; max-height: 190px; }
 
 .mini-toggle {
   display: inline-flex;
@@ -575,6 +582,89 @@ input:focus-visible {
   font-size: 11px;
   color: var(--warning);
 }
+
+/* ── Autopilot ───────────────────────────────────────────────────────── */
+
+.autopilot { display: flex; flex-direction: column; gap: 10px; }
+
+.ap-objective {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.ap-detail { margin: 0; font-size: 11.5px; color: var(--ink-muted); min-height: 1em; }
+
+.meter { display: flex; flex-direction: column; gap: 4px; }
+
+.meter-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+
+.meter-head span:last-child {
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.meter-note { text-transform: none; letter-spacing: 0; opacity: 0.75; }
+
+.meter-track {
+  height: 8px;
+  background: var(--surface-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 4px;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+.meter-fill[data-tone="spend"]   { background: var(--good); }
+.meter-fill[data-tone="warning"] { background: var(--warning); }
+.meter-fill[data-tone="critical"]{ background: var(--critical); }
+
+.ap-facts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr);
+  gap: 3px 10px;
+}
+.ap-facts dt {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-muted);
+}
+.ap-facts dd { margin: 0; font-size: 11.5px; color: var(--ink-2); }
+
+.ap-controls { display: flex; gap: 6px; }
+.ap-controls button { flex: 1 1 auto; font-size: 12px; }
+.ap-controls button[data-primary="true"] {
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+}
+.ap-controls button[data-primary="true"]:hover { background: #4b93e8; }
+
+.status[data-status="backoff"]::before,
+.status[data-status="capped"]::before        { background: var(--warning); }
+.status[data-status="halted"]::before,
+.status[data-status="budget_reached"]::before { background: var(--critical); }
+.status[data-status="paused"]::before,
+.status[data-status="backlog_empty"]::before  { background: var(--ink-muted); }
 
 /* ── Runs list ───────────────────────────────────────────────────────── */
 

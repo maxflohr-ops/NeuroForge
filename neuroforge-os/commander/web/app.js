@@ -19,6 +19,8 @@
     runsById: new Map(),
     stagesByRun: new Map(),
     metrics: null,
+    autopilot: null,
+    profile: null,
     selectedAgent: null,
     selectedRun: null,
     feed: [],
@@ -93,13 +95,16 @@
 
     try {
       const health = await api('/api/health');
-      state.cursor = health.cursor || 0;
+      // Open with recent history rather than a blank feed: an unattended fleet
+      // has usually already done something by the time anyone looks.
+      state.cursor = Math.max(0, (health.cursor || 0) - 200);
       state.simulateMode = Boolean(health.simulate);
     } catch (error) {
       setLink('lost', error.message);
     }
 
-    await Promise.all([refreshFleet(), refreshRuns(), refreshMetrics()]);
+    await Promise.all([refreshFleet(), refreshRuns(), refreshMetrics(),
+                       refreshAutopilot()]);
     await refreshGraph();
     renderFeed();
     connect();
@@ -107,16 +112,42 @@
     // Metrics come from files on disk, so they are polled rather than pushed.
     setInterval(refreshMetrics, 20000);
     setInterval(renderRuns, 10000);
+    // The countdown to the next mission ticks locally; state changes arrive
+    // as events, so this only needs to refresh the clock.
+    setInterval(() => {
+      if (state.autopilot) $('ap-next').textContent = nextActionText(state.autopilot);
+    }, 1000);
   }
 
   async function refreshFleet() {
     const fleet = await api('/api/fleet');
     state.fleet = fleet;
+    state.profile = fleet.profile || null;
     state.agents = new Map(fleet.agents.map((agent) => [agent.id, agent]));
     renderRoster();
     renderLaunchAgents();
     updateModePill();
     renderKpis();
+    applyBranding();
+  }
+
+  async function refreshAutopilot() {
+    state.autopilot = await api('/api/autopilot');
+    renderAutopilot();
+  }
+
+  function applyBranding() {
+    const profile = state.profile;
+    if (!profile) return;
+    document.title = `${profile.name} — Command Center`;
+    document.querySelector('.topbar h1').textContent = profile.name;
+    $('brand-mark').textContent = profile.callsign;
+    $('brand-mark').classList.add('is-callsign');
+
+    const lineage = profile.derived_from ? `cloned from ${profile.derived_from} · ` : '';
+    $('brand-sub').textContent = state.simulateMode
+      ? `${lineage}simulation mode — no API calls, no writes`
+      : `${lineage}${state.agents.size} agents under command`;
   }
 
   async function refreshGraph() {
@@ -262,7 +293,132 @@
       }
 
       default:
+        if (event.type.startsWith('autopilot.')) applyAutopilotEvent(event);
         break;
+    }
+  }
+
+  function applyAutopilotEvent(event) {
+    if (event.state) {
+      state.autopilot = event.state;
+      renderAutopilot();
+    }
+
+    const notes = {
+      'autopilot.dispatched': () => event.kind === 'optimize'
+        ? 'autopilot: optimizing prompts from QA history'
+        : `autopilot: launching ${event.objective} · ${event.faculty}`,
+      'autopilot.completed': () =>
+        `autopilot: ${event.objective} complete (avg ${event.average}/50)`,
+      'autopilot.rework': () =>
+        `autopilot: ${event.objective} scored ${event.average}/50 — reworking`,
+      'autopilot.quarantined': () =>
+        `autopilot: ${event.objective} held at ${event.average}/50 — needs review`,
+      'autopilot.optimized': () =>
+        `autopilot: optimizer ${event.status}` +
+        `${event.applied ? ' (prompts rewritten)' : ' (proposals logged)'}`,
+      'autopilot.optimizer_skipped': () => `autopilot: optimizer unavailable — ${event.detail}`,
+      'autopilot.failed': () =>
+        `autopilot: ${event.detail} (${event.consecutive} in a row)`,
+      'autopilot.status': () => `autopilot: ${event.status}${event.detail ? ` — ${event.detail}` : ''}`,
+      'autopilot.error': () => `autopilot error: ${event.detail}`,
+      'autopilot.skipped': () => 'autopilot: objective skipped by operator',
+    };
+
+    const note = notes[event.type];
+    if (!note) return;
+    const level = ['autopilot.failed', 'autopilot.error'].includes(event.type) ? 'error'
+      : ['autopilot.rework', 'autopilot.quarantined'].includes(event.type) ? 'warn'
+        : 'event';
+    pushFeed({ ...event, agent: 'autopilot' }, note(), level);
+  }
+
+  /* ── Autopilot ─────────────────────────────────────────────────────── */
+
+  // Statuses the fleet stops itself in and will not leave without an operator.
+  const AP_STOPPED = ['idle', 'paused', 'halted', 'budget_reached', 'backlog_empty'];
+
+  const AP_EXPLAIN = {
+    idle: 'Held. Nothing dispatches until you start it.',
+    running: 'Working the mission book.',
+    paused: 'Held by operator.',
+    backoff: 'Backing off after a failure.',
+    capped: 'Daily mission cap reached — resumes tomorrow.',
+    budget_reached: 'Budget ceiling reached. Raise it to continue.',
+    backlog_empty: 'Mission book complete.',
+    halted: 'Stopped after repeated failures — needs a look.',
+  };
+
+  function renderAutopilot() {
+    const ap = state.autopilot;
+    if (!ap) return;
+
+    const badge = $('ap-status');
+    badge.dataset.status = ap.status;
+    badge.textContent = ap.status.replace('_', ' ');
+
+    $('ap-objective').textContent = ap.objective
+      ? `${ap.objective} · ${ap.faculty}`
+      : (ap.status === 'backlog_empty' ? 'Mission book complete' : 'No objective');
+
+    $('ap-detail').textContent = ap.detail || AP_EXPLAIN[ap.status] || '';
+
+    const bookPct = ap.backlog_total
+      ? (ap.settled / ap.backlog_total) * 100 : 0;
+    $('ap-book-bar').style.width = `${bookPct.toFixed(1)}%`;
+    const bookNotes = [];
+    if (ap.preexisting) bookNotes.push(`${ap.preexisting} pre-existing`);
+    if (ap.quarantined) bookNotes.push(`${ap.quarantined} held`);
+    $('ap-book-value').textContent = `${ap.settled}/${ap.backlog_total}`
+      + (bookNotes.length ? ` · ${bookNotes.join(' · ')}` : '');
+
+    const spendPct = ap.budget_usd ? (ap.spend_estimate / ap.budget_usd) * 100 : 0;
+    const budgetBar = $('ap-budget-bar');
+    budgetBar.style.width = `${Math.min(100, spendPct).toFixed(1)}%`;
+    budgetBar.dataset.tone = spendPct >= 100 ? 'critical'
+      : spendPct >= 80 ? 'warning' : 'spend';
+    $('ap-budget-value').textContent =
+      `$${ap.spend_estimate.toFixed(2)} / $${ap.budget_usd.toFixed(2)}`;
+
+    $('ap-next').textContent = nextActionText(ap);
+    $('ap-today').textContent = `${ap.today_missions}/${ap.daily_cap} missions · ${ap.mode}`;
+    $('ap-learning').textContent =
+      `optimizer every ${ap.optimize_every} · ` +
+      `${ap.optimize_applies ? 'applies rewrites' : 'proposes only'} · ` +
+      `QA floor ${ap.qa_floor}`;
+
+    const toggle = $('ap-toggle');
+    const stopped = AP_STOPPED.includes(ap.status);
+    toggle.textContent = stopped ? 'Start' : 'Hold';
+    toggle.dataset.primary = String(stopped);
+    toggle.disabled = ap.status === 'budget_reached';
+    $('ap-skip').disabled = !ap.objective;
+
+    $('ap-error').textContent = ap.status === 'budget_reached'
+      ? 'Raise the ceiling in the fleet profile to continue.' : '';
+  }
+
+  function nextActionText(ap) {
+    if (ap.active_run) {
+      return ap.active_kind === 'optimize' ? 'optimizing prompts' : 'mission in flight';
+    }
+    if (AP_STOPPED.includes(ap.status)) return '—';
+    const seconds = (ap.next_action_at || 0) - Date.now() / 1000;
+    if (seconds <= 0) return 'imminent';
+    if (seconds < 90) return `in ${Math.round(seconds)}s`;
+    return `in ${Math.round(seconds / 60)}m`;
+  }
+
+  async function autopilotCommand(command, body) {
+    $('ap-error').textContent = '';
+    try {
+      state.autopilot = await api(`/api/autopilot/${command}`, {
+        method: 'POST',
+        body: JSON.stringify(body || {}),
+      });
+      renderAutopilot();
+    } catch (error) {
+      $('ap-error').textContent = error.message;
     }
   }
 
@@ -284,7 +440,9 @@
         '/50', metrics.qa_timeline],
       ['topics', String(metrics.topics), null],
       ['artifacts', String(metrics.artifacts_logged), null],
-      ['est. spend', `$${metrics.estimated_spend_usd.toFixed(2)}`, null],
+      // Lifetime estimate from the QA log — distinct from the autopilot's own
+      // budget meter, which tracks only what this fleet has spent.
+      ['logged spend', `$${metrics.estimated_spend_usd.toFixed(2)}`, null],
       ['agents ready', `${ready}`, `/${dispatchable}`],
     ];
 
@@ -845,6 +1003,12 @@
       state.feedFilter = event.target.value;
       renderFeed();
     });
+
+    $('ap-toggle').addEventListener('click', () => {
+      const stopped = AP_STOPPED.includes(state.autopilot?.status);
+      autopilotCommand(stopped ? 'start' : 'pause');
+    });
+    $('ap-skip').addEventListener('click', () => autopilotCommand('skip'));
 
     $('drawer-close').addEventListener('click', closeDrawer);
     $('drawer-scrim').addEventListener('click', closeDrawer);
