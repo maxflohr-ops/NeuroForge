@@ -7,7 +7,7 @@
 # (deploy_to_vercel, buildCommand "sh build.sh", outputDirectory
 # "public", installCommand "").
 set -e
-R=https://raw.githubusercontent.com/maxflohr-ops/neuroforge/39718c9e12731da9597fe89b0e2341b691f2f1a4
+R=https://raw.githubusercontent.com/maxflohr-ops/neuroforge/f3b8e4d5722f4adf6b07f9ee934c4f676e174527
 mkdir -p public
 for f in \
   index.html file.html record.html history.html bestiary.html \
