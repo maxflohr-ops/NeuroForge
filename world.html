@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#100E0C">
+<title>bandersnatch · the county line — walk it</title>
+<meta name="description" content="walk the county line: a slow pass through the bandersnatch county — the field office, the file, the chapel with a light and no glass, the fence opened from the inside, and the one red thing that stayed.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="bandersnatch">
+<meta property="og:url" content="https://bandersnatch.world/world.html">
+<meta property="og:title" content="bandersnatch · the county line">
+<meta property="og:description" content="walk in. the road does the rest. a slow pass through the county, 1935 to now.">
+<meta property="og:image" content="https://cdn.shopify.com/s/files/1/0835/5872/7895/files/og-index.png?v=1785330086">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://bandersnatch.world/world.html">
+<link rel="icon" href="assets/seal.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- type is edited in assets/fonts.css — swap fonts there, nowhere else -->
+<link rel="stylesheet" href="assets/fonts.css">
+<script>document.documentElement.classList.add('js');</script>
+<style>
+/* ------------------------------------------------------------------
+   the county line — a walk, scrubbed by scroll. self-contained page:
+   the scenes live here, not in site.css, so the rooms stay light.
+   ------------------------------------------------------------------ */
+:root {
+  --field: #100E0C;
+  --bone: #E6E0D3;
+  --silver: #8E897F;
+  --cardinal: #7A1D1D;
+}
+* { margin: 0; box-sizing: border-box; }
+html { background: var(--field); }
+body {
+  background: var(--field);
+  color: var(--bone);
+  font-family: 'Courier Prime', 'Courier New', monospace;
+}
+a { color: var(--bone); }
+
+/* the road — its length is the film's length */
+.road { height: 760vh; }
+.js .road { display: block; }
+
+/* the window the county is seen through */
+.stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* film grain + vignette over everything */
+.stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 100%),
+    repeating-radial-gradient(circle at 30% 40%, transparent 0 2px, rgba(230,224,211,0.012) 2px 3px);
+  z-index: 40;
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.scene svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.layer { will-change: transform; }
+
+.caption {
+  position: absolute;
+  left: 50%;
+  bottom: 14vh;
+  transform: translateX(-50%);
+  width: min(34em, 86vw);
+  text-align: center;
+  font-size: clamp(0.85rem, 1.6vw, 1.05rem);
+  line-height: 1.7;
+  color: var(--bone);
+  text-shadow: 0 1px 12px rgba(0,0,0,0.8);
+  z-index: 30;
+}
+.caption .cap-office {
+  display: block;
+  font-size: 0.72em;
+  letter-spacing: 0.22em;
+  color: var(--silver);
+  margin-bottom: 0.9em;
+}
+.title-fell {
+  font-family: 'IM Fell English SC', serif;
+  font-weight: 400;
+  letter-spacing: 0.045em;
+  font-size: clamp(2.4rem, 7vw, 5.2rem);
+  line-height: 1.05;
+}
+
+/* mile marker — how far down the road */
+.mile {
+  position: fixed;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 34vh;
+  background: rgba(142,137,127,0.28);
+  z-index: 50;
+}
+.mile i {
+  display: block;
+  width: 100%;
+  height: 0%;
+  background: var(--silver);
+}
+
+.walk-hint {
+  position: fixed;
+  bottom: 3.4vh;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.72rem;
+  letter-spacing: 0.28em;
+  color: var(--silver);
+  z-index: 50;
+  transition: opacity 1.2s;
+}
+
+.leave {
+  position: fixed;
+  top: 3vh;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  color: var(--silver);
+  text-decoration: none;
+  z-index: 50;
+}
+.leave:hover { color: var(--bone); }
+
+/* the last scene carries the doors out */
+.end-doors {
+  position: absolute;
+  left: 50%;
+  bottom: 8vh;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2.4em;
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  z-index: 30;
+  white-space: nowrap;
+}
+.end-doors a { text-decoration-color: rgba(142,137,127,0.6); }
+
+/* ---- no javascript, or a visitor who asked for stillness:
+       the walk becomes a set of plates, laid in order ---- */
+html:not(.js) .road, .static .road { display: none; }
+html:not(.js) .stage, .static .stage { position: static; }
+html:not(.js) .scene, .static .scene {
+  position: relative;
+  opacity: 1;
+  height: 92vh;
+}
+html:not(.js) .mile, .static .mile,
+html:not(.js) .walk-hint, .static .walk-hint { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .road { display: none; }
+  .stage { position: static; }
+  .scene { position: relative; opacity: 1; height: 92vh; }
+  .mile, .walk-hint { display: none; }
+}
+</style>
+</head>
+<body>
+
+<a class="leave" href="index.html">← the county</a>
+
+<div class="road" aria-hidden="true"></div>
+
+<div class="stage" role="presentation">
+
+  <!-- scene i · the county line, daybreak -->
+  <section class="scene" data-scene="0" aria-label="the county line">
+    <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <rect width="1440" height="900" fill="#100E0C"/>
+      <ellipse cx="720" cy="240" rx="900" ry="420" fill="rgba(230,224,211,0.035)"/>
+      <g class="layer" data-depth="0.25" stroke="#8E897F" fill="none">
+        <path d="M0 640 L1440 620" stroke-width="1.5" opacity="0.7"/>
+        <path d="M0 660 L1440 645" stroke-width="0.75" opacity="0.4"/>
+      </g>
+      <g class="layer" data-depth="0.6" stroke="#8E897F" stroke-width="3" opacity="0.85">
+        <path d="M120 700 L120 610 M330 690 L330 615 M560 685 L560 618 M800 682 L800 620 M1050 686 L1050 618 M1290 692 L1290 614"/>
+        <path d="M120 630 L1290 632" stroke-width="1.2" opacity="0.6"/>
+        <path d="M120 665 L1290 662" stroke-width="1" opacity="0.45"/>
+      </g>
+      <g class="layer" data-depth="1">
+        <path d="M-40 900 L690 640 L750 640 L1480 900 Z" fill="rgba(230,224,211,0.05)"/>
+        <path d="M700 900 L716 645 L724 645 L740 900" fill="none" stroke="#8E897F" stroke-width="1.5" opacity="0.5" stroke-dasharray="26 30"/>
+      </g>
+    </svg>
+    <div class="caption">
+      <span class="cap-office">federal photography project · field office e · southern region</span>
+      <p class="title-fell">the county</p>
+      <p>walk in. the road does the rest.</p>
+    </div>
+  </section>
+
+  <!-- scene ii · the field office door -->
+  <section class="scene" data-scene="1" aria-label="the field office">
+    <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <rect width="1440" height="900" fill="#100E0C"/>
+      <g class="layer" data-depth="0.3" fill="rgba(230,224,211,0.045)">
+        <rect x="180" y="240" width="1080" height="660"/>
+      </g>
+      <g class="layer" data-depth="0.7" stroke="#8E897F" fill="none">
+        <rect x="400" y="200" width="640" height="700" stroke-width="2"/>
+        <path d="M360 200 L720 90 L1080 200" stroke-width="2"/>
+        <rect x="470" y="300" width="120" height="170" stroke-width="1.2" opacity="0.7"/>
+        <rect x="850" y="300" width="120" height="170" stroke-width="1.2" opacity="0.7"/>
+        <path d="M470 385 L590 385 M530 300 L530 470 M850 385 L970 385 M910 300 L910 470" stroke-width="0.75" opacity="0.5"/>
+      </g>
+      <g class="layer" data-depth="1" stroke="#8E897F" fill="none">
+        <rect x="650" y="560" width="140" height="340" stroke-width="2.5"/>
+        <circle cx="772" cy="740" r="4" fill="#8E897F" stroke="none"/>
+        <path d="M600 900 L840 900 M620 880 L820 880 M635 862 L805 862" stroke-width="1.5" opacity="0.7"/>
+      </g>
+      <g class="layer" data-depth="0.85" fill="#E6E0D3" opacity="0.9">
+        <rect x="655" y="480" width="130" height="1"/>
+      </g>
+    </svg>
+    <div class="caption">
+      <span class="cap-office">est. MCMXXXV · the offices were dissolved in 1943 · this one was not</span>
+      <p>the door has been open for ninety years.
+      no one remembers it being unlocked.</p>
+    </div>
+  </section>
+
+  <!-- scene iii · the file -->
+  <section class="scene" data-scene="2" aria-label="the file">
+    <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <rect width="1440" height="900" fill="#100E0C"/>
+      <g class="layer" data-depth="0.35" stroke="#8E897F" fill="none" opacity="0.55">
+        <rect x="80" y="120" width="300" height="780" stroke-width="1.5"/>
+        <path d="M80 250 L380 250 M80 380 L380 380 M80 510 L380 510 M80 640 L380 640 M80 770 L380 770" stroke-width="1"/>
+        <rect x="1060" y="120" width="300" height="780" stroke-width="1.5"/>
+        <path d="M1060 250 L1360 250 M1060 380 L1360 380 M1060 510 L1360 510 M1060 640 L1360 640 M1060 770 L1360 770" stroke-width="1"/>
+      </g>
+      <g class="layer" data-depth="0.75" stroke="#8E897F" fill="none">
+        <rect x="480" y="240" width="480" height="560" stroke-width="2"/>
+        <path d="M480 380 L960 380 M480 520 L960 520 M480 660 L960 660" stroke-width="1.5"/>
+        <path d="M690 310 L750 310 M690 450 L750 450 M690 590 L750 590 M690 730 L750 730" stroke-width="2.5"/>
+      </g>
+      <g class="layer" data-depth="1">
+        <rect x="430" y="800" width="580" height="14" fill="none" stroke="#8E897F" stroke-width="1.5"/>
+        <g stroke="#8E897F" stroke-width="1" fill="rgba(230,224,211,0.06)">
+          <rect x="500" y="690" width="90" height="112" transform="rotate(-4 545 746)"/>
+          <rect x="640" y="686" width="90" height="112" transform="rotate(2 685 742)"/>
+          <rect x="790" y="692" width="90" height="112" transform="rotate(-2 835 748)"/>
+        </g>
+      </g>
+    </svg>
+    <div class="caption">
+      <span class="cap-office">the holdings · editions of 24 · numbered by hand · sealed in wax</span>
+      <p>the office prints the places and not the people.
+      what is not known is not in the file.</p>
+    </div>
+  </section>
+
+  <!-- scene iv · the chapel -->
+  <section class="scene" data-scene="3" aria-label="the chapel">
+    <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <rect width="1440" height="900" fill="#100E0C"/>
+      <g class="layer" data-depth="0.3" stroke="#8E897F" opacity="0.4" fill="none">
+        <path d="M0 760 L1440 748" stroke-width="1"/>
+      </g>
+      <g class="layer" data-depth="0.7" stroke="#8E897F" fill="none">
+        <rect x="560" y="420" width="320" height="340" stroke-width="2"/>
+        <path d="M530 420 L720 260 L910 420" stroke-width="2"/>
+        <path d="M720 260 L720 190 M700 212 L740 212" stroke-width="2"/>
+        <path d="M560 470 L880 470 M560 520 L880 520 M560 570 L880 570 M560 620 L880 620 M560 670 L880 670 M560 720 L880 720" stroke-width="0.5" opacity="0.5"/>
+      </g>
+      <g class="layer" data-depth="0.9">
+        <ellipse cx="720" cy="560" rx="130" ry="150" fill="rgba(230,224,211,0.10)"/>
+        <path d="M690 500 A30 38 0 0 1 750 500 L750 620 L690 620 Z" fill="rgba(230,224,211,0.85)"/>
+        <path d="M690 500 A30 38 0 0 1 750 500 L750 620 L690 620 Z" fill="none" stroke="#8E897F" stroke-width="2"/>
+      </g>
+    </svg>
+    <div class="caption">
+      <span class="cap-office">lot 002 · the chapel · photographed for the annual record</span>
+      <p>in the print there is a light in the window.
+      the chapel has no glass. the negative agrees with the print.</p>
+    </div>
+  </section>
+
+  <!-- scene v · the fence, the trap, the one red thing -->
+  <section class="scene" data-scene="4" aria-label="the county line at night">
+    <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <rect width="1440" height="900" fill="#100E0C"/>
+      <g class="layer" data-depth="0.3" stroke="#8E897F" opacity="0.35" fill="none">
+        <path d="M0 700 L1440 688" stroke-width="1"/>
+      </g>
+      <g class="layer" data-depth="0.65" stroke="#8E897F" fill="none">
+        <path d="M160 760 L160 560 M420 750 L420 565 M980 755 L980 562 M1240 762 L1240 558" stroke-width="3"/>
+        <path d="M160 590 L420 592 M980 590 L1240 592" stroke-width="1.5"/>
+        <path d="M160 660 L420 662 M980 660 L1240 662" stroke-width="1.2"/>
+        <!-- the gap. opened from the inside. -->
+        <path d="M420 592 L560 640 M980 590 L840 636" stroke-width="1.5" opacity="0.8"/>
+      </g>
+      <g class="layer" data-depth="0.85" stroke="#8E897F" fill="none">
+        <path d="M640 780 A40 22 0 1 0 720 780 A40 22 0 1 0 640 780" stroke-width="2"/>
+        <path d="M648 770 L712 790 M648 790 L712 770" stroke-width="1.2" opacity="0.7"/>
+      </g>
+      <g class="layer" data-depth="1">
+        <path d="M1240 560 L1180 560" stroke="#8E897F" stroke-width="1.5" opacity="0.6"/>
+        <!-- it stayed. the only red in the file. -->
+        <g transform="translate(1160,492) scale(0.62)">
+          <path fill="#7A1D1D" d="M20 98 L46 72 C42 58 50 44 64 40 C66 30 72 24 78 20 L82 8 L88 20 C96 24 100 32 100 40 L112 46 L100 52 C100 66 92 76 78 80 C70 83 60 84 52 82 L30 102 Z"/>
+          <path d="M68 82 L68 92" stroke="#7A1D1D" stroke-width="2" opacity="0.8"/>
+        </g>
+      </g>
+    </svg>
+    <div class="caption">
+      <span class="cap-office">damage, class .3300 · the fence has never once been closed from the outside</span>
+      <p>the trap was new-set and unsprung. nothing was caught in it,
+      and nothing has been since. one thing at the line was red. it stayed.</p>
+    </div>
+  </section>
+
+  <!-- scene vi · the print room, and the doors out -->
+  <section class="scene" data-scene="5" aria-label="the print room">
+    <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <rect width="1440" height="900" fill="#100E0C"/>
+      <g class="layer" data-depth="0.4" stroke="#8E897F" fill="none">
+        <path d="M120 220 C480 260 960 260 1320 220" stroke-width="1.5"/>
+      </g>
+      <g class="layer" data-depth="0.8">
+        <g stroke="#8E897F" stroke-width="1" fill="rgba(230,224,211,0.06)">
+          <rect x="240" y="252" width="150" height="190"/>
+          <rect x="470" y="262" width="150" height="190"/>
+          <rect x="700" y="266" width="150" height="190"/>
+          <rect x="930" y="260" width="150" height="190"/>
+          <rect x="1130" y="250" width="150" height="190"/>
+        </g>
+        <g stroke="#8E897F" stroke-width="1" opacity="0.7">
+          <path d="M275 252 L275 236 M355 252 L355 236 M505 262 L505 244 M585 262 L585 244 M735 266 L735 248 M815 266 L815 248 M965 260 L965 243 M1045 260 L1045 243 M1165 250 L1165 235 M1245 250 L1245 235"/>
+        </g>
+      </g>
+      <g class="layer" data-depth="1">
+        <ellipse cx="720" cy="620" rx="420" ry="110" fill="rgba(230,224,211,0.045)"/>
+      </g>
+    </svg>
+    <div class="caption" style="bottom: 22vh;">
+      <p class="title-fell">bandersnatch</p>
+      <p>ninety years develop slowly. the file is not closed.</p>
+    </div>
+    <nav class="end-doors" aria-label="doors out">
+      <a href="file.html">the file →</a>
+      <a href="record.html">the record →</a>
+      <a href="counter.html">the counter →</a>
+    </nav>
+  </section>
+
+</div>
+
+<div class="mile" aria-hidden="true"><i></i></div>
+<p class="walk-hint" aria-hidden="true">scroll · the road does the rest</p>
+
+<script>
+/* the walk. scroll position is the only clock. */
+(function () {
+  'use strict';
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced) { document.body.classList.add('static'); return; }
+
+  var scenes = [].slice.call(document.querySelectorAll('.scene'));
+  var mile = document.querySelector('.mile i');
+  var hint = document.querySelector('.walk-hint');
+
+  /* each scene owns an equal stretch of road, with a shoulder of overlap */
+  var N = scenes.length;
+  var OVERLAP = 0.18;
+
+  var target = 0, shown = -1;
+
+  var onScroll = function () {
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    target = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  var p = 0;
+  var frame = function () {
+    p += (target - p) * 0.085;               /* the camera takes its time */
+    if (Math.abs(target - p) < 0.0004) p = target;
+
+    if (mile) mile.style.height = (p * 100).toFixed(2) + '%';
+    if (hint && p > 0.02 && shown !== 1) { hint.style.opacity = '0'; shown = 1; }
+
+    for (var i = 0; i < N; i++) {
+      var start = i / N, end = (i + 1) / N;
+      var t = (p - start) / (end - start);   /* local time inside the scene */
+      var op = 0;
+      if (t > -OVERLAP && t < 1 + OVERLAP) {
+        op = 1;
+        if (t < OVERLAP) op = (t + OVERLAP) / (2 * OVERLAP);
+        if (t > 1 - OVERLAP) op = (1 + OVERLAP - t) / (2 * OVERLAP);
+        op = Math.min(1, Math.max(0, op));
+      }
+      var sc = scenes[i];
+      if (op <= 0) { sc.style.opacity = '0'; sc.style.visibility = 'hidden'; continue; }
+      sc.style.visibility = 'visible';
+      sc.style.opacity = op.toFixed(3);
+
+      /* captions keep to the middle of their scene so two are never
+         legible at once during a crossfade */
+      var cap = sc.querySelector('.caption');
+      if (cap) {
+        var co = Math.min((t - 0.08) * 5, i === N - 1 ? 1 : (0.92 - t) * 5);
+        cap.style.opacity = Math.min(1, Math.max(0, co)).toFixed(3);
+      }
+      var doors = sc.querySelector('.end-doors');
+      if (doors) doors.style.opacity = Math.min(1, Math.max(0, (t - 0.3) * 4)).toFixed(3);
+
+      /* the push-in: the whole scene grows as it is walked through */
+      var ct = Math.min(1.2, Math.max(-0.2, t));
+      sc.style.transform = 'scale(' + (0.94 + ct * 0.16).toFixed(4) + ')';
+
+      /* parallax: deep layers drift less, near layers more */
+      var layers = sc.querySelectorAll('.layer');
+      for (var j = 0; j < layers.length; j++) {
+        var d = parseFloat(layers[j].getAttribute('data-depth') || '1');
+        var dy = (ct - 0.5) * -70 * d;
+        layers[j].setAttribute('transform', 'translate(0 ' + dy.toFixed(2) + ')');
+      }
+    }
+    window.requestAnimationFrame(frame);
+  };
+  window.requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
