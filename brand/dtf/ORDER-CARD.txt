@@ -1,27 +1,30 @@
 BANDERSNATCH · DTF GANG SHEET · ORDER CARD
 ------------------------------------------
-FILE      bandersnatch-gang-sheet-22x48.png
-SIZE      22 x 48 in @ 300 DPI (6600 x 14400 px), transparent PNG
+FILE      bandersnatch-gang-sheet-22x60.png
+SIZE      22 x 60 in @ 300 DPI (6600 x 18000 px), transparent PNG
 VENDOR    Ninja Transfers — ninjatransfers.com/products/premium-dtf-gang-sheets
-          (22" is their standard width; 48" is a standard length; free
+          (22" is their standard width; 60" is a standard length; free
           shipping, no art fees, ~24h turnaround)
 QTY       3 sheets for the first run (each sheet dresses ~8 garments)
 FINISH    standard hot/easy peel · no notes needed, white underbase
           is automatic from the transparency
 
 HOW TO ORDER (2 minutes)
-1. open the link above, choose size 22" x 48"
-2. upload bandersnatch-gang-sheet-22x48.png
+1. open the link above, choose size 22" x 60"
+2. upload bandersnatch-gang-sheet-22x60.png
 3. set quantity 3, check out
 
-WHAT ONE SHEET YIELDS (the cardinal leads the sheet)
-  1x  cardinal 12" back print   (the only red in the file)
-  3x  seal 10" full-back        (bone + silver for dark tees, ink for bone tees)
-  4x  seal 3.5" left chest      (2 bone, 1 ink, 1 silver)
-  2x  cardinal 3.5" left chest
-  4x  wordmark 12.2" full chest (3 bone, 1 ink)
+WHAT ONE SHEET YIELDS (the notice leads the sheet)
+  1x  THE NOTICE 12" x 16" full-back poster — the office's wanted
+      poster: the empty frame, no reward offered, the cardinal perched
+      on the frame the only red
+  1x  cardinal 12" back print
+  4x  seal 10" full-back        (2 bone, 1 silver, 1 ink)
+  6x  seal 3.5" left chest      (3 bone, 2 ink, 1 silver)
+  6x  cardinal 3.5" left chest
+  3x  wordmark 12.2" full chest (2 bone, 1 ink)
   1x  "the file is not closed." 12.3" across-shoulders (bone)
-  5x  "the file is not closed." 4" back-neck (3 bone, 2 ink)
+  8x  "the file is not closed." 4" back-neck (5 bone, 3 ink)
 
 PRESSING (give this to whoever presses)
   325 F / 165 C · 10-15s medium-firm · peel per vendor instructions
