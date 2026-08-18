@@ -43,7 +43,7 @@ body {
 a { color: var(--bone); }
 
 /* the road — its length is the film's length */
-.road { height: 760vh; }
+.road { height: 880vh; }
 .js .road { display: block; }
 
 /* the window the county is seen through */
@@ -150,6 +150,94 @@ a { color: var(--bone); }
 }
 .leave:hover { color: var(--bone); }
 
+/* the notice — the office's poster, set live in type */
+.posted {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+.p-sheet {
+  --pw: min(76vw, 48vh);
+  width: var(--pw);
+  border: 2px solid var(--bone);
+  outline: 1px solid var(--bone);
+  outline-offset: 5px;
+  padding: calc(var(--pw) * 0.06) calc(var(--pw) * 0.055);
+  text-align: center;
+  color: var(--bone);
+  background: rgba(16, 14, 12, 0.55);
+}
+.p-office {
+  font-family: 'Courier Prime', 'Courier New', monospace;
+  font-size: calc(var(--pw) * 0.023);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--silver);
+  line-height: 1.9;
+}
+.p-title {
+  font-family: 'IM Fell English SC', serif;
+  font-weight: 400;
+  font-size: calc(var(--pw) * 0.15);
+  line-height: 1.05;
+  letter-spacing: 0.06em;
+  margin-top: calc(var(--pw) * 0.02);
+}
+.p-sub {
+  font-family: 'Courier Prime', 'Courier New', monospace;
+  font-size: calc(var(--pw) * 0.024);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-top: calc(var(--pw) * 0.012);
+}
+.p-framebox {
+  position: relative;
+  width: 84%;
+  margin: calc(var(--pw) * 0.075) auto calc(var(--pw) * 0.035);
+}
+.p-framebox svg {
+  position: absolute;
+  inset: auto;
+  width: calc(var(--pw) * 0.085);
+  height: auto;
+  top: calc(var(--pw) * -0.061);
+  right: calc(var(--pw) * 0.055);
+}
+.p-frame {
+  border: 2px solid var(--bone);
+  outline: 1px solid var(--bone);
+  outline-offset: 4px;
+  padding: calc(var(--pw) * 0.075) calc(var(--pw) * 0.05);
+}
+.p-frame p {
+  font-family: 'Courier Prime', 'Courier New', monospace;
+  font-size: calc(var(--pw) * 0.028);
+  line-height: 2;
+  letter-spacing: 0.05em;
+}
+.p-class {
+  font-family: 'Courier Prime', 'Courier New', monospace;
+  font-size: calc(var(--pw) * 0.021);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--silver);
+}
+.p-reward {
+  font-family: 'IM Fell English SC', serif;
+  font-weight: 400;
+  font-size: calc(var(--pw) * 0.062);
+  letter-spacing: 0.05em;
+  margin-top: calc(var(--pw) * 0.045);
+  white-space: nowrap;
+}
+.p-rsub {
+  font-family: 'Courier Prime', 'Courier New', monospace;
+  font-size: calc(var(--pw) * 0.023);
+  letter-spacing: 0.12em;
+  margin-top: calc(var(--pw) * 0.012);
+}
+
 /* the last scene carries the doors out */
 .end-doors {
   position: absolute;
@@ -248,8 +336,40 @@ html:not(.js) .walk-hint, .static .walk-hint { display: none; }
     </div>
   </section>
 
-  <!-- scene iii · the file -->
-  <section class="scene" data-scene="2" aria-label="the file">
+  <!-- scene iii · the notice, posted at the door -->
+  <section class="scene" data-scene="2" aria-label="the notice">
+    <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <rect width="1440" height="900" fill="#100E0C"/>
+      <ellipse cx="720" cy="430" rx="620" ry="480" fill="rgba(230,224,211,0.035)"/>
+    </svg>
+    <div class="posted">
+      <div class="p-sheet">
+        <p class="p-office">federal photography project</p>
+        <p class="p-office">field office e &middot; southern region &middot; est. MCMXXXV</p>
+        <p class="p-title">NOTICE</p>
+        <p class="p-sub">concerning the animal of this county</p>
+        <div class="p-framebox">
+          <svg viewBox="0 0 140 110" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path fill="#7A1D1D" d="M20 98 L46 72 C42 58 50 44 64 40 C66 30 72 24 78 20 L82 8 L88 20 C96 24 100 32 100 40 L112 46 L100 52 C100 66 92 76 78 80 C70 83 60 84 52 82 L30 102 Z"/>
+            <path d="M68 82 L68 92" stroke="#7A1D1D" stroke-width="2" opacity="0.8"/>
+          </svg>
+          <div class="p-frame">
+            <p>the office has no photograph of this animal.<br>
+            what it does is in the file. what it is, is not.</p>
+          </div>
+        </div>
+        <p class="p-class">exhibit: plate i &middot; class .0100 &middot; filed: damage only</p>
+        <p class="p-reward">NO REWARD IS OFFERED</p>
+        <p class="p-rsub">the office does not hunt. it keeps the record.</p>
+      </div>
+    </div>
+    <div class="caption" style="bottom: 4vh;">
+      <span class="cap-office">posted at the courthouse door &middot; renewed every year since 1936</span>
+    </div>
+  </section>
+
+  <!-- scene iv · the file -->
+  <section class="scene" data-scene="3" aria-label="the file">
     <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <rect width="1440" height="900" fill="#100E0C"/>
       <g class="layer" data-depth="0.35" stroke="#8E897F" fill="none" opacity="0.55">
@@ -279,8 +399,8 @@ html:not(.js) .walk-hint, .static .walk-hint { display: none; }
     </div>
   </section>
 
-  <!-- scene iv · the chapel -->
-  <section class="scene" data-scene="3" aria-label="the chapel">
+  <!-- scene v · the chapel -->
+  <section class="scene" data-scene="4" aria-label="the chapel">
     <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <rect width="1440" height="900" fill="#100E0C"/>
       <g class="layer" data-depth="0.3" stroke="#8E897F" opacity="0.4" fill="none">
@@ -305,8 +425,8 @@ html:not(.js) .walk-hint, .static .walk-hint { display: none; }
     </div>
   </section>
 
-  <!-- scene v · the fence, the trap, the one red thing -->
-  <section class="scene" data-scene="4" aria-label="the county line at night">
+  <!-- scene vi · the fence, the trap, the one red thing -->
+  <section class="scene" data-scene="5" aria-label="the county line at night">
     <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <rect width="1440" height="900" fill="#100E0C"/>
       <g class="layer" data-depth="0.3" stroke="#8E897F" opacity="0.35" fill="none">
@@ -339,8 +459,8 @@ html:not(.js) .walk-hint, .static .walk-hint { display: none; }
     </div>
   </section>
 
-  <!-- scene vi · the print room, and the doors out -->
-  <section class="scene" data-scene="5" aria-label="the print room">
+  <!-- scene vii · the print room, and the doors out -->
+  <section class="scene" data-scene="6" aria-label="the print room">
     <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <rect width="1440" height="900" fill="#100E0C"/>
       <g class="layer" data-depth="0.4" stroke="#8E897F" fill="none">
