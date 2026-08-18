@@ -34,10 +34,22 @@ items = [
     ("neck tag bone 4in",   load("bandersnatch-tagline-bone.png", 4)),
     ("neck tag bone 4in",   load("bandersnatch-tagline-bone.png", 4)),
     ("neck tag ink 4in",    load("bandersnatch-tagline-ink.png", 4)),
+    ("wordmark bone 12in",  load("bandersnatch-wordmark-bone.png")),
+    ("neck tag bone 4in",   load("bandersnatch-tagline-bone.png", 4)),
+    ("neck tag ink 4in",    load("bandersnatch-tagline-ink.png", 4)),
 ]
 
-# shelf pack: tallest first, fill rows left to right
-items.sort(key=lambda t: t[1].height, reverse=True)
+# shelf pack: the cardinal leads the sheet, the two left-chest seals
+# ride beside it to fill the row, the rest packs tallest-first
+lead, rest = [], []
+for t in items:
+    if (t[0] == "cardinal 12in" and not lead) or \
+       (t[0] == "lc seal bone 3.5in" and len(lead) in (1, 2)):
+        lead.append(t)
+    else:
+        rest.append(t)
+rest.sort(key=lambda t: t[1].height, reverse=True)
+items = lead + rest
 placed, x, y, row_h = [], GAP, GAP, 0
 for name, im in items:
     if x + im.width + GAP > W:
