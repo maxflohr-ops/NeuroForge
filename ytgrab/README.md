@@ -23,7 +23,20 @@ written as a chapter marker, so you can see where the segments were.
 
 ## Install
 
-### macOS — three commands, no git
+### macOS — one command
+
+Paste this into Terminal. It installs Homebrew if you don't have it, repairs
+Homebrew's PATH if it's installed but `brew: command not found` (the Apple
+Silicon classic), installs yt-dlp and ffmpeg, then installs ytgrab:
+
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/maxflohr-ops/NeuroForge/refs/heads/claude/youtube-video-downloader-f4qg1x/ytgrab/mac-setup.sh)"
+```
+
+Keep the `bash -c "$(...)"` wrapper — piping into `bash` instead takes your
+keyboard away from the Homebrew installer when it asks for your password.
+
+### macOS — by hand
 
 ```bash
 brew install yt-dlp ffmpeg
