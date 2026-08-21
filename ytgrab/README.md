@@ -23,21 +23,48 @@ written as a chapter marker, so you can see where the segments were.
 
 ## Install
 
+### macOS — three commands, no git
+
 ```bash
-git clone https://github.com/maxflohr-ops/NeuroForge.git
+brew install yt-dlp ffmpeg
+curl -fsSL https://raw.githubusercontent.com/maxflohr-ops/NeuroForge/0827eadf330ecec89df996a482f85676f2c746d9/ytgrab/ytgrab.py \
+  -o "$(brew --prefix)/bin/ytgrab" && chmod +x "$(brew --prefix)/bin/ytgrab"
+ytgrab
+```
+
+`$(brew --prefix)/bin` is already on your PATH and works on both Apple Silicon
+and Intel Macs, so there is nothing to configure afterwards.
+
+No Homebrew yet? Install it first — it takes a few minutes and asks for your
+Mac password:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+### From a clone
+
+`ytgrab` lives on the `claude/youtube-video-downloader-f4qg1x` branch, which is
+**not** this repository's default branch — clone that branch explicitly or the
+folder will not be there:
+
+```bash
+git clone -b claude/youtube-video-downloader-f4qg1x \
+  https://github.com/maxflohr-ops/NeuroForge.git
 cd NeuroForge/ytgrab
 ./install.sh
 ```
 
-The installer fetches yt-dlp, installs ffmpeg with your system package manager,
-and symlinks `ytgrab` into `~/.local/bin`. Re-run it any time to update.
+The installer fetches yt-dlp, installs ffmpeg (Homebrew on macOS, apt/dnf/pacman
+on Linux) and links `ytgrab` into a directory already on your PATH. Re-run it
+any time to update.
 
-Prefer to do it by hand:
+### By hand
 
 ```bash
 pip install -U "yt-dlp[default]"     # the downloader
 brew install ffmpeg                  # or: apt install ffmpeg
-python3 ytgrab.py                    # run it in place
+python3 ytgrab.py                    # run it in place, no install
 ```
 
 **ffmpeg is not optional in practice.** YouTube serves video and audio as
