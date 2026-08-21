@@ -86,3 +86,43 @@ def test_bot_check_failure_suggests_cookies():
 
 def test_extraction_failure_suggests_update():
     assert "update" in ytgrab._hint_for("ERROR: unable to extract player response")
+
+
+# --- pasting ---------------------------------------------------------------
+
+def test_a_plain_pasted_link_is_a_url():
+    assert ytgrab.normalize_url("https://www.youtube.com/watch?v=abc") == \
+        "https://www.youtube.com/watch?v=abc"
+
+
+def test_share_sheet_link_without_a_scheme_gets_one():
+    assert ytgrab.normalize_url("youtu.be/abc?si=xyz") == "https://youtu.be/abc?si=xyz"
+    assert ytgrab.normalize_url("www.youtube.com/watch?v=abc").startswith("https://")
+    assert ytgrab.normalize_url("m.youtube.com/watch?v=abc").startswith("https://")
+
+
+def test_quotes_brackets_and_trailing_punctuation_are_stripped():
+    for pasted in ('"https://youtu.be/abc"', "<https://youtu.be/abc>",
+                   "https://youtu.be/abc,", "'https://youtu.be/abc'"):
+        assert ytgrab.normalize_url(pasted) == "https://youtu.be/abc"
+
+
+def test_query_strings_survive_stripping():
+    url = "https://www.youtube.com/watch?v=abc&t=90s&list=PL123"
+    assert ytgrab.normalize_url(url) == url
+
+
+def test_several_links_in_one_paste():
+    assert ytgrab.extract_urls("https://youtu.be/a https://youtu.be/b") == \
+        ["https://youtu.be/a", "https://youtu.be/b"]
+    assert ytgrab.extract_urls("youtu.be/a, youtu.be/b") == \
+        ["https://youtu.be/a", "https://youtu.be/b"]
+
+
+def test_commands_are_not_mistaken_for_links():
+    for line in ("help", "set quality 1080p", "audio https://youtu.be/a", "quit"):
+        assert ytgrab.extract_urls(line) == []
+
+
+def test_search_terms_pass_through():
+    assert ytgrab.normalize_url("ytsearch5:lofi beats") == "ytsearch5:lofi beats"

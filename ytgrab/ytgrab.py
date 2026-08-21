@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shlex
 import shutil
 import subprocess
@@ -411,8 +412,44 @@ def _save_history(readline) -> None:
         pass
 
 
+# Pasted links arrive wrapped in quotes, angle brackets or trailing sentence
+# punctuation depending on where they were copied from, and share sheets often
+# hand over a bare "youtu.be/..." with no scheme at all.
+PASTE_JUNK = "\"'<>()[]{}`,.;!"
+SITE_RE = re.compile(
+    r"^(?:(?:www|m|music)\.)?(?:youtube\.com|youtu\.be|youtube-nocookie\.com)/",
+    re.I,
+)
+BARE_HOST_RE = re.compile(r"^[\w-]+(?:\.[\w-]+)+/", re.I)
+
+
+def normalize_url(token: str) -> str | None:
+    """Turn one pasted token into a URL yt-dlp will accept, or None."""
+    token = token.strip().strip(PASTE_JUNK).strip()
+    if not token:
+        return None
+    if token.startswith(("http://", "https://")):
+        return token
+    if token.startswith(("ytsearch", "ytsearchdate")):  # ytsearch5:query
+        return token
+    if SITE_RE.match(token) or BARE_HOST_RE.match(token):
+        return "https://" + token
+    return None
+
+
+def extract_urls(line: str) -> list[str]:
+    """URLs from a pasted line, or [] if the line is not purely URLs.
+
+    Whitespace-, comma- and pipe-separated lists all work, so you can dump a
+    whole batch of links in one paste.
+    """
+    tokens = [t for t in re.split(r"[\s,|]+", line) if t]
+    urls = [normalize_url(t) for t in tokens]
+    return list(urls) if urls and all(urls) else []
+
+
 def looks_like_url(token: str) -> bool:
-    return token.startswith(("http://", "https://", "www.", "ytsearch"))
+    return normalize_url(token) is not None
 
 
 def shell(cfg: dict) -> int:
@@ -422,7 +459,8 @@ def shell(cfg: dict) -> int:
     print(f"{C.DIM}saving to{C.RESET} {Path(cfg['output_dir']).expanduser()}   "
           f"{C.DIM}quality{C.RESET} {cfg['quality']}   "
           f"{C.DIM}sponsorblock{C.RESET} {cfg['sponsorblock']}")
-    print(f"{C.DIM}paste a YouTube URL, or type `help`.{C.RESET}\n")
+    print(f"\n{C.BOLD}Paste a YouTube link and press Enter.{C.RESET}"
+          f"{C.DIM}  (`help` for everything else, `quit` to leave){C.RESET}\n")
     _setup_readline()
 
     while True:
@@ -434,11 +472,23 @@ def shell(cfg: dict) -> int:
         if not raw:
             continue
 
+        # A pasted link (or several) is the common case — handle it before
+        # anything gets parsed as a command.
+        urls = extract_urls(raw)
+        if urls:
+            try:
+                run_download(cfg, urls)
+            except KeyboardInterrupt:
+                print()
+                warn("cancelled")
+            continue
+
         try:
             parts = shlex.split(raw)
         except ValueError:
             parts = raw.split()
         cmd, args = parts[0].lower(), parts[1:]
+        cmd_urls = extract_urls(" ".join(args))  # for `audio`/`formats`/`info`
 
         if cmd in ("quit", "exit", "q"):
             return 0
@@ -462,33 +512,27 @@ def shell(cfg: dict) -> int:
                 n = len(ARCHIVE_FILE.read_text().splitlines()) if ARCHIVE_FILE.exists() else 0
                 info(f"{n} videos remembered ({ARCHIVE_FILE})")
         elif cmd == "formats":
-            if args:
-                run_plain(["--list-formats"], args)
+            if cmd_urls:
+                run_plain(["--list-formats"], cmd_urls)
             else:
                 err("usage: formats <url>")
         elif cmd == "info":
-            if args:
+            if cmd_urls:
                 run_plain(["--print",
                            "%(title)s\n  channel: %(channel)s\n  duration: "
                            "%(duration_string)s\n  views: %(view_count)s\n"
-                           "  uploaded: %(upload_date>%Y-%m-%d)s"], args)
+                           "  uploaded: %(upload_date>%Y-%m-%d)s"], cmd_urls)
             else:
                 err("usage: info <url>")
         elif cmd == "audio":
-            if args:
-                run_download({**cfg, "quality": "audio"}, args)
+            if cmd_urls:
+                run_download({**cfg, "quality": "audio"}, cmd_urls)
             else:
                 err("usage: audio <url>")
         elif cmd == "batch":
             do_batch(cfg, args)
-        elif looks_like_url(cmd):
-            try:
-                run_download(cfg, parts)
-            except KeyboardInterrupt:
-                print()
-                warn("cancelled")
         else:
-            err(f"unknown command: {cmd}  (try `help`)")
+            err(f"not a link or a command: {cmd}  (try `help`)")
 
 
 def do_set(cfg: dict, args: list[str]) -> None:
@@ -611,6 +655,7 @@ def apply_flags(cfg: dict, a: argparse.Namespace) -> dict:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    args.urls = [normalize_url(u) or u for u in args.urls]
     cfg = apply_flags(load_config(), args)
 
     if args.save:

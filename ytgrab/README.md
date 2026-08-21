@@ -47,18 +47,28 @@ limited, and tells you so.
 
 ## The terminal
 
-Run `ytgrab` with no arguments and paste URLs at the prompt:
+Type `ytgrab`, paste a link, press Enter. That's the whole thing.
 
 ```
 ytgrab › https://www.youtube.com/watch?v=dQw4w9WgXcQ
-ytgrab › set quality 1080p
-ytgrab › audio https://youtu.be/abc123
-ytgrab › batch ~/links.txt
+[download] 100% of 47.21MiB in 00:03
+[SponsorBlock] Removing 2 segments (1m14s)
+✓ done → /home/you/Videos/ytgrab
+ytgrab › 
 ```
+
+The prompt comes straight back, so you can keep pasting. Paste is forgiving:
+
+- bare share links with no `https://` — `youtu.be/dQw4w9WgXcQ`
+- links that came wrapped in quotes, `<angle brackets>` or a trailing comma
+- several links at once, separated by spaces or commas — they queue up
+- mobile, `music.youtube.com` and `youtube-nocookie` links
+- timestamps and tracking junk (`?si=`, `&t=90s`) — kept or ignored as needed
+
+Everything else is optional:
 
 | Command | Does |
 | --- | --- |
-| `<url> [url …]` | download — paste as many as you like |
 | `audio <url>` | audio only, just this once |
 | `formats <url>` | list every available stream |
 | `info <url>` | title, channel, duration, views |
@@ -74,6 +84,8 @@ Settings are saved to `~/.config/ytgrab/config.json` the moment you change
 them, so the next session starts where you left off. Arrow-key history works.
 
 ## One-shot use
+
+If you'd rather not stay in the terminal, pass the link as an argument:
 
 ```bash
 ytgrab "https://youtu.be/dQw4w9WgXcQ"              # best quality, sponsors cut
