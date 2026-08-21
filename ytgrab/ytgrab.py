@@ -366,7 +366,7 @@ HELP = f"""{C.BOLD}commands{C.RESET}
                      sponsorblock | cookies | rate | proxy
   {C.CYAN}toggle <opt>{C.RESET}       {' | '.join(TOGGLES)}
   {C.CYAN}config{C.RESET}             show current settings
-  {C.CYAN}open{C.RESET}               print the download folder
+  {C.CYAN}open{C.RESET}               open the download folder in Finder
   {C.CYAN}update{C.RESET}             update yt-dlp (fixes most YouTube breakage)
   {C.CYAN}archive clear{C.RESET}      forget what has already been downloaded
   {C.CYAN}help{C.RESET} · {C.CYAN}quit{C.RESET}         this text · exit
@@ -452,6 +452,17 @@ def looks_like_url(token: str) -> bool:
     return normalize_url(token) is not None
 
 
+def reveal(path: Path) -> None:
+    """Open the download folder in Finder / the desktop file manager."""
+    opener = "open" if sys.platform == "darwin" else "xdg-open"
+    if shutil.which(opener):
+        subprocess.run([opener, str(path)], check=False,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        ok(f"opened {path}")
+    else:
+        print(path)
+
+
 def shell(cfg: dict) -> int:
     print(BANNER)
     if check_deps() is None:
@@ -496,8 +507,8 @@ def shell(cfg: dict) -> int:
             print(HELP)
         elif cmd == "config":
             show_config(cfg)
-        elif cmd == "open":
-            print(Path(cfg["output_dir"]).expanduser())
+        elif cmd in ("open", "folder"):
+            reveal(Path(cfg["output_dir"]).expanduser())
         elif cmd == "update":
             update_ytdlp()
         elif cmd == "set":
