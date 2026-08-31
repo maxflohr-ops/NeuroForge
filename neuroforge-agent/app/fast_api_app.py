@@ -62,7 +62,9 @@ app: FastAPI = get_fast_api_app(
     artifact_service_uri=services.ARTIFACT_SERVICE_URI,
     allow_origins=allow_origins,
     session_service_uri=services.SESSION_SERVICE_URI,
-    otel_to_cloud=True,
+    # Cloud Trace needs GCP Application Default Credentials; skip it when
+    # running on a Google AI Studio API key (GEMINI_API_KEY) only.
+    otel_to_cloud=os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "").lower() == "true",
     lifespan=lifespan,
 )
 app.title = "neuroforge-agent"

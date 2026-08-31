@@ -207,3 +207,6 @@ tools/a2a-inspector/
 *.pem
 *-key.json
 credentials*.json
+
+# Generated eval traces and eval artifacts
+artifacts/

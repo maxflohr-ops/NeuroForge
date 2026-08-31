@@ -102,6 +102,31 @@ tool spec.
 - Scaffolding a new agent: full flow + flag table in
   `references/agents-cli-playbook.md`.
 
+## Running on an AI Studio API key (no GCP project)
+
+Both agents are configured for this mode: `.env` has `GEMINI_API_KEY` set and
+the Vertex lines commented out. Learned the hard way (agents-cli 1.4.2):
+
+- The scaffold hardcodes `otel_to_cloud=True` in `app/fast_api_app.py`, which
+  demands GCP ADC at startup and crashes API-key-only runs. Both agents carry
+  the fix — `otel_to_cloud` is now conditional on
+  `GOOGLE_GENAI_USE_VERTEXAI=true`. Apply the same one-line patch to any new
+  scaffold that must run on an API key (the one sanctioned edit to that file).
+- `agents-cli eval generate` works on an API key; **`eval grade` does not** —
+  it builds a GCS client unconditionally and dies on missing ADC even for
+  local judge metrics. Workaround: load `artifacts/traces/*.json` and call
+  `tests/eval/response_quality.evaluate()` per case yourself (truncate
+  `agent_data` to ~8k chars — full traces overflow the request). Full
+  `eval run` needs `gcloud auth login --update-adc`.
+- Eval inference has a hardcoded 120s SSE read timeout
+  (`_RUN_SSE_TIMEOUT` in the CLI's `_adk_client.py`); slow/throttled turns
+  fail as "Read timed out" and the case is dropped. Re-running usually
+  recovers different cases — traces accumulate, so grade the union.
+- **Free-tier keys allow ~20 requests/day per model.** A single full-pipeline
+  eval or a few smoke tests exhausts it; 429 RESOURCE_EXHAUSTED and odd
+  timeouts follow. For real eval loops, enable billing on the key or switch
+  to Vertex mode.
+
 ## Where the domain knowledge lives
 
 - NeuroForge brand, faculty, prompts: `neuroforge-os/prompts/`,
