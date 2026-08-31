@@ -1,0 +1,30 @@
+[
+  {
+    "id": "d8dec1c2",
+    "title": "Revoke old Telegram bot token in BotFather",
+    "tag": "security",
+    "done": false,
+    "created": "2026-08-31T09:16:40.413780+00:00"
+  },
+  {
+    "id": "cd934e45",
+    "title": "Host Postiz and connect TikTok / Instagram / YouTube",
+    "tag": "launch",
+    "done": false,
+    "created": "2026-08-31T09:16:40.413978+00:00"
+  },
+  {
+    "id": "9a302def",
+    "title": "Add POSTIZ_API_KEY + ANTHROPIC_API_KEY as GitHub Actions secrets",
+    "tag": "launch",
+    "done": false,
+    "created": "2026-08-31T09:16:40.413984+00:00"
+  },
+  {
+    "id": "7dbd7f11",
+    "title": "Deploy ADK agents to Cloud Run via agents-cli (optional)",
+    "tag": "infra",
+    "done": false,
+    "created": "2026-08-31T09:16:40.413988+00:00"
+  }
+]
