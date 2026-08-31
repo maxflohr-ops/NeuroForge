@@ -176,6 +176,13 @@ _RESUME = ParamSpec("resume", "Resume", kind="flag", flag="--resume",
                     help="Reuse outputs already on disk instead of regenerating")
 _DRY_RUN = ParamSpec("dry_run", "Dry run", kind="flag", flag="--dry-run",
                      help="Preview only — write nothing to the remote system")
+# Recalled context is prose, so it needs a far wider pattern than a topic name.
+# argv is a list, never a shell string, so length is the only real concern here;
+# the pattern exists to reject control characters, not to prevent injection.
+_NOTES = ParamSpec("audience_notes", "Prior context", flag="--audience_notes",
+                   pattern=r"[^\x00-\x08\x0b\x0c\x0e-\x1f]{1,4000}",
+                   help="Context handed to the Research Agent (the fleet fills "
+                        "this from memory when a memory server is attached)")
 
 
 AGENTS: tuple[AgentSpec, ...] = (
@@ -187,7 +194,7 @@ AGENTS: tuple[AgentSpec, ...] = (
         kind=KIND_COMMAND,
         glyph="⌘",
         summary="Dispatches every agent, supervises runs, streams live telemetry.",
-        feeds=("mission",),
+        feeds=("mission", "agent_memory"),
         feed_labels={"mission": "launch"},
         doc="The control plane you are looking at. Runs locally, holds no secrets "
             "of its own, and can only launch commands declared in this registry.",
@@ -200,7 +207,7 @@ AGENTS: tuple[AgentSpec, ...] = (
         glyph="▶",
         summary="Runs the complete forge chain for one topic: research → funnel.",
         command=_PIPELINE + ("--mode", "full"),
-        params=(_TOPIC, _FACULTY, _PILLAR, _NO_QA, _RESUME),
+        params=(_TOPIC, _FACULTY, _PILLAR, _NOTES, _NO_QA, _RESUME),
         requires_env=("ANTHROPIC_API_KEY",),
         feeds=("research",),
         feed_labels={"research": "kickoff"},
@@ -542,6 +549,9 @@ AGENTS: tuple[AgentSpec, ...] = (
     AgentSpec("web_search", "Web Search", "external", KIND_EXTERNAL,
               "Keyless DuckDuckGo, or a keyed search API when one is set.",
               glyph="◎"),
+    AgentSpec("agent_memory", "Agent Memory", "external", KIND_EXTERNAL,
+              "Self-hosted recall across missions. Optional — the fleet runs "
+              "unchanged without it.", glyph="⟳"),
 )
 
 # The forge chain, in the order a full mission executes it.

@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2008 833" class="fleetmap" role="img" aria-label="Florra Fleet Alpha architecture">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2008 925" class="fleetmap" role="img" aria-label="Florra Fleet Alpha architecture">
   <title>Florra Fleet Alpha architecture</title>
   <defs>
     <marker id="fm-arrow" viewBox="0 0 8 8" refX="7" refY="4"
@@ -97,204 +97,204 @@
     <g class="sq-external"><line class="fm-lane-rule" x1="1792" y1="45" x2="1818" y2="45" /><text class="fm-lane-label" x="1826" y="49">EXTERNAL SYSTEMS</text></g>
   </g>
   <g class="fm-edges">
-    <path class="fm-edge" d="M 128.0 391.0 L 128.0 425.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 216.0 454.0 L 244.1 454.0 Q 253.1 454.0 253.1 445.0 L 253.1 187.0 Q 253.1 178.0 262.1 178.0 L 332.0 178.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 420.0 207.0 L 420.0 241.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 332.0 178.0 L 319.0 178.0 Q 310.0 178.0 310.0 187.0 L 310.0 445.0 Q 310.0 454.0 319.0 454.0 L 332.0 454.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 332.0 178.0 L 297.0 178.0 Q 288.0 178.0 288.0 187.0 L 288.0 537.0 Q 288.0 546.0 297.0 546.0 L 332.0 546.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 420.0 299.0 L 420.0 333.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 332.0 270.0 L 275.0 270.0 Q 266.0 270.0 266.0 279.0 L 266.0 537.0 Q 266.0 546.0 275.0 546.0 L 332.0 546.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 420.0 391.0 L 420.0 425.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 332.0 362.0 L 253.0 362.0 Q 244.0 362.0 244.0 371.0 L 244.0 537.0 Q 244.0 546.0 253.0 546.0 L 332.0 546.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 508.0 454.0 L 536.1 454.0 Q 545.1 454.0 545.1 445.0 L 545.1 325.0 Q 545.1 316.0 554.1 316.0 L 624.0 316.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 420.0 517.0 L 420.0 141.0 Q 420.0 132.0 429.0 132.0 L 1287.0 132.0 Q 1296.0 132.0 1296.0 141.0 L 1296.0 333.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 420.0 609.0 L 420.0 124.0 Q 420.0 115.0 429.0 115.0 L 1579.0 115.0 Q 1588.0 115.0 1588.0 124.0 L 1588.0 471.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 420.0 609.0 L 420.0 107.0 Q 420.0 98.0 429.0 98.0 L 995.0 98.0 Q 1004.0 98.0 1004.0 107.0 L 1004.0 287.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 624.0 316.0 L 611.0 316.0 Q 602.0 316.0 602.0 325.0 L 602.0 491.0 Q 602.0 500.0 611.0 500.0 L 624.0 500.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 712.0 437.0 L 712.0 471.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 800.0 500.0 L 828.1 500.0 Q 837.1 500.0 837.1 509.0 L 837.1 583.0 Q 837.1 592.0 846.1 592.0 L 916.0 592.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 800.0 500.0 L 916.0 500.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 1004.0 253.0 L 1004.0 287.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 916.0 224.0 L 903.0 224.0 Q 894.0 224.0 894.0 233.0 L 894.0 399.0 Q 894.0 408.0 903.0 408.0 L 916.0 408.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 916.0 224.0 L 881.0 224.0 Q 872.0 224.0 872.0 233.0 L 872.0 491.0 Q 872.0 500.0 881.0 500.0 L 916.0 500.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 1004.0 195.0 L 1004.0 90.0 Q 1004.0 81.0 1013.0 81.0 L 1579.0 81.0 Q 1588.0 81.0 1588.0 90.0 L 1588.0 287.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 1004.0 437.0 L 1004.0 471.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 1004.0 529.0 L 1004.0 563.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 1004.0 471.0 L 1004.0 73.0 Q 1004.0 64.0 1013.0 64.0 L 1579.0 64.0 Q 1588.0 64.0 1588.0 73.0 L 1588.0 287.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 1092.0 592.0 L 1120.1 592.0 Q 1129.1 592.0 1129.1 583.0 L 1129.1 463.0 Q 1129.1 454.0 1138.1 454.0 L 1208.0 454.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 1092.0 592.0 L 1136.1 592.0 Q 1145.1 592.0 1145.1 583.0 L 1145.1 371.0 Q 1145.1 362.0 1154.1 362.0 L 1208.0 362.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 1500.0 316.0 L 1487.0 316.0 Q 1478.0 316.0 1478.0 325.0 L 1478.0 491.0 Q 1478.0 500.0 1487.0 500.0 L 1500.0 500.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 1588.0 437.0 L 1588.0 675.0 Q 1588.0 684.0 1579.0 684.0 L 429.0 684.0 Q 420.0 684.0 420.0 675.0 L 420.0 207.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 1588.0 529.0 L 1588.0 692.0 Q 1588.0 701.0 1579.0 701.0 L 429.0 701.0 Q 420.0 701.0 420.0 692.0 L 420.0 207.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 1588.0 529.0 L 1588.0 709.0 Q 1588.0 718.0 1579.0 718.0 L 429.0 718.0 Q 420.0 718.0 420.0 709.0 L 420.0 299.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 1588.0 529.0 L 1588.0 726.0 Q 1588.0 735.0 1579.0 735.0 L 429.0 735.0 Q 420.0 735.0 420.0 726.0 L 420.0 391.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 1588.0 529.0 L 1588.0 743.0 Q 1588.0 752.0 1579.0 752.0 L 429.0 752.0 Q 420.0 752.0 420.0 743.0 L 420.0 483.0" marker-end="url(#fm-arrow)" />
-    <path class="fm-edge" d="M 1588.0 529.0 L 1588.0 760.0 Q 1588.0 769.0 1579.0 769.0 L 429.0 769.0 Q 420.0 769.0 420.0 760.0 L 420.0 575.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 128.0 437.0 L 128.0 471.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 216.0 500.0 L 244.1 500.0 Q 253.1 500.0 253.1 491.0 L 253.1 233.0 Q 253.1 224.0 262.1 224.0 L 332.0 224.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 420.0 253.0 L 420.0 287.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 332.0 224.0 L 319.0 224.0 Q 310.0 224.0 310.0 233.0 L 310.0 491.0 Q 310.0 500.0 319.0 500.0 L 332.0 500.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 332.0 224.0 L 297.0 224.0 Q 288.0 224.0 288.0 233.0 L 288.0 583.0 Q 288.0 592.0 297.0 592.0 L 332.0 592.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 420.0 345.0 L 420.0 379.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 332.0 316.0 L 275.0 316.0 Q 266.0 316.0 266.0 325.0 L 266.0 583.0 Q 266.0 592.0 275.0 592.0 L 332.0 592.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 420.0 437.0 L 420.0 471.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 332.0 408.0 L 253.0 408.0 Q 244.0 408.0 244.0 417.0 L 244.0 583.0 Q 244.0 592.0 253.0 592.0 L 332.0 592.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 508.0 500.0 L 536.1 500.0 Q 545.1 500.0 545.1 491.0 L 545.1 371.0 Q 545.1 362.0 554.1 362.0 L 624.0 362.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 420.0 563.0 L 420.0 141.0 Q 420.0 132.0 429.0 132.0 L 1287.0 132.0 Q 1296.0 132.0 1296.0 141.0 L 1296.0 379.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 420.0 655.0 L 420.0 124.0 Q 420.0 115.0 429.0 115.0 L 1579.0 115.0 Q 1588.0 115.0 1588.0 124.0 L 1588.0 517.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 420.0 655.0 L 420.0 107.0 Q 420.0 98.0 429.0 98.0 L 995.0 98.0 Q 1004.0 98.0 1004.0 107.0 L 1004.0 333.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 624.0 362.0 L 611.0 362.0 Q 602.0 362.0 602.0 371.0 L 602.0 537.0 Q 602.0 546.0 611.0 546.0 L 624.0 546.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 712.0 483.0 L 712.0 517.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 800.0 546.0 L 828.1 546.0 Q 837.1 546.0 837.1 555.0 L 837.1 629.0 Q 837.1 638.0 846.1 638.0 L 916.0 638.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 800.0 546.0 L 916.0 546.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1004.0 299.0 L 1004.0 333.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 916.0 270.0 L 903.0 270.0 Q 894.0 270.0 894.0 279.0 L 894.0 445.0 Q 894.0 454.0 903.0 454.0 L 916.0 454.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 916.0 270.0 L 881.0 270.0 Q 872.0 270.0 872.0 279.0 L 872.0 537.0 Q 872.0 546.0 881.0 546.0 L 916.0 546.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1004.0 241.0 L 1004.0 90.0 Q 1004.0 81.0 1013.0 81.0 L 1579.0 81.0 Q 1588.0 81.0 1588.0 90.0 L 1588.0 333.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1004.0 483.0 L 1004.0 517.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1004.0 575.0 L 1004.0 609.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1004.0 517.0 L 1004.0 73.0 Q 1004.0 64.0 1013.0 64.0 L 1579.0 64.0 Q 1588.0 64.0 1588.0 73.0 L 1588.0 333.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1092.0 638.0 L 1120.1 638.0 Q 1129.1 638.0 1129.1 629.0 L 1129.1 509.0 Q 1129.1 500.0 1138.1 500.0 L 1208.0 500.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1092.0 638.0 L 1136.1 638.0 Q 1145.1 638.0 1145.1 629.0 L 1145.1 417.0 Q 1145.1 408.0 1154.1 408.0 L 1208.0 408.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1500.0 362.0 L 1487.0 362.0 Q 1478.0 362.0 1478.0 371.0 L 1478.0 537.0 Q 1478.0 546.0 1487.0 546.0 L 1500.0 546.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1588.0 483.0 L 1588.0 767.0 Q 1588.0 776.0 1579.0 776.0 L 429.0 776.0 Q 420.0 776.0 420.0 767.0 L 420.0 253.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1588.0 575.0 L 1588.0 784.0 Q 1588.0 793.0 1579.0 793.0 L 429.0 793.0 Q 420.0 793.0 420.0 784.0 L 420.0 253.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1588.0 575.0 L 1588.0 801.0 Q 1588.0 810.0 1579.0 810.0 L 429.0 810.0 Q 420.0 810.0 420.0 801.0 L 420.0 345.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1588.0 575.0 L 1588.0 818.0 Q 1588.0 827.0 1579.0 827.0 L 429.0 827.0 Q 420.0 827.0 420.0 818.0 L 420.0 437.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1588.0 575.0 L 1588.0 835.0 Q 1588.0 844.0 1579.0 844.0 L 429.0 844.0 Q 420.0 844.0 420.0 835.0 L 420.0 529.0" marker-end="url(#fm-arrow)" />
+    <path class="fm-edge" d="M 1588.0 575.0 L 1588.0 852.0 Q 1588.0 861.0 1579.0 861.0 L 429.0 861.0 Q 420.0 861.0 420.0 852.0 L 420.0 621.0" marker-end="url(#fm-arrow)" />
   </g>
   <g class="fm-edge-labels">
-    <rect class="fm-edge-label-bg" x="104.6" y="400.5" width="46.8" height="15" rx="4" /><text class="fm-edge-label" x="128.0" y="408.0">launch</text>
-    <rect class="fm-edge-label-bg" x="226.8" y="308.5" width="52.6" height="15" rx="4" /><text class="fm-edge-label" x="253.1" y="316.0">kickoff</text>
-    <rect class="fm-edge-label-bg" x="399.5" y="216.5" width="41.0" height="15" rx="4" /><text class="fm-edge-label" x="420.0" y="224.0">brief</text>
-    <rect class="fm-edge-label-bg" x="289.5" y="308.5" width="41.0" height="15" rx="4" /><text class="fm-edge-label" x="310.0" y="316.0">brief</text>
-    <rect class="fm-edge-label-bg" x="267.5" y="354.5" width="41.0" height="15" rx="4" /><text class="fm-edge-label" x="288.0" y="362.0">brief</text>
-    <rect class="fm-edge-label-bg" x="387.9" y="308.5" width="64.2" height="15" rx="4" /><text class="fm-edge-label" x="420.0" y="316.0">blueprint</text>
-    <rect class="fm-edge-label-bg" x="233.9" y="400.5" width="64.2" height="15" rx="4" /><text class="fm-edge-label" x="266.0" y="408.0">blueprint</text>
-    <rect class="fm-edge-label-bg" x="379.2" y="400.5" width="81.6" height="15" rx="4" /><text class="fm-edge-label" x="420.0" y="408.0">voice anchor</text>
-    <rect class="fm-edge-label-bg" x="203.2" y="494.3" width="81.6" height="15" rx="4" /><text class="fm-edge-label" x="244.0" y="501.8">voice anchor</text>
-    <rect class="fm-edge-label-bg" x="504.3" y="398.2" width="81.6" height="15" rx="4" /><text class="fm-edge-label" x="545.1" y="405.7">script batch</text>
+    <rect class="fm-edge-label-bg" x="104.6" y="446.5" width="46.8" height="15" rx="4" /><text class="fm-edge-label" x="128.0" y="454.0">launch</text>
+    <rect class="fm-edge-label-bg" x="226.8" y="354.5" width="52.6" height="15" rx="4" /><text class="fm-edge-label" x="253.1" y="362.0">kickoff</text>
+    <rect class="fm-edge-label-bg" x="399.5" y="262.5" width="41.0" height="15" rx="4" /><text class="fm-edge-label" x="420.0" y="270.0">brief</text>
+    <rect class="fm-edge-label-bg" x="289.5" y="354.5" width="41.0" height="15" rx="4" /><text class="fm-edge-label" x="310.0" y="362.0">brief</text>
+    <rect class="fm-edge-label-bg" x="267.5" y="400.5" width="41.0" height="15" rx="4" /><text class="fm-edge-label" x="288.0" y="408.0">brief</text>
+    <rect class="fm-edge-label-bg" x="387.9" y="354.5" width="64.2" height="15" rx="4" /><text class="fm-edge-label" x="420.0" y="362.0">blueprint</text>
+    <rect class="fm-edge-label-bg" x="233.9" y="446.5" width="64.2" height="15" rx="4" /><text class="fm-edge-label" x="266.0" y="454.0">blueprint</text>
+    <rect class="fm-edge-label-bg" x="379.2" y="446.5" width="81.6" height="15" rx="4" /><text class="fm-edge-label" x="420.0" y="454.0">voice anchor</text>
+    <rect class="fm-edge-label-bg" x="203.2" y="540.3" width="81.6" height="15" rx="4" /><text class="fm-edge-label" x="244.0" y="547.8">voice anchor</text>
+    <rect class="fm-edge-label-bg" x="504.3" y="444.2" width="81.6" height="15" rx="4" /><text class="fm-edge-label" x="545.1" y="451.7">script batch</text>
     <rect class="fm-edge-label-bg" x="831.7" y="124.5" width="52.6" height="15" rx="4" /><text class="fm-edge-label" x="858.0" y="132.0">ad copy</text>
     <rect class="fm-edge-label-bg" x="980.6" y="107.5" width="46.8" height="15" rx="4" /><text class="fm-edge-label" x="1004.0" y="115.0">scores</text>
-    <rect class="fm-edge-label-bg" x="564.1" y="352.7" width="75.8" height="15" rx="4" /><text class="fm-edge-label" x="602.0" y="360.2">script JSON</text>
-    <rect class="fm-edge-label-bg" x="677.0" y="446.5" width="70.0" height="15" rx="4" /><text class="fm-edge-label" x="712.0" y="454.0">avatar IDs</text>
-    <rect class="fm-edge-label-bg" x="856.1" y="584.5" width="41.0" height="15" rx="4" /><text class="fm-edge-label" x="876.6" y="592.0">video</text>
+    <rect class="fm-edge-label-bg" x="564.1" y="398.7" width="75.8" height="15" rx="4" /><text class="fm-edge-label" x="602.0" y="406.2">script JSON</text>
+    <rect class="fm-edge-label-bg" x="677.0" y="492.5" width="70.0" height="15" rx="4" /><text class="fm-edge-label" x="712.0" y="500.0">avatar IDs</text>
+    <rect class="fm-edge-label-bg" x="856.1" y="630.5" width="41.0" height="15" rx="4" /><text class="fm-edge-label" x="876.6" y="638.0">video</text>
     <rect class="fm-edge-label-bg" x="1258.1" y="56.5" width="75.8" height="15" rx="4" /><text class="fm-edge-label" x="1296.0" y="64.0">performance</text>
-    <rect class="fm-edge-label-bg" x="1088.3" y="536.2" width="81.6" height="15" rx="4" /><text class="fm-edge-label" x="1129.1" y="543.7">sound signal</text>
-    <rect class="fm-edge-label-bg" x="1422.7" y="352.7" width="110.6" height="15" rx="4" /><text class="fm-edge-label" x="1478.0" y="360.2">improvement notes</text>
-    <rect class="fm-edge-label-bg" x="951.6" y="676.5" width="104.8" height="15" rx="4" /><text class="fm-edge-label" x="1004.0" y="684.0">verified sources</text>
-    <rect class="fm-edge-label-bg" x="948.7" y="693.5" width="110.6" height="15" rx="4" /><text class="fm-edge-label" x="1004.0" y="701.0">rewritten prompts</text>
+    <rect class="fm-edge-label-bg" x="1088.3" y="582.2" width="81.6" height="15" rx="4" /><text class="fm-edge-label" x="1129.1" y="589.7">sound signal</text>
+    <rect class="fm-edge-label-bg" x="1422.7" y="398.7" width="110.6" height="15" rx="4" /><text class="fm-edge-label" x="1478.0" y="406.2">improvement notes</text>
+    <rect class="fm-edge-label-bg" x="951.6" y="768.5" width="104.8" height="15" rx="4" /><text class="fm-edge-label" x="1004.0" y="776.0">verified sources</text>
+    <rect class="fm-edge-label-bg" x="948.7" y="785.5" width="110.6" height="15" rx="4" /><text class="fm-edge-label" x="1004.0" y="793.0">rewritten prompts</text>
   </g>
   <g class="fm-nodes">
-    <g class="fm-node sq-command" transform="translate(40 333.0)">
+    <g class="fm-node sq-command" transform="translate(40 379.0)">
       <rect class="fm-node-box" width="176" height="58" rx="8" />
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">⌘</text>
       <text class="fm-node-label" x="34" y="24">Agent Commander</text>
       <text class="fm-node-sub" x="14" y="42">COMMAND</text>
     </g>
-    <g class="fm-node sq-command fm-node--unconfigured" transform="translate(40 425.0)">
+    <g class="fm-node sq-command fm-node--unconfigured" transform="translate(40 471.0)">
       <rect class="fm-node-box" width="176" height="58" rx="8" />
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">▶</text>
       <text class="fm-node-label" x="34" y="24">Full Mission</text>
       <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
     </g>
-    <g class="fm-node sq-forge fm-node--unconfigured" transform="translate(332 149.0)">
+    <g class="fm-node sq-forge fm-node--unconfigured" transform="translate(332 195.0)">
       <rect class="fm-node-box" width="176" height="58" rx="8" />
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">🔬</text>
       <text class="fm-node-label" x="34" y="24">Research Agent</text>
       <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
     </g>
-    <g class="fm-node sq-forge fm-node--unconfigured" transform="translate(332 241.0)">
+    <g class="fm-node sq-forge fm-node--unconfigured" transform="translate(332 287.0)">
       <rect class="fm-node-box" width="176" height="58" rx="8" />
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">📐</text>
       <text class="fm-node-label" x="34" y="24">Book Architect</text>
       <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
     </g>
-    <g class="fm-node sq-forge fm-node--unconfigured" transform="translate(332 333.0)">
+    <g class="fm-node sq-forge fm-node--unconfigured" transform="translate(332 379.0)">
       <rect class="fm-node-box" width="176" height="58" rx="8" />
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">✍</text>
       <text class="fm-node-label" x="34" y="24">Manuscript Agent</text>
       <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
     </g>
-    <g class="fm-node sq-forge fm-node--unconfigured" transform="translate(332 425.0)">
+    <g class="fm-node sq-forge fm-node--unconfigured" transform="translate(332 471.0)">
       <rect class="fm-node-box" width="176" height="58" rx="8" />
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">🎬</text>
       <text class="fm-node-label" x="34" y="24">Shorts Script Agent</text>
       <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
     </g>
-    <g class="fm-node sq-forge fm-node--unconfigured" transform="translate(332 517.0)">
+    <g class="fm-node sq-forge fm-node--unconfigured" transform="translate(332 563.0)">
       <rect class="fm-node-box" width="176" height="58" rx="8" />
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">💰</text>
       <text class="fm-node-label" x="34" y="24">Funnel Agent</text>
       <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
     </g>
-    <g class="fm-node sq-forge fm-node--unconfigured" transform="translate(332 609.0)">
+    <g class="fm-node sq-forge fm-node--unconfigured" transform="translate(332 655.0)">
       <rect class="fm-node-box" width="176" height="58" rx="8" />
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">🔍</text>
       <text class="fm-node-label" x="34" y="24">QA Agent</text>
       <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
     </g>
-    <g class="fm-node sq-production" transform="translate(624 287.0)">
+    <g class="fm-node sq-production" transform="translate(624 333.0)">
       <rect class="fm-node-box" width="176" height="58" rx="8" />
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">⧉</text>
       <text class="fm-node-label" x="34" y="24">Script Parser</text>
       <text class="fm-node-sub" x="14" y="42">PRODUCTION</text>
     </g>
-    <g class="fm-node sq-production fm-node--unconfigured" transform="translate(624 379.0)">
+    <g class="fm-node sq-production fm-node--unconfigured" transform="translate(624 425.0)">
       <rect class="fm-node-box" width="176" height="58" rx="8" />
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">⚙</text>
       <text class="fm-node-label" x="34" y="24">HeyGen Setup</text>
       <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
     </g>
-    <g class="fm-node sq-production fm-node--unconfigured" transform="translate(624 471.0)">
+    <g class="fm-node sq-production fm-node--unconfigured" transform="translate(624 517.0)">
       <rect class="fm-node-box" width="176" height="58" rx="8" />
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">🎥</text>
       <text class="fm-node-label" x="34" y="24">HeyGen Producer</text>
       <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
     </g>
-    <g class="fm-node sq-distribution fm-node--unconfigured" transform="translate(916 195.0)">
+    <g class="fm-node sq-distribution fm-node--unconfigured" transform="translate(916 241.0)">
       <rect class="fm-node-box" width="176" height="58" rx="8" />
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">📡</text>
       <text class="fm-node-label" x="34" y="24">Master Orchestrator</text>
       <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
     </g>
-    <g class="fm-node sq-distribution fm-node--unconfigured" transform="translate(916 287.0)">
+    <g class="fm-node sq-distribution fm-node--unconfigured" transform="translate(916 333.0)">
       <rect class="fm-node-box" width="176" height="58" rx="8" />
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">🗂</text>
       <text class="fm-node-label" x="34" y="24">Airtable Sync</text>
       <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
     </g>
-    <g class="fm-node sq-distribution fm-node--unconfigured" transform="translate(916 379.0)">
+    <g class="fm-node sq-distribution fm-node--unconfigured" transform="translate(916 425.0)">
       <rect class="fm-node-box" width="176" height="58" rx="8" />
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">🌸</text>
       <text class="fm-node-label" x="34" y="24">Florra Logger</text>
       <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
     </g>
-    <g class="fm-node sq-distribution fm-node--unconfigured" transform="translate(916 471.0)">
+    <g class="fm-node sq-distribution fm-node--unconfigured" transform="translate(916 517.0)">
       <rect class="fm-node-box" width="176" height="58" rx="8" />
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">🎞</text>
       <text class="fm-node-label" x="34" y="24">Opus Scheduler</text>
       <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
     </g>
-    <g class="fm-node sq-distribution fm-node--unconfigured" transform="translate(916 563.0)">
+    <g class="fm-node sq-distribution fm-node--unconfigured" transform="translate(916 609.0)">
       <rect class="fm-node-box" width="176" height="58" rx="8" />
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">📤</text>
       <text class="fm-node-label" x="34" y="24">Flowstage Publisher</text>
       <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
     </g>
-    <g class="fm-node sq-growth fm-node--unconfigured" transform="translate(1208 333.0)">
+    <g class="fm-node sq-growth fm-node--unconfigured" transform="translate(1208 379.0)">
       <rect class="fm-node-box" width="176" height="58" rx="8" />
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">🅜</text>
       <text class="fm-node-label" x="34" y="24">Meta Ads</text>
       <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
     </g>
-    <g class="fm-node sq-growth fm-node--unconfigured" transform="translate(1208 425.0)">
+    <g class="fm-node sq-growth fm-node--unconfigured" transform="translate(1208 471.0)">
       <rect class="fm-node-box" width="176" height="58" rx="8" />
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">🅣</text>
       <text class="fm-node-label" x="34" y="24">TikTok Ads</text>
       <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
     </g>
-    <g class="fm-node sq-intelligence fm-node--unconfigured" transform="translate(1500 287.0)">
+    <g class="fm-node sq-intelligence fm-node--unconfigured" transform="translate(1500 333.0)">
       <rect class="fm-node-box" width="176" height="58" rx="8" />
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">🦾</text>
       <text class="fm-node-label" x="34" y="24">OpenClaw</text>
       <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
     </g>
-    <g class="fm-node sq-intelligence fm-node--unconfigured" transform="translate(1500 379.0)">
+    <g class="fm-node sq-intelligence fm-node--unconfigured" transform="translate(1500 425.0)">
       <rect class="fm-node-box" width="176" height="58" rx="8" />
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">🔎</text>
       <text class="fm-node-label" x="34" y="24">Evidence Agent</text>
       <text class="fm-node-sub" x="14" y="42">NO CREDENTIALS</text>
     </g>
-    <g class="fm-node sq-intelligence fm-node--unconfigured" transform="translate(1500 471.0)">
+    <g class="fm-node sq-intelligence fm-node--unconfigured" transform="translate(1500 517.0)">
       <rect class="fm-node-box" width="176" height="58" rx="8" />
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">♻</text>
@@ -341,6 +341,13 @@
       <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
       <text class="fm-node-glyph" x="14" y="24">◎</text>
       <text class="fm-node-label" x="34" y="24">Web Search</text>
+      <text class="fm-node-sub" x="14" y="42">EXTERNAL SYSTEMS</text>
+    </g>
+    <g class="fm-node sq-external" transform="translate(1792 701.0)">
+      <rect class="fm-node-box" width="176" height="58" rx="8" />
+      <rect class="fm-node-accent" width="3.5" height="58" rx="1.75" />
+      <text class="fm-node-glyph" x="14" y="24">⟳</text>
+      <text class="fm-node-label" x="34" y="24">Agent Memory</text>
       <text class="fm-node-sub" x="14" y="42">EXTERNAL SYSTEMS</text>
     </g>
   </g>

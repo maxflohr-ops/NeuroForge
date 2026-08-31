@@ -34,6 +34,7 @@ from pathlib import Path
 from typing import Any
 
 from .eventbus import EventBus
+from .memory import MemoryLink, mission_summary
 from .profiles import FleetProfile, Objective
 from .runner import DispatchError, Runner
 from .store import ERROR, FleetStore, OK, WARN
@@ -58,9 +59,14 @@ TERMINAL = (HALTED, BUDGET_REACHED)
 
 class Autopilot:
     def __init__(self, profile: FleetProfile, runner: Runner, store: FleetStore,
-                 bus: EventBus, state_dir: Path):
+                 bus: EventBus, state_dir: Path,
+                 memory: MemoryLink | None = None):
         self.profile = profile
         self.policy = profile.autopilot
+        # Optional: absent unless a memory server is configured, in which case
+        # every call is a no-op and the fleet behaves exactly as before.
+        self.memory = memory if memory is not None else MemoryLink.from_env(
+            on_error=lambda message: self._emit("autopilot.memory", detail=message))
         self.runner = runner
         self.store = store
         self.bus = bus
@@ -293,6 +299,17 @@ class Autopilot:
 
     def _dispatch_mission(self, objective: Objective) -> None:
         params = objective.mission_params(no_qa=self.policy.no_qa)
+
+        # Hand the Research Agent what earlier missions learned. Recall failing
+        # is not a reason to skip the mission — it just runs without context,
+        # exactly as it did before memory was attached.
+        if self.memory.enabled:
+            recalled = self.memory.recall(f"{objective.topic} {objective.faculty}")
+            if recalled:
+                params["audience_notes"] = recalled
+                self._emit("autopilot.recalled", objective=objective.topic,
+                           chars=len(recalled))
+
         try:
             run = self.runner.dispatch("mission", params,
                                        simulate=self.policy.mode == "simulate")
@@ -380,7 +397,7 @@ class Autopilot:
             return
 
         if average is not None and average < self.policy.qa_floor:
-            self._handle_weak_result(label, slug, average)
+            self._handle_weak_result(run, label, slug, average)
             return
 
         self.state["missions"] += 1
@@ -388,13 +405,15 @@ class Autopilot:
         self.state["completed"].append(slug)
         self.state["cursor"] += 1
         self._record(slug, "complete", average)
+        self._remember(run, label, "complete")
         self._schedule_next()
         self._persist()
         self._emit("autopilot.completed", objective=label, average=average,
                    missions=self.state["missions"],
                    spend=round(self.state["spend_estimate"], 2))
 
-    def _handle_weak_result(self, label: str, slug: str, average: float) -> None:
+    def _handle_weak_result(self, run: dict[str, Any], label: str,
+                            slug: str, average: float) -> None:
         """Below the QA floor: rework once, then quarantine rather than ship."""
         used = self.state["attempts"].get(slug, 0)
         self.state["missions"] += 1
@@ -411,9 +430,24 @@ class Autopilot:
             self.state["cursor"] += 1
             self._record(slug, f"quarantined ({average}/50)", average)
             self._emit("autopilot.quarantined", objective=label, average=average)
+            # Worth remembering precisely because it failed — the next mission
+            # on adjacent ground should know what fell short here.
+            self._remember(run, label, f"quarantined below the {self.policy.qa_floor} floor")
 
         self._schedule_next()
         self._persist()
+
+    def _remember(self, run: dict[str, Any], label: str, outcome: str) -> None:
+        """Write the mission back to memory. Never raises, never blocks."""
+        if not self.memory.enabled:
+            return
+        scores = {k: v for k, v in (run.get("scores") or {}).items()
+                  if isinstance(v, int)}
+        faculty = (run.get("params") or {}).get("faculty", "")
+        summary = mission_summary(label, faculty, scores, outcome)
+        detail = "\n".join(f"{stage}: {score}/50" for stage, score in scores.items())
+        if self.memory.record(run["id"], summary, detail):
+            self._emit("autopilot.remembered", objective=label, outcome=outcome)
 
     def _fail(self, detail: str, slug: str | None = None) -> None:
         self.state["failures"] += 1
@@ -501,6 +535,7 @@ class Autopilot:
             "optimize_every": self.policy.optimize_every,
             "optimize_applies": self.policy.optimize_applies,
             "qa_floor": self.policy.qa_floor,
+            "memory": self.memory.status(),
             "history": self.state["history"][-20:],
         }
 

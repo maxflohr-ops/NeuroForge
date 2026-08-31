@@ -198,6 +198,7 @@ meter tracks only what that fleet has spent.)
 
 ```
 registry.py     what agents exist, how they launch, how work flows between them
+memory.py       optional cross-mission recall, fail-open and off by default
 export.py       the map as a standalone SVG or self-contained HTML page
 webapp.py       the whole console as one hostable, read-only page
 runner.py       launches them as subprocesses and supervises the result
@@ -319,6 +320,59 @@ Search is keyless DuckDuckGo (`ddgs`) by default, or a keyed API when
 
 ---
 
+## Cross-mission memory (optional)
+
+Every mission currently starts from nothing. Six of the ten objectives in the
+book are adjacent and three share a faculty voice on overlapping ground, so the
+Research Agent rediscovers the same territory each time. Attaching a memory
+server closes that gap: what an earlier mission learned, and what QA objected
+to, is handed to the next one.
+
+The fleet speaks the [TencentDB Agent Memory](https://github.com/Tencent/TencentDB-Agent-Memory)
+v2 protocol (MIT). **Despite the name it needs no Tencent Cloud account** — it
+is three Docker services and an OpenAI-compatible LLM endpoint of your choosing.
+
+```bash
+git clone https://github.com/Tencent/TencentDB-Agent-Memory
+cd TencentDB-Agent-Memory/deploy/global-images
+cp .env.example .env && $EDITOR .env && ./start-all.sh
+```
+
+Then in the fleet's `.env`:
+
+```bash
+MEMORY_ENDPOINT=http://127.0.0.1:8420
+MEMORY_API_KEY=...
+MEMORY_SERVICE_ID=...        # the memory space id
+MEMORY_AGENT_ID=florra-fleet # scopes recall to this fleet
+```
+
+### How it behaves
+
+| | |
+|---|---|
+| Before a mission | Recalls prior work on the topic and hands it to the Research Agent as `--audience_notes` |
+| After a mission | Writes back what it produced, which stage was weakest, and whether it was quarantined |
+| Not configured | **Every call is a no-op.** The fleet behaves exactly as it does today |
+| Server down or slow | **Fails open.** The mission runs without context rather than not running |
+
+`commander/memory.py` speaks the protocol over `urllib` — the official SDK
+works fine, but the commander stays standard library. Failures are counted and
+surfaced in the autopilot panel rather than swallowed silently.
+
+### Two things worth knowing before you turn it on
+
+**It has its own LLM spend.** The memory pipeline runs its own model calls on
+its own key to build structured memory from conversations. That cost is real
+and the fleet's `budget_usd` ceiling does not see it — the ceiling only counts
+missions. Put a limit on that key too.
+
+**It is three more services.** Memory Core, Memory Hub and a Proxy, plus their
+volumes. That is a reasonable trade for a fleet working a long book; it is
+overkill for a handful of one-off runs.
+
+---
+
 ## Shipping the console as a web app
 
 The live commander launches subprocesses. Putting **that** on a public URL
@@ -428,7 +482,7 @@ mission.
 python -m unittest discover -s commander/tests -t .
 ```
 
-147 tests. The commander itself is standard library only; the Evidence Agent
+170 tests. The commander itself is standard library only; the Evidence Agent
 tests skip cleanly when smolagents is absent, and the static-build tests skip
 when no recording is present. The end-to-end cases drive the real supervisor
 against the simulator, so dispatch, interpretation, the event bus and the store

@@ -26,6 +26,25 @@ services:
       - ./commander/state:/app/commander/state
 
   # ─────────────────────────────────────────
+  # Optional: cross-mission memory.
+  # TencentDB Agent Memory is MIT and fully self-hosted — despite the name it
+  # needs no Tencent Cloud account, only Docker and an OpenAI-compatible LLM
+  # endpoint. It is three services of its own, so it is NOT run by default:
+  #
+  #   git clone https://github.com/Tencent/TencentDB-Agent-Memory
+  #   cd TencentDB-Agent-Memory/deploy/global-images && cp .env.example .env
+  #   $EDITOR .env && ./start-all.sh
+  #
+  # Then point the fleet at it and restart florra-alpha:
+  #   MEMORY_ENDPOINT=http://host.docker.internal:8420
+  #   MEMORY_API_KEY=...
+  #   MEMORY_SERVICE_ID=...
+  #
+  # Note it runs its own LLM pipeline on its own key: that spend is real and
+  # the fleet's budget ceiling does not see it.
+  # ─────────────────────────────────────────
+
+  # ─────────────────────────────────────────
   # Florra Fleet Alpha — the same fleet, running itself around the clock.
   # Usage:
   #   docker compose up -d florra-alpha      # survives reboots
