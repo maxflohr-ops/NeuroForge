@@ -1,0 +1,31 @@
+{
+  "eval_cases": [
+    {
+      "eval_case_id": "capabilities",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "Hello, what can you help me with?"}]
+      }
+    },
+    {
+      "eval_case_id": "faculty_assignment",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "Which NeuroForge faculty member should own a book about beating procrastination, and why?"}]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [{"text": "Kai Ren should own it — procrastination sits in his domain of focus, dopamine, habits, and productivity, under the 'Focus, dopamine, productivity' pillar. (Marcus Voss is a defensible alternate if the angle is discipline and identity.)"}]
+        }
+      }
+    },
+    {
+      "eval_case_id": "pipeline_dispatch",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "Run the full content pipeline on the topic 'Digital Minimalism'."}]
+      }
+    }
+  ]
+}
