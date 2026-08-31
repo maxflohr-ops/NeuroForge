@@ -209,5 +209,11 @@ docker run -d --restart unless-stopped \
 - **Members-only / private videos**: yt-dlp can only fetch what the account it runs as
   can see. For members-only content, export cookies from a logged-in browser session and
   set `YTDLP_COOKIES_FILE` in `.env`.
+- **"Sign in to confirm you're not a bot"**: YouTube challenges downloads from many
+  datacenter/cloud IPs (channel scanning still works; only the media download is
+  blocked). Fix: export YouTube cookies from a logged-in browser
+  ([how-to](https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies))
+  and set `YTDLP_COOKIES_FILE=credentials/cookies.txt`. Residential/home IPs usually
+  don't hit this.
 - This is built for archiving **Ridge Club's own channel** for its own clipping
   community — keep it pointed at content you have the rights to redistribute.
