@@ -1,0 +1,31 @@
+{
+  "eval_cases": [
+    {
+      "eval_case_id": "capabilities",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "Hey, what can you do for Florra?"}]
+      }
+    },
+    {
+      "eval_case_id": "creator_scoring",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "Score this creator for the Bounty Sounds campaign: @wavey.jules, 250k TikTok followers, 8.5% engagement, used the sound in 4 posts, averages 500k views."}]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [{"text": "Using the score_creator tool: @wavey.jules scores in the high 80s to low 90s overall — Mid tier (250k followers), elite engagement at 8.5%, strong repeated use of the sound, and roughly 2x view-to-follower efficiency. Strong outreach candidate; offer to add them to Airtable at status 'Identified'."}]
+        }
+      }
+    },
+    {
+      "eval_case_id": "outreach_dispatch",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "Write the DM and creator brief for @wavey.jules (Mid tier, lo-fi bedroom-pop edits, big on aesthetic transitions) for the Bounty Sounds campaign using the sound 'Night Drive'."}]
+      }
+    }
+  ]
+}
