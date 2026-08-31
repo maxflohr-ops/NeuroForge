@@ -55,6 +55,9 @@ class Downloader:
         }
         if self.config.cookies_file:
             opts["cookiefile"] = self.config.cookies_file
+        js_runtimes = self.config.ytdlp_js_runtimes_opt()
+        if js_runtimes:
+            opts["js_runtimes"] = js_runtimes
 
         with yt_dlp.YoutubeDL(opts) as ydl:
             ydl.download([video["url"]])

@@ -71,6 +71,20 @@ class Config:
     max_video_height: int = int(os.getenv("MAX_VIDEO_HEIGHT", "0"))  # 0 = best available
     keep_local_files: bool = field(default_factory=lambda: _bool("KEEP_LOCAL_FILES", False))
     cookies_file: str = os.getenv("YTDLP_COOKIES_FILE", "")
+    # JS runtimes yt-dlp may use to solve YouTube's n-token challenge (required
+    # for downloads since 2026). "name" or "name:/path/to/binary", comma-separated.
+    ytdlp_js_runtimes: str = os.getenv("YTDLP_JS_RUNTIMES", "node,deno")
+
+    def ytdlp_js_runtimes_opt(self) -> dict:
+        """Parse YTDLP_JS_RUNTIMES into yt-dlp's js_runtimes param
+        ({name: {'path': path-or-None}})."""
+        runtimes = {}
+        for entry in self.ytdlp_js_runtimes.split(","):
+            entry = entry.strip()
+            if entry:
+                name, _, path = entry.partition(":")
+                runtimes[name] = {"path": path or None}
+        return runtimes
 
     full_videos_folder_name: str = "01 Full Videos"
     opus_clips_folder_name: str = "02 Opus Clips"

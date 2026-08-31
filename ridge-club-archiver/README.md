@@ -57,6 +57,11 @@ pip install -r requirements.txt
 `ffmpeg` must be on PATH (yt-dlp uses it to merge audio+video):
 `sudo apt install ffmpeg` or `brew install ffmpeg`.
 
+A JavaScript runtime (`node` or `deno`) must also be on PATH — since 2026 yt-dlp
+needs one (plus the bundled `yt-dlp-ejs` solver) to pass YouTube's n-token
+challenge; without it downloads fail with "The page needs to be reloaded".
+Override the runtime list with `YTDLP_JS_RUNTIMES` (e.g. `node:/usr/local/bin/node`).
+
 ### 2. Google Drive credentials (service account)
 
 1. In [Google Cloud Console](https://console.cloud.google.com/), create a project and
