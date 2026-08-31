@@ -1,0 +1,97 @@
+name: NeuroForge Weekly Content Routine
+
+# The "living influencer" loop: every week, generate the next topic's content
+# package (research → blueprint → chapter → scripts → funnel) and hand it to
+# Postiz for scheduling to TikTok/Instagram/YouTube.
+#
+# Runs every Monday 06:00 UTC. Can also be triggered manually with
+# workflow_dispatch (pick a topic) or on push to the main branch (dry run).
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'   # Monday 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: 'Topic to generate (default: next from roadmap)'
+        required: false
+        default: ''
+  push:
+    branches: [claude/neuroforge-stop-overthinking-46mrT]
+    paths: ['neuroforge-os/scripts/**', 'neuroforge-os/prompts/**']
+
+permissions:
+  contents: read
+
+jobs:
+  generate-and-schedule:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      POSTIZ_API_KEY: ${{ secrets.POSTIZ_API_KEY }}
+      POSTIZ_BASE_URL: ${{ secrets.POSTIZ_BASE_URL }}
+      POSTIZ_INTEGRATION_IDS: ${{ secrets.POSTIZ_INTEGRATION_IDS }}
+      AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+      AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          cd neuroforge-os
+          pip install -r requirements.txt
+
+      - name: Determine topic
+        id: topic
+        run: |
+          if [ -n "${{ github.event.inputs.topic }}" ]; then
+            echo "topic=${{ github.event.inputs.topic }}"
+          else
+            # Next topic from the roadmap (first that has no output folder yet)
+            for t in "Stop Negative Thoughts" "How to Read People" "The Discipline Blueprint" "The Charisma Blueprint" "Beat Anxiety Fast"; do
+              slug=$(echo "$t" | tr '[:upper:]' '[:lower:]' | tr ' ' '_')
+              if [ ! -d "neuroforge-os/output/$slug" ]; then
+                echo "topic=$t"
+                exit 0
+              fi
+            done
+            echo "topic=Stop Negative Thoughts"
+          fi
+
+      - name: Run pipeline (research → funnel, no QA to keep the run fast)
+        run: |
+          cd neuroforge-os
+          python scripts/neuroforge_pipeline.py \
+            --topic "${{ steps.topic.outputs.topic }}" \
+            --faculty "${{ github.event.inputs.faculty || 'Kai Ren' }}" \
+            --mode full --no-qa
+
+      - name: Schedule to Postiz (dry run unless POSTIZ_API_KEY is set)
+        run: |
+          cd neuroforge-os
+          if [ -z "$POSTIZ_API_KEY" ]; then
+            echo "::warning::POSTIZ_API_KEY not set — running dry run only."
+            python scripts/postiz_integration.py \
+              --topic "${{ steps.topic.outputs.topic }}" \
+              --platforms tiktok,instagram,youtube --dry-run
+          else
+            python scripts/postiz_integration.py \
+              --topic "${{ steps.topic.outputs.topic }}" \
+              --platforms tiktok,instagram,youtube
+          fi
+
+      - name: Upload generated content as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: neuroforge-output
+          path: neuroforge-os/output/
+          retention-days: 30
