@@ -19,5 +19,9 @@ output/
 neuroforge_db.json
 *.zip
 
+# Clip engine runtime
+clip-engine/clips/
+clip-engine/manifest.json
+
 # OS junk
 .DS_Store
