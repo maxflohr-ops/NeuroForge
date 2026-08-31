@@ -10,8 +10,11 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-# Add scripts to path
-sys.path.insert(0, '/app')
+# Make sibling modules importable whether running from a repo checkout
+# or from the Docker image (where the app lives at /app).
+SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_DIR = SCRIPT_DIR.parent
+sys.path.insert(0, str(SCRIPT_DIR))
 
 # Import all loggers
 from airtable_sync import AirtableSync
@@ -24,6 +27,7 @@ class MasterOrchestrator:
     def __init__(self):
         self.base_id = os.getenv("AIRTABLE_BASE_ID", "applXEAjh6k3Xmybl")
         self.api_key = os.getenv("AIRTABLE_API_KEY")
+        self.output_dir = Path(os.getenv("NEUROFORGE_OUTPUT_DIR", PROJECT_DIR / "output"))
         
         # Initialize all loggers
         self.airtable_sync = AirtableSync(self.api_key, self.base_id)
@@ -35,7 +39,7 @@ class MasterOrchestrator:
         
     def _load_config(self):
         """Load Airtable configuration"""
-        config_path = Path("/app/airtable-config.json")
+        config_path = Path(os.getenv("NEUROFORGE_CONFIG_DIR", PROJECT_DIR)) / "airtable-config.json"
         if config_path.exists():
             with open(config_path) as f:
                 return json.load(f)
@@ -53,7 +57,7 @@ class MasterOrchestrator:
         self.log(f"Syncing NeuroForge '{topic}' to Florra campaigns...", "🔄")
         
         # Get NeuroForge project data
-        output_dir = Path("/app/output") / topic.lower().replace(" ", "_")
+        output_dir = self.output_dir / topic.lower().replace(" ", "_")
         
         if not output_dir.exists():
             self.log(f"No output found for {topic}", "⚠️")

@@ -27,8 +27,8 @@ class AirtableSync:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
-        self.output_dir = Path("/app/output")
-        self.db_file = Path("/app/neuroforge_db.json")
+        self.output_dir = Path(os.getenv("NEUROFORGE_OUTPUT_DIR", Path(__file__).resolve().parent.parent / "output"))
+        self.db_file = Path(os.getenv("NEUROFORGE_DB_FILE", Path(__file__).resolve().parent.parent / "neuroforge_db.json"))
 
     def log(self, message: str, prefix: str = "ℹ️ "):
         print(f"{prefix} {message}")
@@ -211,7 +211,7 @@ class AirtableSync:
                 if "**Faculty:**" in content:
                     line = [l for l in content.split("\n") if "**Faculty:**" in l][0]
                     return line.split("**Faculty:**")[-1].strip()
-        except:
+        except (OSError, ValueError):
             pass
         return "Unknown"
 
@@ -226,8 +226,8 @@ class AirtableSync:
         try:
             with open(self.db_file, "r") as f:
                 db = json.load(f)
-        except:
-            self.error("Failed to read pipeline database")
+        except (OSError, ValueError) as e:
+            self.error(f"Failed to read pipeline database: {e}")
             return
         
         # Handle both list and dict formats

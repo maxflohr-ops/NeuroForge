@@ -130,7 +130,7 @@ def print_performance_report(analysis: dict):
     for key, data in sorted(analysis.items(), key=lambda x: (x[1]["avg_score"] or 0)):
         avg = f"{data['avg_score']}/50" if data["avg_score"] else "N/A"
         min_s = f"{data['min_score']}" if data["min_score"] else "N/A"
-        max_s = f"{data["max_score"]}" if data["max_score"] else "N/A"
+        max_s = f"{data['max_score']}" if data["max_score"] else "N/A"
         runs = str(data["run_count"])
         low = str(len(data["low_runs"]))
 

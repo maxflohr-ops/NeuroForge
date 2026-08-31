@@ -229,9 +229,10 @@ AIRTABLE_API_KEY=AIRTABLE_API_KEY
 AIRTABLE_BASE_ID=applXEAjh6k3Xmybl
 
 # OpenClaw (running ✓)
-TELEGRAM_BOT_TOKEN=TELEGRAM_BOT_TOKEN_REDACTED
+# TELEGRAM_BOT_TOKEN — REVOKED 2026-08-31 (was leaked in this file). Set your rotated token in .env only.
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
 OPENAI_API_KEY=OPENAI_API_KEY
-BRAVE_API_KEY=BSAbjg4bJojLOO8X...
+BRAVE_API_KEY=your_brave_api_key_here
 
 # NeuroForge (set ✓)
 ANTHROPIC_API_KEY=ANTHROPIC_API_KEY

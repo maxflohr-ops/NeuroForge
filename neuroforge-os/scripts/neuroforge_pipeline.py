@@ -33,6 +33,7 @@ import json
 import os
 import re
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -47,7 +48,10 @@ PROJECT_DIR = SCRIPT_DIR.parent
 OUTPUT_DIR = PROJECT_DIR / "output"
 PROMPT_DIR = PROJECT_DIR / "prompts"
 DB_FILE = PROJECT_DIR / "neuroforge_db.json"
-SESSION_TOKEN_FILE = Path("/home/claude/.claude/remote/.session_ingress_token")
+SESSION_TOKEN_FILE = Path(os.environ.get(
+    "NEUROFORGE_SESSION_TOKEN_FILE",
+    "/home/claude/.claude/remote/.session_ingress_token",
+))
 
 # Content type labels used by QA agent
 CT_RESEARCH  = "Research Brief"
@@ -146,13 +150,16 @@ def log_to_db(topic: str, agent: str, filepath: str, qa_score: int = None):
 
 def extract_qa_score(qa_output: str) -> int:
     """Parse total QA score from QA Agent output."""
-    match = re.search(r"\*\*TOTAL\*\*.*?(\d+)/50", qa_output)
+    # Prefer the explicit TOTAL line: **TOTAL** 42/50
+    match = re.search(r"\*\*TOTAL\*\*[^\d]*(\d{1,2})/50", qa_output)
     if match:
         return int(match.group(1))
-    # fallback: search for X/50
-    match = re.search(r"(\d+)/50", qa_output)
-    if match:
-        return int(match.group(1))
+    # Fallback: any plausible overall score X/50 (X must be ≤ 50).
+    # Negative lookbehind stops "138/50" from matching as "38/50".
+    for m in re.finditer(r"(?<!\d)(\d{1,2})/50", qa_output):
+        score = int(m.group(1))
+        if 0 <= score <= 50:
+            return score
     return None
 
 
@@ -177,8 +184,9 @@ def _get_client() -> anthropic.Anthropic:
     return anthropic.Anthropic()
 
 
-def call_claude(system_prompt: str, user_message: str, label: str = "") -> str:
-    """Single Claude API call. Returns text content."""
+def call_claude(system_prompt: str, user_message: str, label: str = "",
+                max_retries: int = 3) -> str:
+    """Single Claude API call with retry on transient errors. Returns text content."""
     client = _get_client()
 
     print(f"\n{'─'*50}")
@@ -186,14 +194,22 @@ def call_claude(system_prompt: str, user_message: str, label: str = "") -> str:
     print(f"  Model:   {MODEL}")
     print(f"{'─'*50}")
 
-    message = client.messages.create(
-        model=MODEL,
-        max_tokens=MAX_TOKENS,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_message}],
-    )
-
-    return message.content[0].text
+    for attempt in range(1, max_retries + 1):
+        try:
+            message = client.messages.create(
+                model=MODEL,
+                max_tokens=MAX_TOKENS,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_message}],
+            )
+            return message.content[0].text
+        except (anthropic.APIStatusError, anthropic.APIConnectionError) as e:
+            if attempt == max_retries:
+                raise
+            wait = 2 ** attempt  # 2s, 4s, 8s backoff
+            print(f"  ⚠️  API error ({type(e).__name__}), retrying in {wait}s "
+                  f"({attempt}/{max_retries - 1})...", file=sys.stderr)
+            time.sleep(wait)
 
 
 # ─────────────────────────────────────────────

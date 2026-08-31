@@ -12,7 +12,7 @@ from typing import Dict, List, Optional
 
 class FlorraAirtableLogger:
     def __init__(self):
-        self.api_key = os.getenv("AIRTABLE_API_KEY", "AIRTABLE_API_KEY
+        self.api_key = os.getenv("AIRTABLE_API_KEY", "AIRTABLE_API_KEY")
         self.base_id = os.getenv("AIRTABLE_BASE_ID", "applXEAjh6k3Xmybl")
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",

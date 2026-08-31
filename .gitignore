@@ -1,1 +1,23 @@
+# Python
 __pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+
+# Environment / secrets — never commit these
+.env
+.env.*
+!.env.example
+*.pem
+*.p8
+*.key
+
+# Runtime artifacts
+output/
+neuroforge_db.json
+*.zip
+
+# OS junk
+.DS_Store
