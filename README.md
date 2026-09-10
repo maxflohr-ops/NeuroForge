@@ -21,6 +21,9 @@ cat FLORRA_OS.md
 cd neuroforge-os
 python scripts/neuroforge_pipeline.py --topic "Stop Overthinking" --faculty "Dr. Nova Vale" --mode full
 
+# Distill a person into a voice profile the pipeline writes as (in Claude Code)
+#   /distilly   → lands in people/<family>/<slug>/, see people/README.md
+
 # Run the dashboard (works offline, no keys)
 python florra_dashboard.py
 
@@ -34,6 +37,7 @@ python notion_todo.py add "Host Postiz and connect accounts" --tag launch
 | Component | Path | Needs |
 |-----------|------|-------|
 | Pipeline (6 agents + QA) | `neuroforge-os/scripts/neuroforge_pipeline.py` | Anthropic key |
+| People layer (Distilly) | `people/` + `.claude/skills/distilly/` (`/distilly` in Claude Code) | none (local files, pasted text, public URLs) |
 | Google ADK agents | `neuroforge-agent/`, `florra-agent/` | `agents-cli`, Gemini key |
 | Clip Engine | `clip-engine/` (merge via `merge-clip-engine.sh`) | Postiz key |
 | Postiz posting | `neuroforge-os/scripts/postiz_integration.py` | Postiz host + accounts |

@@ -25,3 +25,8 @@ clip-engine/manifest.json
 
 # OS junk
 .DS_Store
+
+# Distilly raw source material — commit the profile, not the evidence
+knowledge/
+.distilly/
+playwright-data/

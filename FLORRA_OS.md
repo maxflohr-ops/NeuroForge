@@ -13,6 +13,10 @@ the engine behind the petal.
                  │              FLORRA OS  (this repo)             │
                  │        "the operating layer"                    │
                  │                                                  │
+   PEOPLE        │   Distilly → people/<family>/<slug>/persona.md   │
+   LAYER   ─────►│     who the agents write as (faculty, roster)    │
+                 │        │                                        │
+                 │        ▼                                        │
    CONTENT       │   NeuroForge pipeline (6 agents)                 │
    ENGINE  ─────►│     research → blueprint → chapter → scripts     │
                  │     → funnel → QA                               │
@@ -50,7 +54,8 @@ Per florra.net, everything florra ships sits on this layer:
 
 | Component | What it does | Where |
 |-----------|--------------|-------|
-| **NeuroForge pipeline** | Generates a full content package per topic (6 Claude agents + QA) | `neuroforge-os/scripts/neuroforge_pipeline.py` |
+| **People layer (Distilly)** | Distills a person's material into a versioned Person Profile (persona + work standards) that every pipeline agent writes as; corrections patch the profile and bump the version | `people/`, `.claude/skills/distilly/` |
+| **NeuroForge pipeline** | Generates a full content package per topic (6 Claude agents + QA); loads the matching `people/` profile by faculty name | `neuroforge-os/scripts/neuroforge_pipeline.py` |
 | **Google ADK agents** | Gemini ports of the pipeline + the Florra UGC workflow, deployable to Cloud Run | `neuroforge-agent/`, `florra-agent/` |
 | **Clip Engine** | Ingests podcast/source clips → logs to Opus Airtable → schedules to socials | `clip-engine/` |
 | **Postiz integration** | Uploads + schedules videos to TikTok/IG/YouTube via the Postiz public API | `neuroforge-os/scripts/postiz_integration.py` |
@@ -62,6 +67,10 @@ Per florra.net, everything florra ships sits on this layer:
 
 ## The loop
 
+0. **People layer** holds who we write as. `/distilly` turns a faculty
+   member's brand docs or a roster artist's public material into a profile;
+   the pipeline picks it up by name, and a "she wouldn't say that" becomes a
+   versioned correction instead of a prompt edit.
 1. **Weekly cron** (`.github/workflows/weekly-content-routine.yml`) generates the
    next roadmap topic and schedules it to Postiz.
 2. **Clip Engine** keeps the short-form feed fed from podcast audio.
@@ -81,6 +90,7 @@ Per florra.net, everything florra ships sits on this layer:
 
 | Layer | Status |
 |-------|--------|
+| People layer | ✅ Wired (Distilly vendored; `people/` empty until the first profile is distilled) |
 | Content engine | ✅ Live (5 topics generated, QA-scored) |
 | Google ADK agents | ✅ Built (deploy via `agents-cli`) |
 | Clip engine | ✅ Built + merged |

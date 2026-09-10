@@ -25,6 +25,9 @@ Flags:
                Use after a partial run to pick up where you left off.
                Scripts and funnel will always be anchored to chapter 1 voice.
     --no-qa    Skip the QA agent after each step (~50%% token savings).
+    --person   Slug of a Distilly Person Profile under people/<family>/<slug>/.
+               Defaults to the slugified faculty name. When a profile is found
+               its persona.md is injected into every agent as the voice source.
 """
 
 import anthropic
@@ -34,6 +37,7 @@ import os
 import re
 import sys
 import time
+import unicodedata
 from datetime import datetime
 from pathlib import Path
 
@@ -48,6 +52,18 @@ PROJECT_DIR = SCRIPT_DIR.parent
 OUTPUT_DIR = PROJECT_DIR / "output"
 PROMPT_DIR = PROJECT_DIR / "prompts"
 DB_FILE = PROJECT_DIR / "neuroforge_db.json"
+REPO_DIR = PROJECT_DIR.parent
+
+# Distilly Person Profiles (people/<family>/<slug>/persona.md). Searched in order.
+PEOPLE_DIRS = [
+    REPO_DIR / "people",
+    PROJECT_DIR / "people",
+    REPO_DIR / "skills",      # Distilly's default project-local storage root
+    PROJECT_DIR / "skills",
+]
+PERSON_FAMILIES = ("colleague", "celebrity", "relationship")
+PERSONA_MAX_CHARS = 12000   # persona.md is layered; the top layers matter most
+WORK_MAX_CHARS = 4000
 SESSION_TOKEN_FILE = Path(os.environ.get(
     "NEUROFORGE_SESSION_TOKEN_FILE",
     "/home/claude/.claude/remote/.session_ingress_token",
@@ -213,6 +229,83 @@ def call_claude(system_prompt: str, user_message: str, label: str = "",
 
 
 # ─────────────────────────────────────────────
+# PERSON PROFILES (Distilly)
+# ─────────────────────────────────────────────
+
+ACTIVE_PERSON = None   # set once in main(); read by every agent via person_context()
+
+
+def person_slug(name: str) -> str:
+    """Mirror Distilly's slug rule: ASCII-fold, lowercase, non-alphanumerics → '-'."""
+    ascii_value = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii").lower()
+    return re.sub(r"[^a-z0-9]+", "-", ascii_value).strip("-")
+
+
+def find_person_dir(slug: str) -> Path:
+    """Return the first people/<family>/<slug> directory holding a persona.md, or None."""
+    for root in PEOPLE_DIRS:
+        for family in PERSON_FAMILIES:
+            candidate = root / family / slug
+            if (candidate / "persona.md").is_file():
+                return candidate
+    return None
+
+
+def load_person_profile(faculty: str, slug: str = "") -> dict:
+    """
+    Load a Distilly Person Profile for a faculty member.
+
+    Returns {"slug", "dir", "name", "version", "persona", "work"} or None when no
+    profile exists, in which case agents fall back to FACULTY_PROFILES.
+    """
+    slug = slug or person_slug(faculty)
+    person_dir = find_person_dir(slug)
+    if person_dir is None:
+        return None
+
+    persona = (person_dir / "persona.md").read_text(encoding="utf-8").strip()
+    work_path = person_dir / "work.md"
+    work = work_path.read_text(encoding="utf-8").strip() if work_path.is_file() else ""
+
+    meta = {}
+    meta_path = person_dir / "meta.json"
+    if meta_path.is_file():
+        try:
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            print(f"  ⚠️  {meta_path} is not valid JSON — ignoring metadata")
+
+    return {
+        "slug": slug,
+        "dir": person_dir,
+        "name": meta.get("name") or faculty,
+        "version": meta.get("version", "v1"),
+        "persona": persona[:PERSONA_MAX_CHARS],
+        "work": work[:WORK_MAX_CHARS],
+    }
+
+
+def person_context(include_work: bool = False) -> str:
+    """
+    Voice-profile block appended to an agent's user message.
+
+    Empty when no profile is active, so prompts are byte-identical to the
+    pre-Distilly pipeline in that case.
+    """
+    if not ACTIVE_PERSON:
+        return ""
+    block = (
+        f"\n\n---\n\nPERSON PROFILE — {ACTIVE_PERSON['name']} ({ACTIVE_PERSON['version']}, distilled with Distilly).\n"
+        "This is the authoritative voice. Where it conflicts with the generic faculty tone above, the profile wins. "
+        "Write as this person would: their vocabulary, sentence rhythm, judgment calls, and what they refuse to say.\n\n"
+        f"{ACTIVE_PERSON['persona']}"
+    )
+    if include_work and ACTIVE_PERSON["work"]:
+        block += f"\n\n--- WORK STANDARDS ---\n\n{ACTIVE_PERSON['work']}"
+    return block + "\n\n---"
+
+
+# ─────────────────────────────────────────────
 # AGENTS
 # ─────────────────────────────────────────────
 
@@ -234,6 +327,7 @@ Please produce a complete research brief for the following topic.
 **Audience Notes:** {audience_notes if audience_notes else "None provided — use standard audience for this faculty member."}
 
 Produce the full research brief now, following the output format exactly.
+{person_context(include_work=True)}
 """.strip()
 
     output = call_claude(system_prompt, user_message, label="Research Agent")
@@ -259,6 +353,7 @@ Please produce a complete book blueprint based on the following research brief.
 ---
 
 Produce the full book blueprint now, following the output format exactly.
+{person_context()}
 """.strip()
 
     output = call_claude(system_prompt, user_message, label="Book Architect Agent")
@@ -288,6 +383,7 @@ Please write Chapter {chapter_num} of the book based on the blueprint below.
 **Target Word Count:** {chapter_word_count} words
 
 Write the full chapter now as flowing prose. Remember: do not start with "In this chapter..." and do not end with a bullet-point summary. Follow the output format in your instructions exactly.
+{person_context()}
 {prior_context}
 
 ---
@@ -322,6 +418,7 @@ Please produce {num_scripts} short-form video scripts based on the research brie
 
 Follow the batch output structure in your instructions (hooks, mechanism, counterintuitive, tool, story, objection scripts in sequence).
 Also include the 10 quote graphics and 5 carousel concepts at the end.
+{person_context()}
 {style_context}
 
 ---
@@ -354,6 +451,7 @@ Please produce the complete funnel copy package for this topic.
 **CTA URL:** {cta_url}
 
 Produce all five sections: landing page, thank you page + book offer, 5-email sequence, Google Ads copy, and the quality check.
+{person_context()}
 {style_context}
 
 ---
@@ -383,6 +481,8 @@ Please review the following content and produce a full QA report.
 **Content Type:** {content_type}
 **Faculty:** {faculty}
 **Topic:** {topic}
+{person_context()}
+{"When a PERSON PROFILE is present, judge voice fidelity against it, not against a generic idea of the faculty member. Flag any line this person would not say." if ACTIVE_PERSON else ""}
 
 ---
 
@@ -438,6 +538,7 @@ def pipeline_full(args):
     print(f"  NEUROFORGE OS — FULL PIPELINE")
     print(f"  Topic:   {args.topic}")
     print(f"  Faculty: {args.faculty}")
+    print(f"  Person:  {ACTIVE_PERSON['slug'] + ' (' + ACTIVE_PERSON['version'] + ')' if ACTIVE_PERSON else 'no Distilly profile — using FACULTY_PROFILES'}")
     print(f"  QA:      {'disabled' if args.no_qa else 'enabled'}")
     print(f"{'='*60}")
 
@@ -552,8 +653,19 @@ def main():
                         help="Skip QA agent after each step (saves ~50%% of tokens)")
     parser.add_argument("--resume", action="store_true",
                         help="Skip steps whose output already exists; load from disk instead")
+    parser.add_argument("--person", default="",
+                        help="Distilly profile slug under people/<family>/ (default: slugified --faculty)")
 
     args = parser.parse_args()
+
+    # Load the Distilly Person Profile, if one exists for this faculty member
+    global ACTIVE_PERSON
+    ACTIVE_PERSON = load_person_profile(args.faculty, args.person)
+    if ACTIVE_PERSON:
+        print(f"👤 Person profile: {ACTIVE_PERSON['name']} {ACTIVE_PERSON['version']} ← {ACTIVE_PERSON['dir']}")
+    elif args.person:
+        print(f"Error: no Distilly profile found for slug '{args.person}' in {[str(d) for d in PEOPLE_DIRS]}")
+        sys.exit(1)
 
     # Set default pillar from faculty if not provided
     if not args.pillar and args.faculty in FACULTY_PROFILES:
