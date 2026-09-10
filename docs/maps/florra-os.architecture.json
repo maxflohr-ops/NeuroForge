@@ -1,0 +1,327 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Florra OS — the operating layer",
+    "quality_profile": "showcase",
+    "animation": "trace",
+    "viewBox": [
+      1240,
+      700
+    ],
+    "views": [
+      {
+        "id": "the-loop",
+        "label": "The loop",
+        "focus": [
+          "cron",
+          "pipeline",
+          "clip",
+          "postiz",
+          "socials",
+          "optimizer"
+        ],
+        "note": "Generate, publish, learn, scale. The weekly cron starts it; engagement feeds the optimizer back into the prompts."
+      },
+      {
+        "id": "people-layer",
+        "label": "People layer",
+        "focus": [
+          "people",
+          "pipeline"
+        ],
+        "note": "Distilly profiles are who the agents write as. A correction becomes a versioned patch, not a prompt edit."
+      },
+      {
+        "id": "observe-direct",
+        "label": "Observe and direct",
+        "focus": [
+          "airtable",
+          "dashboard",
+          "desk",
+          "human",
+          "pipeline"
+        ],
+        "note": "Agents run around the clock. The dashboard shows the numbers, the desk holds the calls, a human makes them."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "cron",
+      "type": "cloud",
+      "label": "Weekly cron",
+      "sublabel": "GitHub Actions · next topic",
+      "brand": "github",
+      "pos": [
+        40,
+        100
+      ],
+      "size": [
+        160,
+        68
+      ]
+    },
+    {
+      "id": "human",
+      "type": "external",
+      "label": "A human",
+      "sublabel": "makes the calls",
+      "pos": [
+        1040,
+        100
+      ],
+      "size": [
+        160,
+        68
+      ],
+      "tag": "review gate"
+    },
+    {
+      "id": "people",
+      "type": "database",
+      "label": "People layer",
+      "sublabel": "Distilly · people/<slug>",
+      "pos": [
+        40,
+        260
+      ],
+      "size": [
+        160,
+        68
+      ],
+      "tag": "who we write as"
+    },
+    {
+      "id": "pipeline",
+      "type": "backend",
+      "label": "NeuroForge pipeline",
+      "sublabel": "6 Claude agents + QA",
+      "brand": "claude",
+      "pos": [
+        270,
+        260
+      ],
+      "size": [
+        190,
+        68
+      ]
+    },
+    {
+      "id": "clip",
+      "type": "backend",
+      "label": "Clip Engine",
+      "sublabel": "podcast → shorts",
+      "pos": [
+        530,
+        260
+      ],
+      "size": [
+        160,
+        68
+      ]
+    },
+    {
+      "id": "postiz",
+      "type": "messagebus",
+      "label": "Postiz",
+      "sublabel": "schedule Mon · Wed · Fri",
+      "pos": [
+        760,
+        260
+      ],
+      "size": [
+        160,
+        68
+      ]
+    },
+    {
+      "id": "socials",
+      "type": "external",
+      "label": "TikTok · IG · YouTube",
+      "sublabel": "labeled AI content",
+      "brand": "tiktok",
+      "pos": [
+        1040,
+        260
+      ],
+      "size": [
+        160,
+        68
+      ]
+    },
+    {
+      "id": "airtable",
+      "type": "database",
+      "label": "Airtable master base",
+      "sublabel": "18 tables · runs and clips",
+      "brand": "airtable",
+      "pos": [
+        270,
+        440
+      ],
+      "size": [
+        190,
+        68
+      ]
+    },
+    {
+      "id": "optimizer",
+      "type": "backend",
+      "label": "Optimizer",
+      "sublabel": "OpenClaw · rewrites prompts",
+      "pos": [
+        760,
+        440
+      ],
+      "size": [
+        160,
+        68
+      ]
+    },
+    {
+      "id": "dashboard",
+      "type": "frontend",
+      "label": "Dashboard",
+      "sublabel": "florra_dashboard.py",
+      "pos": [
+        530,
+        600
+      ],
+      "size": [
+        160,
+        68
+      ]
+    },
+    {
+      "id": "desk",
+      "type": "external",
+      "label": "Notion desk",
+      "sublabel": "daily to-do list",
+      "brand": "notion",
+      "pos": [
+        1040,
+        600
+      ],
+      "size": [
+        160,
+        68
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "cron-to-pipeline",
+      "from": "cron",
+      "to": "pipeline",
+      "label": "topic",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "people-to-pipeline",
+      "from": "people",
+      "to": "pipeline",
+      "label": "persona.md",
+      "variant": "emphasis"
+    },
+    {
+      "id": "pipeline-to-clip",
+      "from": "pipeline",
+      "to": "clip",
+      "label": "scripts",
+      "variant": "emphasis"
+    },
+    {
+      "id": "clip-to-postiz",
+      "from": "clip",
+      "to": "postiz",
+      "label": "clips",
+      "variant": "emphasis"
+    },
+    {
+      "id": "postiz-to-socials",
+      "from": "postiz",
+      "to": "socials",
+      "label": "publish",
+      "variant": "emphasis"
+    },
+    {
+      "id": "human-to-postiz",
+      "from": "human",
+      "to": "postiz",
+      "label": "approve",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "pipeline-to-airtable",
+      "from": "pipeline",
+      "to": "airtable",
+      "label": "QA scores",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 24,
+      "labelDx": -48
+    },
+    {
+      "id": "socials-to-optimizer",
+      "from": "socials",
+      "to": "optimizer",
+      "label": "engagement",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "right"
+    },
+    {
+      "id": "optimizer-to-pipeline",
+      "from": "optimizer",
+      "to": "pipeline",
+      "label": "better prompts",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "bottom"
+    },
+    {
+      "id": "airtable-to-dashboard",
+      "from": "airtable",
+      "to": "dashboard",
+      "label": "the numbers",
+      "fromSide": "bottom",
+      "toSide": "left"
+    },
+    {
+      "id": "dashboard-to-desk",
+      "from": "dashboard",
+      "to": "desk",
+      "label": "what to decide"
+    },
+    {
+      "id": "desk-to-human",
+      "from": "desk",
+      "to": "human",
+      "label": "the calls",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "right"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Non-negotiables",
+      "items": [
+        "Honest AI labeling on every post",
+        "Human review before anything is published"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Waiting on credentials",
+      "items": [
+        "Meta and TikTok ads integrations are built, not live",
+        "Postiz needs a host and connected accounts"
+      ]
+    }
+  ]
+}

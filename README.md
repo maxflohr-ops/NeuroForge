@@ -16,6 +16,7 @@ NeuroForge pipeline → Clip Engine → Postiz → OpenClaw/optimizer → dashbo
 ```bash
 # See the whole world
 cat FLORRA_OS.md
+open docs/maps/florra-os.architecture.html   # the interactive map
 
 # Generate content for a topic (needs ANTHROPIC_API_KEY)
 cd neuroforge-os
@@ -37,6 +38,7 @@ python notion_todo.py add "Host Postiz and connect accounts" --tag launch
 | Component | Path | Needs |
 |-----------|------|-------|
 | Pipeline (6 agents + QA) | `neuroforge-os/scripts/neuroforge_pipeline.py` | Anthropic key |
+| System map (Archify) | `docs/maps/florra-os.architecture.html` (`/archify` in Claude Code) | Node 22+ |
 | People layer (Distilly) | `people/` + `.claude/skills/distilly/` (`/distilly` in Claude Code) | none (local files, pasted text, public URLs) |
 | Google ADK agents | `neuroforge-agent/`, `florra-agent/` | `agents-cli`, Gemini key |
 | Clip Engine | `clip-engine/` (merge via `merge-clip-engine.sh`) | Postiz key |

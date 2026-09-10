@@ -8,6 +8,10 @@ The official site (florra.net) describes it as **the operating layer**: research
 outreach, CRM, daily desks, builds, reporting. This repo is that layer —
 the engine behind the petal.
 
+**Interactive map:** open [`docs/maps/florra-os.architecture.html`](docs/maps/florra-os.architecture.html)
+(built with Archify, verified 9/9 checks; source in `docs/maps/florra-os.architecture.json`).
+The sketch below is the same system in text.
+
 ```
                  ┌─────────────────────────────────────────────────┐
                  │              FLORRA OS  (this repo)             │
@@ -55,6 +59,7 @@ Per florra.net, everything florra ships sits on this layer:
 | Component | What it does | Where |
 |-----------|--------------|-------|
 | **People layer (Distilly)** | Distills a person's material into a versioned Person Profile (persona + work standards) that every pipeline agent writes as; corrections patch the profile and bump the version | `people/`, `.claude/skills/distilly/` |
+| **System maps (Archify)** | Typed JSON → validated interactive HTML map of this layer; `/archify` edits it, the CLI proves it | `docs/maps/`, `.claude/skills/archify/` |
 | **NeuroForge pipeline** | Generates a full content package per topic (6 Claude agents + QA); loads the matching `people/` profile by faculty name | `neuroforge-os/scripts/neuroforge_pipeline.py` |
 | **Google ADK agents** | Gemini ports of the pipeline + the Florra UGC workflow, deployable to Cloud Run | `neuroforge-agent/`, `florra-agent/` |
 | **Clip Engine** | Ingests podcast/source clips → logs to Opus Airtable → schedules to socials | `clip-engine/` |
