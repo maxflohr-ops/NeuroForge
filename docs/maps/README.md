@@ -9,6 +9,8 @@ export as PNG, SVG, WebM, or a 1200×630 share card.
 |-----|--------|------|
 | Florra OS — the operating layer | `florra-os.architecture.json` | `florra-os.architecture.html` |
 
+PDFs: [`florra-os.architecture.pdf`](florra-os.architecture.pdf) (print, light, vector) · [`florra-os.architecture.dark.pdf`](florra-os.architecture.dark.pdf) (presentation view, dark).
+
 ![Florra OS map](florra-os.architecture.preview.png)
 
 Guided views inside the map: **The loop** (generate → publish → learn →
@@ -28,6 +30,9 @@ node bin/archify.mjs deliver architecture ../../../docs/maps/florra-os.architect
 
 `florra-os.architecture.visual-check.json` is the last acceptance receipt.
 Regenerate the preview with `visual-check` (needs Chromium via `ARCHIFY_CHROME`).
+
+Print PDF: `chrome --headless=new --no-pdf-header-footer --window-size=1440,900 --print-to-pdf=florra-os.architecture.pdf "file://$PWD/florra-os.architecture.html?theme=light&present=1"`.
+The viewer's print stylesheet renders light and omits the status cards.
 
 Rule for every map: show what is live as live and what is built-but-waiting as
 waiting. The cards at the bottom carry that status.
