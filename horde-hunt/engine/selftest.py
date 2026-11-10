@@ -103,15 +103,7 @@ def run(tmp, shot):
     check("lua data has every clue", all(f'id="{s}"' in lua for s in ("c1", "c2", "c3")))
     check("door hash matches pbkdf2 of the normalized code",
           g["door_hash"] == hc.door_hash(g["slug"], "open   DOOR!"))
-    luac = shutil.which("luac5.1") or shutil.which("luac") or shutil.which("luac5.4")
-    if luac:
-        for f in ("HuntData.lua",):
-            r = subprocess.run([luac, "-p", os.path.join(pkg, "addon", "HordeHunt", f)], capture_output=True)
-            check(f"lua syntax: {f}", r.returncode == 0, r.stderr)
-        r = subprocess.run([luac, "-p", os.path.join(PKG, "addon", "HordeHunt", "HordeHunt.lua")], capture_output=True)
-        check("lua syntax: HordeHunt.lua", r.returncode == 0, r.stderr)
-    else:
-        print("  skip lua syntax (no luac on this machine)")
+    addon_test(pkg)
 
     print("solve + verify")
     clock = Clock(1762833600)  # 2025-11-11 04:00 UTC: 2025-11-10 20:00 PT
@@ -251,6 +243,80 @@ def run(tmp, shot):
     serve_test(tmp, pkg, guide_path, shot)
 
 
+ADDON_MOCK = r"""
+-- a just-big-enough fake of the WoW client API: every widget method is a recorder
+local sent, printed, sounds, played = {}, {}, 0, 0
+local scripts, zone, pos, npc = {}, "Durotar", {0.40, 0.60}, nil
+local function widget()
+  local w = {}
+  return setmetatable(w, {__index = function(t, k)
+    if k == "SetScript" then return function(self, ev, fn) scripts[ev] = fn end end
+    if k == "CreateAnimationGroup" then return function() return setmetatable({Play = function() played = played + 1 end}, {__index = function() return function() return widget() end end}) end end
+    if k == "CreateAnimation" or k == "CreateTexture" or k == "CreateFontString" then return function() return widget() end end
+    if k == "SetText" then return function(self, v) rawset(self, "text", v) end end
+    return function() end
+  end})
+end
+unpack = unpack or table.unpack   -- WoW is Lua 5.1; lupa may embed 5.4
+CreateFrame = function() return widget() end
+UIParent = widget()
+DEFAULT_CHAT_FRAME = {AddMessage = function(_, m) printed[#printed + 1] = m end}
+UnitName = function(u) if u == "player" then return "Grunt" end if u == "npc" then return npc end end
+UnitExists = function() return false end
+CheckInteractDistance = function() return false end
+SendChatMessage = function(msg, kind, _, to) sent[#sent + 1] = kind .. ">" .. to .. ":" .. msg end
+LoggingChat = function() return true end
+PlaySound = function() sounds = sounds + 1 end
+time = os.time
+GetRealZoneText = function() return zone end
+GetZoneText = function() return zone end
+C_Map = {GetBestMapForUnit = function() return 1411 end,
+         GetPlayerMapPosition = function() return {GetXY = function() return pos[1], pos[2] end} end}
+SlashCmdList = {}
+local ok, err = pcall(function()
+  HUNTCHUNK("HordeHunt")
+  scripts.OnEvent(nil, "ADDON_LOADED", "HordeHunt")
+  scripts.OnEvent(nil, "PLAYER_LOGIN")
+  scripts.OnUpdate(nil, 1)                                    -- standing on clue 1's spot
+  scripts.OnEvent(nil, "CHAT_MSG_LOOT", "Bob receives loot: [Other Thing].")
+  npc = "Some Npc"; scripts.OnEvent(nil, "GOSSIP_SHOW")       -- talks to clue 2's npc
+  SlashCmdList.HORDEHUNT("undo")
+  SlashCmdList.HORDEHUNT("done")
+  SlashCmdList.HORDEHUNT("done")                              -- clue 3 is manual
+  SlashCmdList.HORDEHUNT("done")                              -- already complete
+end)
+return ok and "" or tostring(err), table.concat(sent, "|"), #printed, sounds, played,
+       HordeHuntDB and #HordeHuntDB.order or -1
+"""
+
+
+def addon_test(pkg):
+    print("addon (fake WoW API)")
+    try:
+        from lupa import LuaRuntime
+    except ImportError:
+        print("  skip addon run (pip install lupa to turn it on)")
+        return
+    lua = LuaRuntime()
+    for f in ("HuntData.lua", "HordeHunt.lua"):
+        err = lua.eval("function(s, n) local f, e = (loadstring or load)(s, n); return e end")(
+            open(os.path.join(pkg, "addon", "HordeHunt", f)).read(), f)
+        check(f"lua syntax: {f}", err is None, err)
+    lua.execute(open(os.path.join(pkg, "addon", "HordeHunt", "HuntData.lua")).read())
+    chunk = lua.eval("function(s) return (loadstring or load)(s, 'HordeHunt.lua') end")(
+        open(os.path.join(pkg, "addon", "HordeHunt", "HordeHunt.lua")).read())
+    lua.globals().HUNTCHUNK = chunk
+    err, sent, printed, sounds, played, order = lua.execute(ADDON_MOCK)
+    check("addon runs a whole hunt without a Lua error", err == "", err)
+    want = ("WHISPER>Grunt:HUNT_DONE c1 selftest-hunt|WHISPER>Grunt:HUNT_DONE c2 selftest-hunt|"
+            "WHISPER>Grunt:HUNT_UNDO c2 selftest-hunt|WHISPER>Grunt:HUNT_DONE c2 selftest-hunt|"
+            "WHISPER>Grunt:HUNT_DONE c3 selftest-hunt")
+    check("addon stamps location, npc, undo and manual finds to itself", sent == want, sent)
+    check("someone else's loot doesn't count", "Other Thing" not in sent)
+    check("each find flashes the card and plays the sound", played == 4 and sounds == 4, (played, sounds))
+    check("addon progress saved", order == 3, order)
+
+
 def serve_test(tmp, pkg, guide_path, shot):
     paid = []
 
@@ -361,10 +427,14 @@ const {chromium}=require('playwright');
     await p.goto(process.argv[2]+(mini?'?mini=1':''));
     await p.waitForSelector('body[data-ready="1"]',{timeout:8000});
     await p.waitForTimeout(400);
-    const r=await p.evaluate(()=>({cards:document.querySelectorAll('.card').length,
-      strings:document.querySelectorAll('#strings path').length,
-      active:!!document.querySelector('.card.active'),found:document.querySelectorAll('.card.found').length,
-      stamps:document.querySelectorAll('.stamp').length,heat:document.getElementById('deg').textContent}));
+    await p.waitForTimeout(1300);
+    const r=await p.evaluate(()=>({cards:document.querySelectorAll('.node').length,
+      strings:document.querySelectorAll('.seg.lit').length,
+      active:!!document.querySelector('.node.active'),found:document.querySelectorAll('.node.found').length,
+      solvers:[...document.querySelectorAll('.label .w')].filter(e=>e.textContent.trim()).length,
+      title:document.getElementById('title').textContent,
+      overflowX:document.documentElement.scrollWidth>innerWidth,
+      heat:document.getElementById('deg').textContent}));
     out[mini?'mini':'full']=r;
     if(!mini&&process.argv[3])await p.screenshot({path:process.argv[3]});
   }
@@ -392,10 +462,10 @@ def render_test(base, shot):
         return
     f, m = out["full"], out["mini"]
     check("board renders every card", f["cards"] == 3, f)
-    check("red string drawn from the found card", f["strings"] == 1, f)
-    check("active card highlighted", f["active"] and f["found"] == 1, f)
-    check("stamps show (solved + found)", f["stamps"] == 2, f)
-    check("mini strip renders", m["active"], m)
+    check("red string lit from the found clue", f["strings"] == 1, f)
+    check("active clue on the rail and in focus", f["active"] and f["found"] == 1 and f["title"] == "Voice Mark", f)
+    check("solver tagged on the rail", f["solvers"] == 1, f)
+    check("mini strip renders without overflow", m["active"] and not m["overflowX"], m)
     check("no page errors", not out["errors"], out["errors"])
 
 

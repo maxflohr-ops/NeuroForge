@@ -19,7 +19,7 @@ Runs beside the Orders of the Horde engine (8907) on **port 8908**. It never tou
 | `engine/hunt.py` | Core logic: guesses, verification, ledger, heat, night filing. |
 | `engine/hunt_server.py` | HTTP on 8908, chat-log tail, anonymous Twitch chat reader, Desk Bucks pay loop. |
 | `engine/hunt-board.html` | The case board overlay (`/hunt/board`, or `/hunt/board?mini=1` for the corner strip). |
-| `engine/selftest.py` | Plays a whole hunt in a temp folder. Expect `76/76 checks passed`. |
+| `engine/selftest.py` | Plays a whole hunt in a temp folder. Expect `83/83 checks passed` (`pip install lupa` first, for the addon checks). |
 | `engine/config.example.json` | Copy to `engine/config.json` and fill in. |
 
 ## Write a hunt
@@ -126,5 +126,5 @@ Paste it over `const HUNT=null;` in florra-net `index.html`. The code works at `
 
 - The `## Interface` number has to come from the Forever client; it's a placeholder here.
 - The Lua was written against the Classic Era API (`C_Map`, `SendChatMessage` whisper-to-self, `LoggingChat`) and has not run in the Forever client yet. Do a test run with the example hunt before going live.
-- No `luac` on the build machine, so the selftest skips the Lua syntax check. Install `lua5.1` on the Mac to turn it on.
+- The selftest runs the addon against a fake WoW API (syntax, finds, undo, manual, flash) when `lupa` is installed (`pip install lupa`). It catches Lua errors and logic slips, not client API differences.
 - Twitch chat is read anonymously; the engine can't post in chat.

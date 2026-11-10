@@ -6,7 +6,18 @@
 
 local ADDON = ...
 local D = HordeHuntData
-local frame, title, riddle, status
+local frame, eyebrow, title, riddle, status, pips, flash
+
+-- one palette, matching the stream board: near-black panel, one crimson, one gold for the door
+local C = {
+  panel  = { 0.045, 0.035, 0.035, 0.90 },
+  accent = { 0.86, 0.24, 0.22 },
+  door   = { 0.94, 0.80, 0.50 },
+  ink    = { 0.95, 0.93, 0.89 },
+  ink2   = { 0.72, 0.69, 0.65 },
+  ink3   = { 0.45, 0.42, 0.40 },
+  rule   = { 0.24, 0.21, 0.20 },
+}
 
 local function me() return (UnitName("player")) end
 local function say(msg) DEFAULT_CHAT_FRAME:AddMessage("|cffd43a3aHorde Hunt|r " .. msg) end
@@ -31,18 +42,37 @@ local function stamp(kind, id)
   SendChatMessage("HUNT_" .. kind .. " " .. id .. " " .. D.slug, "WHISPER", nil, me())
 end
 
+local function pad(n) return string.format("%02d", n) end
+
 local function refresh()
   if not frame then return end
+  local s = db()
   local step, i = active()
+  for k, pip in ipairs(pips) do
+    local st = D.steps[k]
+    if s.found[st.id] then
+      pip:SetColorTexture(C.accent[1], C.accent[2], C.accent[3], 1)
+    elseif step and st.id == step.id then
+      pip:SetColorTexture(C.ink[1], C.ink[2], C.ink[3], 0.9)
+    else
+      pip:SetColorTexture(C.rule[1], C.rule[2], C.rule[3], 1)
+    end
+  end
   if not step then
-    title:SetText("Hunt complete")
-    riddle:SetText("Every mark is found. The door is open.")
-    status:SetText(#D.steps .. " / " .. #D.steps)
+    eyebrow:SetText("HORDE HUNT  " .. pad(#D.steps) .. " / " .. pad(#D.steps))
+    title:SetText("The door is open")
+    title:SetTextColor(C.door[1], C.door[2], C.door[3])
+    riddle:SetText("Every mark is found.")
+    status:SetText("")
+    frame.edge:SetColorTexture(C.door[1], C.door[2], C.door[3], 1)
     return
   end
-  title:SetText("Clue " .. i .. " of " .. #D.steps .. ": " .. step.title)
+  eyebrow:SetText("HORDE HUNT  " .. pad(i) .. " / " .. pad(#D.steps))
+  title:SetText(step.title)
+  title:SetTextColor(C.ink[1], C.ink[2], C.ink[3])
   riddle:SetText(step.riddle)
-  status:SetText(step.kind == "manual" and "/hunt done when you have it" or "searching...")
+  status:SetText(step.kind == "manual" and "/hunt done" or "searching")
+  frame.edge:SetColorTexture(C.accent[1], C.accent[2], C.accent[3], 1)
 end
 
 local function markFound(step, how)
@@ -53,6 +83,7 @@ local function markFound(step, how)
   stamp("DONE", step.id)
   say("found |cffffffff" .. step.title .. "|r (" .. how .. ")")
   PlaySound(SOUNDKIT and SOUNDKIT.IG_QUEST_LIST_COMPLETE or 618)
+  if flash then flash:Play() end
   refresh()
 end
 
@@ -113,9 +144,12 @@ ev:SetScript("OnUpdate", function(_, dt)
 end)
 
 -- the card -----------------------------------------------------------------
+-- Same voice as the stream board: dark panel, crimson edge, small spaced eyebrow,
+-- the title big, the riddle quiet, one pip per clue. Original art: flat colour only.
 
-frame = CreateFrame("Frame", "HordeHuntFrame", UIParent, BackdropTemplateMixin and "BackdropTemplate")
-frame:SetSize(300, 96)
+local W, H = 312, 118
+frame = CreateFrame("Frame", "HordeHuntFrame", UIParent)
+frame:SetSize(W, H)
 frame:SetPoint("TOPRIGHT", -24, -220)
 frame:SetMovable(true)
 frame:EnableMouse(true)
@@ -123,23 +157,64 @@ frame:RegisterForDrag("LeftButton")
 frame:SetScript("OnDragStart", frame.StartMoving)
 frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
 frame:SetClampedToScreen(true)
-if frame.SetBackdrop then
-  frame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
-  frame:SetBackdropColor(0.07, 0.06, 0.06, 0.82)
-  frame:SetBackdropBorderColor(0.83, 0.23, 0.23, 0.9)
-end
-title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-title:SetPoint("TOPLEFT", 10, -8)
-title:SetPoint("RIGHT", -10, 0)
+
+local bg = frame:CreateTexture(nil, "BACKGROUND")
+bg:SetAllPoints()
+bg:SetColorTexture(unpack(C.panel))
+
+frame.edge = frame:CreateTexture(nil, "ARTWORK")
+frame.edge:SetPoint("TOPLEFT")
+frame.edge:SetPoint("BOTTOMLEFT")
+frame.edge:SetWidth(2)
+frame.edge:SetColorTexture(C.accent[1], C.accent[2], C.accent[3], 1)
+
+-- a soft crimson wash that fades in and out when a find lands
+local glow = frame:CreateTexture(nil, "BORDER")
+glow:SetAllPoints()
+glow:SetColorTexture(C.accent[1], C.accent[2], C.accent[3], 0.22)
+glow:SetAlpha(0)
+flash = glow:CreateAnimationGroup()
+local up = flash:CreateAnimation("Alpha")
+up:SetFromAlpha(0); up:SetToAlpha(1); up:SetDuration(0.18); up:SetOrder(1)
+local down = flash:CreateAnimation("Alpha")
+down:SetFromAlpha(1); down:SetToAlpha(0); down:SetDuration(0.9); down:SetOrder(2)
+flash:SetScript("OnFinished", function() glow:SetAlpha(0) end)
+
+local PAD = 14
+eyebrow = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+eyebrow:SetPoint("TOPLEFT", PAD, -11)
+eyebrow:SetTextColor(C.accent[1], C.accent[2], C.accent[3])
+eyebrow:SetSpacing(2)
+
+status = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+status:SetPoint("TOPRIGHT", -PAD, -11)
+status:SetTextColor(C.ink3[1], C.ink3[2], C.ink3[3])
+
+title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+title:SetPoint("TOPLEFT", eyebrow, "BOTTOMLEFT", 0, -6)
+title:SetPoint("RIGHT", -PAD, 0)
 title:SetJustifyH("LEFT")
+title:SetTextColor(C.ink[1], C.ink[2], C.ink[3])
+
 riddle = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 riddle:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -6)
-riddle:SetPoint("RIGHT", -10, 0)
+riddle:SetPoint("RIGHT", -PAD, 0)
 riddle:SetJustifyH("LEFT")
 riddle:SetJustifyV("TOP")
-riddle:SetHeight(44)
-status = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-status:SetPoint("BOTTOMLEFT", 10, 8)
+riddle:SetHeight(40)
+riddle:SetTextColor(C.ink2[1], C.ink2[2], C.ink2[3])
+
+-- one pip per clue along the bottom: found = crimson, current = light, sealed = dim
+pips = {}
+local n = #D.steps
+local gap = 4
+local pw = (W - PAD * 2 - gap * (n - 1)) / n
+for k = 1, n do
+  local pip = frame:CreateTexture(nil, "ARTWORK")
+  pip:SetSize(pw, 2)
+  pip:SetPoint("BOTTOMLEFT", PAD + (k - 1) * (pw + gap), 10)
+  pips[k] = pip
+end
 
 -- slash --------------------------------------------------------------------
 
