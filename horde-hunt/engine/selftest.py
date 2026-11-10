@@ -6,10 +6,13 @@ usage: python3 engine/selftest.py [--shot <png>]
 """
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
 import tempfile
+import hashlib
+import hmac
 import threading
 import time
 import urllib.request
@@ -182,6 +185,45 @@ def run(tmp, shot):
     check("a new hunt starts clean and backs up the old one",
           h3.s["found"] == {} and os.path.exists(state + ".bak-selftest-hunt"))
 
+    print("bounty sounds rewards")
+    check("redeem code hash matches bountysounds (shared vector)",
+          H.code_hash(" hunt 7k3mq-9txa2 ") == "75dc05d20b458d029ceb92f97cc92f12c8e8794333104ef0a9b2c478597dbcaf")
+    codes = {H.mint_code() for _ in range(200)}
+    check("minted codes are well formed and unique",
+          len(codes) == 200 and all(re.fullmatch(r"HUNT-[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}", c) for c in codes))
+    clock.t += 60
+    hr = H.Hunt(guide_path, os.path.join(tmp, "rw.json"), character="Grunt", now=clock)
+    hr.guess("winner", "burning tree")
+    check("a solve alone mints nothing", hr.rewards() == [])
+    hr.found("c1", "game")
+    rw = hr.rewards()
+    check("a verified find mints one code for the solver",
+          len(rw) == 1 and rw[0]["login"] == "winner" and rw[0]["status"] == "pending_issue")
+    code1 = rw[0]["code"]
+    check("codes never reach the board or florra.net", code1 not in json.dumps(hr.state()) + json.dumps(hr.florra())
+          and rw[0]["hash"] not in json.dumps(hr.state()))
+    sent = []
+    check("bridge down keeps it waiting", hr.sync_rewards(lambda p: None)["waiting"] == 1)
+    hr.sync_rewards(lambda p: sent.append(p) or {"status": "issued"})
+    check("issue sends only the hash", sent and sent[0]["action"] == "issue" and sent[0]["codeHash"] == H.code_hash(code1)
+          and code1 not in json.dumps(sent))
+    check("issued after the bridge says ok", hr.rewards()[0]["status"] == "issued")
+    hr.undo("c1")
+    check("undo queues a void", hr.rewards()[0]["status"] == "pending_void")
+    hr.sync_rewards(lambda p: sent.append(p) or {"status": "void"})
+    check("void goes out", sent[-1] == {"action": "void", "rewardKey": "hunt:selftest-hunt:c1"}
+          and hr.rewards()[0]["status"] == "void")
+    clock.t += 5
+    hr.found("c1", "game")
+    check("re-find after a void mints a fresh code", hr.rewards()[0]["code"] != code1
+          and hr.rewards()[0]["status"] == "pending_issue")
+    hr.sync_rewards(lambda p: {"status": "issued"})
+    hr.undo("c1")
+    hr.sync_rewards(lambda p: {"status": "redeemed", "unchanged": True})
+    check("too late to void: flagged for the admin desk", hr.rewards()[0]["status"] == "redeemed_on_site")
+    hr.found("c2", "game")
+    check("no solver, no code", len(hr.rewards()) == 1)
+
     print("filing")
     h = H.Hunt(guide_path, os.path.join(tmp, "s2.json"), character="Grunt", now=clock)
     h.guess("viewer2", "ashen tree")
@@ -194,7 +236,7 @@ def run(tmp, shot):
         check(f"wrote {f}", os.path.exists(os.path.join(folder, f)))
     specs = open(os.path.join(folder, "hunt-specs.md")).read()
     check("find ranks first in clip specs", specs.index("CLIP H01") < specs.index("verified in game") < specs.index("CLIP H02"))
-    check("specs use wall-clock PT", "20:00:" in specs, specs[:400])
+    check("specs use wall-clock PT", f"Turn at:        {H.pt(clock.t):%H:%M:%S}" in specs, specs[:400])
     brief = open(os.path.join(folder, "hunt-bounty-brief-DRAFT.md")).read()
     check("brief leaves the money blank", "Purse: $____" in brief and "DRAFT" in brief)
     check("report numbers match", rep["found"] == 1 and rep["solved"] == 1 and rep["solvers"] == ["viewer2"] and rep["moments"] == 2, rep)
@@ -221,12 +263,33 @@ def serve_test(tmp, pkg, guide_path, shot):
 
     hs = ThreadingHTTPServer(("127.0.0.1", 0), Helper)
     threading.Thread(target=hs.serve_forever, daemon=True).start()
+
+    bridged = []
+
+    class Bridge(BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+
+        def do_POST(self):
+            raw = self.rfile.read(int(self.headers["content-length"]))
+            want = hmac.new(b"test-secret", raw, hashlib.sha256).hexdigest()
+            ok = hmac.compare_digest(want, self.headers.get("x-bridge-signature", ""))
+            bridged.append((ok, json.loads(raw)))
+            self.send_response(201 if ok else 401)
+            self.end_headers()
+            self.wfile.write(b'{"status":"issued"}' if ok else b'{"error":"bad signature"}')
+
+    bs = ThreadingHTTPServer(("127.0.0.1", 0), Bridge)
+    threading.Thread(target=bs.serve_forever, daemon=True).start()
+    os.environ["HUNT_SELFTEST_SECRET"] = "test-secret"
     chat = os.path.join(tmp, "WoWChatLog.txt")
     open(chat, "w").write("11/10 19:00:00.000  To Grunt: HUNT_DONE c1 selftest-hunt\n")  # old night: must not replay
     cfg = dict(S.DEFAULTS, port=0, guide=guide_path, state=os.path.join(tmp, "srv-state.json"), chat_log=chat,
                character="Grunt", twitch_channel="", helper=f"http://127.0.0.1:{hs.server_port}",
                nights_root=os.path.join(tmp, "srv-nights"), florra_export=os.path.join(tmp, "florra-hunt.json"),
-               cooldown_s=0, pay_every_s=0.3)
+               cooldown_s=0, pay_every_s=0.3,
+               bounty_bridge=f"http://127.0.0.1:{bs.server_port}/bridge-hunt-rewards",
+               bridge_secret_env="HUNT_SELFTEST_SECRET")
     app = S.App(cfg)
     srv = ThreadingHTTPServer(("127.0.0.1", 0), S.handler(app))
     threading.Thread(target=srv.serve_forever, daemon=True).start()
@@ -254,6 +317,14 @@ def serve_test(tmp, pkg, guide_path, shot):
         time.sleep(0.1)
     check("helper got /bucks/add with the entry id", paid and "/bucks/add?" in paid[0] and "id=hunt%3Aselftest-hunt%3Ac1" in paid[0], paid)
     check("florra export written", json.load(open(cfg["florra_export"]))["found"] == 1)
+    for _ in range(40):
+        if bridged:
+            break
+        time.sleep(0.1)
+    check("bridge got a signed issue", bridged and bridged[0][0] and bridged[0][1]["action"] == "issue", bridged)
+    rws = get("/hunt/rewards")
+    check("desk lists the code once it's live", rws["secret_set"] and rws["rewards"][0]["status"] == "issued"
+          and rws["rewards"][0]["code"].startswith("HUNT-"), rws)
     check("desk found + undo", get("/hunt/found?id=c2")["ok"] and get("/hunt/undo")["id"] == "c2")
     check("unknown route 404s", _status(base + "/hunt/nope") == 404)
     r = get("/hunt/file")
@@ -264,6 +335,7 @@ def serve_test(tmp, pkg, guide_path, shot):
     app.stop.set()
     srv.shutdown()
     hs.shutdown()
+    bs.shutdown()
 
 
 def _status(url):

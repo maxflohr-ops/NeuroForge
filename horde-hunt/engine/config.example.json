@@ -9,5 +9,7 @@
   "nights_root": "~/Documents/Florra Claude Work/Stream/WoW Forever/nights",
   "florra_export": "",
   "cooldown_s": 5,
-  "pay_every_s": 30
+  "pay_every_s": 30,
+  "bounty_bridge": "https://abvqcdiutahxfkruxidk.supabase.co/functions/v1/bridge-hunt-rewards",
+  "bridge_secret_env": "HUNT_BRIDGE_SECRET"
 }

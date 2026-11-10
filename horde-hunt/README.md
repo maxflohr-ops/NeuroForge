@@ -19,7 +19,7 @@ Runs beside the Orders of the Horde engine (8907) on **port 8908**. It never tou
 | `engine/hunt.py` | Core logic: guesses, verification, ledger, heat, night filing. |
 | `engine/hunt_server.py` | HTTP on 8908, chat-log tail, anonymous Twitch chat reader, Desk Bucks pay loop. |
 | `engine/hunt-board.html` | The case board overlay (`/hunt/board`, or `/hunt/board?mini=1` for the corner strip). |
-| `engine/selftest.py` | Plays a whole hunt in a temp folder. Expect `60/60 checks passed`. |
+| `engine/selftest.py` | Plays a whole hunt in a temp folder. Expect `75/75 checks passed`. |
 | `engine/config.example.json` | Copy to `engine/config.json` and fill in. |
 
 ## Write a hunt
@@ -66,11 +66,26 @@ python3 engine/selftest.py
 | `/hunt/feed?line=` | A chat-log line. |
 | `/hunt/found?id=` / `/hunt/undo[?id=]` | Desk overrides. |
 | `/hunt/pay` | Retry Desk Bucks now (it also retries every 30 s). |
+| `/hunt/sync` | Send pending reward codes / voids to Bounty Sounds now. |
+| `/hunt/rewards` | **Desk only:** every reward code and its status. Never on stream. |
 | `/hunt/file` | File the night: `hunt-report.json`, `hunt-specs.md`, `hunt-bounty-brief-DRAFT.md`. |
 
 ## How proof works (and why viewers can't fake it)
 
 The addon whispers itself `HUNT_DONE <id> <slug>`, so the chat log gets `To <you>: HUNT_DONE …`. The engine trusts only that outgoing line, anchored to the start of the log line, and only to your own character. If a viewer whispers `HUNT_DONE`, or hides `To Grunt: HUNT_DONE` inside their own whisper, it's ignored (the selftest covers both). Stamps from a different hunt's slug are also ignored.
+
+## Rewards: redeemed on Bounty Sounds
+
+When the game verifies a find that someone solved in chat, the engine mints a one-time code like `HUNT-7K3MQ-9TXA2`.
+
+1. **Only the code's hash goes to Bounty Sounds**, signed with `HUNT_BRIDGE_SECRET` and sent to the `bridge-hunt-rewards` edge function. It retries every 30 s until the site confirms, and re-sending is safe.
+2. **You hand the winner the code.** Open `/hunt/rewards` on the phone desk (it lists every code; never put it on stream) and whisper it to them. The engine can't message anyone.
+3. **The winner redeems at `bountysounds.com/redeem`.** They sign in and enter the code, and it locks to their account. Codes are one use and forgive case, dashes and O/0, I/1 mix-ups.
+4. **Admin desk → Hunt tab.** You set the amount and approve, send the money through your usual payout, then press Mark paid. Nothing pays on its own.
+
+Undoing a find voids its code on the site, unless the winner already redeemed it. Then the engine flags it `redeemed_on_site` and it's your call on the admin desk. A re-find after a void mints a fresh code. Someone who finds a clue that nobody solved in chat gets no code.
+
+**Setup:** set `bounty_bridge` in `engine/config.json` (the example has the project URL), and put the same random secret in two places: `HUNT_BRIDGE_SECRET` in the Mac's environment for the engine, and as a Supabase function secret on the bountysounds project. Until both are set, codes wait in the state file and nothing is lost.
 
 ## Desk Bucks
 

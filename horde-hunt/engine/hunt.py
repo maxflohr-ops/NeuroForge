@@ -12,6 +12,7 @@ import hashlib
 import json
 import os
 import re
+import secrets
 import threading
 import time
 import unicodedata
@@ -23,6 +24,25 @@ except Exception:  # pragma: no cover
     PT = None
 
 GUESS_WINDOW = 300  # seconds of chat guesses that count toward heat
+
+# Reward codes, redeemed at bountysounds.com/redeem. Mirrors the site's
+# src/lib/hunt-code.ts exactly (shared test vector in both test suites).
+CODE_ALPHA = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"  # Crockford base32: no I L O U
+CODE_SALT = "florra-hunt-redeem\n"
+
+
+def mint_code():
+    c = "".join(secrets.choice(CODE_ALPHA) for _ in range(10))
+    return f"HUNT-{c[:5]}-{c[5:]}"
+
+
+def norm_code(s):
+    s = re.sub(r"[^0-9A-Z]", "", (s or "").upper().replace("O", "0").replace("I", "1").replace("L", "1"))
+    return s[4:] if s.startswith("HUNT") else s
+
+
+def code_hash(code):
+    return hashlib.sha256((CODE_SALT + norm_code(code)).encode()).hexdigest()
 
 
 def norm(s):
@@ -70,7 +90,7 @@ class Hunt:
 
     # -- state -------------------------------------------------------------
     def _fresh(self):
-        return {"hunt": self.slug, "solved": {}, "found": {}, "order": [], "ledger": [],
+        return {"hunt": self.slug, "solved": {}, "found": {}, "order": [], "ledger": [], "rewards": {},
                 "moments": [], "guesses": [], "cool": {}, "history": [], "started": self.now()}
 
     def _load(self):
@@ -83,6 +103,7 @@ class Hunt:
             # a different hunt: keep the old progress beside it, start clean
             os.replace(self.state_path, f"{self.state_path}.bak-{s.get('hunt', 'old')}")
             return self._fresh()
+        s.setdefault("rewards", {})
         return s
 
     def save(self):
@@ -162,6 +183,8 @@ class Hunt:
                     self.s["ledger"].append({"id": eid, "login": solver["login"], "n": st["bucks"],
                                              "why": f"hunt: solved {st['title']}", "status": "pending",
                                              "at": at})
+            if solver:
+                self._mint(sid, solver["login"], at)
             self.s["moments"].append({"kind": "find", "id": sid, "at": at, "src": src,
                                       "login": solver["login"] if solver else None})
             self._log("found", id=sid, src=src)
@@ -183,12 +206,70 @@ class Hunt:
                         e["status"] = "void"
                     elif e["status"] == "paid":
                         note = "already paid; take it back by hand on the helper if it was wrong"
+            rw = self.s["rewards"].get(f"hunt:{self.slug}:{sid}")
+            if rw and rw["status"] in ("pending_issue", "issued"):
+                rw["status"] = "pending_void"  # the site voids it unless someone already redeemed
             for mo in self.s["moments"]:
                 if mo["kind"] == "find" and mo["id"] == sid and not mo.get("undone"):
                     mo["undone"] = True
             self._log("undo", id=sid, src=src)
             self.save()
             return {"ok": True, "id": sid, "note": note}
+
+    # -- Bounty Sounds reward codes ------------------------------------------
+    def _mint(self, sid, login, at):
+        key = f"hunt:{self.slug}:{sid}"
+        rw = self.s["rewards"].get(key)
+        if rw and rw["status"] in ("pending_issue", "issued", "redeemed_on_site"):
+            return rw
+        if rw and rw["status"] == "pending_void":
+            rw["status"] = "issued"  # undo then re-find before the void went out: same code stands
+            return rw
+        code = mint_code()  # first find, or a re-find after a void: fresh code
+        rw = {"key": key, "clue": sid, "title": self.by_id[sid]["title"], "login": login,
+              "code": code, "hash": code_hash(code), "status": "pending_issue", "at": at}
+        self.s["rewards"][key] = rw
+        return rw
+
+    def sync_rewards(self, sender):
+        """sender(payload) -> the bridge's JSON reply, or None on failure. Retries are safe:
+        the bridge is idempotent on rewardKey."""
+        with self.lock:
+            todo = [dict(r) for r in self.s["rewards"].values() if r["status"] in ("pending_issue", "pending_void")]
+        done = 0
+        for r in todo:
+            if r["status"] == "pending_issue":
+                payload = {"action": "issue", "rewardKey": r["key"], "huntSlug": self.slug,
+                           "huntName": self.g["name"], "clueTitle": r["title"],
+                           "twitchLogin": r["login"], "codeHash": r["hash"]}
+            else:
+                payload = {"action": "void", "rewardKey": r["key"]}
+            try:
+                reply = sender(payload)
+            except Exception:
+                reply = None
+            if not reply:
+                continue
+            with self.lock:
+                cur = self.s["rewards"][r["key"]]
+                if cur["status"] != r["status"]:
+                    continue  # changed under us (undo/re-find); next pass sends the new intent
+                if r["status"] == "pending_issue":
+                    cur["status"] = "issued"
+                elif reply.get("status") in ("redeemed", "approved", "paid"):
+                    cur["status"] = "redeemed_on_site"  # too late to void here: Max decides on the admin desk
+                else:
+                    cur["status"] = "void"
+                done += 1
+        if done:
+            with self.lock:
+                self.save()
+        return {"synced": done, "waiting": len(todo) - done}
+
+    def rewards(self):
+        """For Max's desk only: holds the codes. Never on the board, never on florra.net."""
+        with self.lock:
+            return [dict(r) for r in self.s["rewards"].values()]
 
     # -- Desk Bucks -----------------------------------------------------------
     def pay(self, sender):
@@ -279,6 +360,7 @@ class Hunt:
                       "door_open": st["door_open"], "heat": st["heat"],
                       "solvers": sorted({m["login"] for m in solves}),
                       "moments": len(finds) + len(solves), "bucks": st["bucks"],
+                      "rewards": self._reward_counts(),
                       "filed_at": self.now()}
             with open(os.path.join(folder, "hunt-report.json"), "w") as f:
                 json.dump(report, f, indent=1)
@@ -289,6 +371,12 @@ class Hunt:
             self._log("filed", folder=folder)
             self.save()
             return folder, report
+
+    def _reward_counts(self):
+        c = {}
+        for r in self.s["rewards"].values():
+            c[r["status"]] = c.get(r["status"], 0) + 1
+        return c
 
     def _specs(self, finds, solves):
         total = len(self.steps)
@@ -337,6 +425,9 @@ class Hunt:
                  f"- Clues found: {st['found']} of {st['total']} (door {'open' if st['door_open'] else 'still shut'})",
                  f"- Solvers: {', '.join('@' + s for s in report['solvers']) or 'none yet'}",
                  f"- Clip specs: hunt-specs.md ({report['moments']} moments)",
+                 f"- Reward codes: {sum(report['rewards'].values())} minted "
+                 f"({report['rewards'].get('issued', 0)} live on bountysounds.com/redeem, "
+                 f"{report['rewards'].get('pending_issue', 0)} still waiting to reach the site)",
                  "",
                  "## Money (Max fills these)",
                  "- Purse: $____",

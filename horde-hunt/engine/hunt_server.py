@@ -8,6 +8,8 @@
 
 usage: python3 hunt_server.py [config.json]
 """
+import hashlib
+import hmac
 import json
 import os
 import socket
@@ -34,6 +36,10 @@ DEFAULTS = {
     "florra_export": "",       # optional path: writes florra-hunt.json on every change
     "cooldown_s": 5,
     "pay_every_s": 30,
+    # Bounty Sounds bridge: reward codes are redeemed at bountysounds.com/redeem.
+    # The secret is read from this environment variable, never from the config file.
+    "bounty_bridge": "",       # https://<project>.supabase.co/functions/v1/bridge-hunt-rewards
+    "bridge_secret_env": "HUNT_BRIDGE_SECRET",
 }
 
 
@@ -78,9 +84,25 @@ class App:
         except ValueError:
             return body == "ok"
 
+    # -- Bounty Sounds (reward codes) -----------------------------------------
+    def send_bridge(self, payload):
+        url, secret = self.cfg["bounty_bridge"], os.environ.get(self.cfg["bridge_secret_env"], "")
+        if not url or not secret:
+            return None  # not set up yet: codes wait in the state file and go out once it is
+        body = json.dumps(payload, separators=(",", ":")).encode()
+        sig = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
+        req = urllib.request.Request(url, data=body, method="POST",
+                                     headers={"content-type": "application/json", "x-bridge-signature": sig})
+        try:
+            with urllib.request.urlopen(req, timeout=10) as r:
+                return json.loads(r.read() or b"{}") if r.status in (200, 201) else None
+        except Exception:
+            return None
+
     def pay_loop(self):
         while not self.stop.wait(self.cfg["pay_every_s"]):
             self.hunt.pay(self.send_bucks)
+            self.hunt.sync_rewards(self.send_bridge)
 
     # -- chat log tail --------------------------------------------------------
     def tail_loop(self):
@@ -196,6 +218,13 @@ def handler(app):
                 r = h.undo(q.get("id") or None, "desk")
             elif p == "/hunt/pay":
                 r = h.pay(app.send_bucks)
+            elif p == "/hunt/sync":
+                r = dict(h.sync_rewards(app.send_bridge), ok=True)
+            elif p == "/hunt/rewards":
+                # Max's desk: the codes to hand winners. Never put this page on stream.
+                return self.send(200, {"ok": True, "bridge": bool(app.cfg["bounty_bridge"]),
+                                       "secret_set": bool(os.environ.get(app.cfg["bridge_secret_env"])),
+                                       "rewards": h.rewards()})
             elif p == "/hunt/file":
                 folder, rep = h.file_night(app.cfg["nights_root"])
                 r = {"ok": True, "folder": folder, "report": rep}
