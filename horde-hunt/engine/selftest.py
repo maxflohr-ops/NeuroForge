@@ -125,6 +125,9 @@ def run(tmp, shot):
     r = h.guess("Viewer2", "  The BURNING tree!! ")
     check("normalized answer solves", r["ok"] and r["login"] == "viewer2", r)
     clock.t += 6
+    check("apostrophes and & normalize like chat types them",
+          H.norm("Ukor's Bane") == H.norm("ukors bane") and H.norm("Supply & Logistics") == H.norm("supply and logistics")
+          and H.norm("Gazz\u2019uz") == "gazzuz")
     check("second solver can't steal it", h.guess("viewer1", "burning tree")["why"] == "already solved")
     check("solve alone pays nothing", h.s["ledger"] == [])
     check("solving doesn't move the board", h.active()["id"] == "c1")

@@ -19,7 +19,7 @@ Runs beside the Orders of the Horde engine (8907) on **port 8908**. It never tou
 | `engine/hunt.py` | Core logic: guesses, verification, ledger, heat, night filing. |
 | `engine/hunt_server.py` | HTTP on 8908, chat-log tail, anonymous Twitch chat reader, Desk Bucks pay loop. |
 | `engine/hunt-board.html` | The case board overlay (`/hunt/board`, or `/hunt/board?mini=1` for the corner strip). |
-| `engine/selftest.py` | Plays a whole hunt in a temp folder. Expect `75/75 checks passed`. |
+| `engine/selftest.py` | Plays a whole hunt in a temp folder. Expect `76/76 checks passed`. |
 | `engine/config.example.json` | Copy to `engine/config.json` and fill in. |
 
 ## Write a hunt
@@ -46,6 +46,15 @@ python3 engine/selftest.py
 `compile.py` refuses a hunt with a missing riddle, missing answer, duplicate id or bad coordinates, and lists every problem at once.
 
 **Use only clue text you can source. Never invent coordinates or names.** Check every spot in the WoW Forever client before the hunt goes on stream. Retail coordinates may not match.
+
+## Live hunts: never in git
+
+**This repo is public.** A real hunt's `hunt.txt` holds the answers. Its compiled `hunt.json` holds hashed answers, and short place names are easy to brute-force. `HuntData.lua` names the items and spots. So live hunts live in `live/`, which is gitignored:
+
+```
+python3 hunt/compile.py live/hunt-one.txt --out live
+```
+That builds `live/engine/hunt.json` (point `guide` in `engine/config.json` at it) and a complete `live/addon/HordeHunt/` to copy into AddOns. The example hunt in `hunt/` is the only one that belongs in git.
 
 ## Install on the Mac mini
 

@@ -48,6 +48,7 @@ def code_hash(code):
 def norm(s):
     s = unicodedata.normalize("NFKD", (s or "").lower())
     s = "".join(c for c in s if not unicodedata.combining(c))
+    s = re.sub(r"['\u2019`]", "", s).replace("&", " and ")  # ukor's -> ukors, & -> and
     s = re.sub(r"[^a-z0-9]+", " ", s).strip()
     return re.sub(r"^the ", "", s)
 

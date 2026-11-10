@@ -2,6 +2,8 @@
 """Compile hunt.txt -> engine/hunt.json (hashed answers) + addon/HordeHunt/HuntData.lua (no answers).
 
 usage: python3 hunt/compile.py [hunt.txt] [--out <package root>]
+  live hunt:  python3 hunt/compile.py live/<hunt>.txt --out live
+  (live/ is gitignored: this repo is public and a real hunt's answers must never be pushed)
 Prints the florra.net HUNT snippet (door id, salt, PBKDF2 hash of the door code).
 """
 import hashlib, json, os, re, sys, unicodedata
@@ -12,6 +14,7 @@ DOOR_ITER = 150000  # PBKDF2 rounds for the public door hash (florra.net checks 
 def norm(s):
     s = unicodedata.normalize("NFKD", s.lower())
     s = "".join(c for c in s if not unicodedata.combining(c))
+    s = re.sub(r"['\u2019`]", "", s).replace("&", " and ")  # ukor's -> ukors, & -> and
     s = re.sub(r"[^a-z0-9]+", " ", s).strip()
     return re.sub(r"^the ", "", s)
 
@@ -171,6 +174,14 @@ def main(argv):
         json.dump(guide, f, indent=1)
     with open(os.path.join(root, "addon", "HordeHunt", "HuntData.lua"), "w") as f:
         f.write(lua)
+    # make the output's addon folder complete, so a live/ build can be copied to AddOns as is
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    for name in ("HordeHunt.lua", "HordeHunt.toc"):
+        src_f = os.path.join(here, "addon", "HordeHunt", name)
+        dst_f = os.path.join(root, "addon", "HordeHunt", name)
+        if os.path.abspath(src_f) != os.path.abspath(dst_f):
+            with open(src_f, "rb") as a, open(dst_f, "wb") as b:
+                b.write(a.read())
     print(f"compiled {len(guide['steps'])} clues for '{guide['name']}' -> engine/hunt.json + addon/HordeHunt/HuntData.lua")
     if guide.get("door_hash"):
         print("florra.net HUNT snippet (paste over the HUNT line in index.html):")
