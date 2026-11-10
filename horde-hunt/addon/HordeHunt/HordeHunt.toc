@@ -1,0 +1,8 @@
+## Interface: 11507
+## Title: Horde Hunt
+## Notes: Clue hunt checklist. Verifies finds in game and stamps them into the chat log for the Florra hunt engine.
+## Author: Florra
+## Version: 0.1.0
+## SavedVariables: HordeHuntDB
+HuntData.lua
+HordeHunt.lua

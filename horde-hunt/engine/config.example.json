@@ -1,0 +1,13 @@
+{
+  "port": 8908,
+  "guide": "hunt.json",
+  "state": "~/Library/Application Support/RegionE/horde-hunt-state.json",
+  "chat_log": "/Applications/World of Warcraft/_classic_era_/Logs/WoWChatLog.txt",
+  "character": "",
+  "twitch_channel": "makeitbackmax",
+  "helper": "http://localhost:8765",
+  "nights_root": "~/Documents/Florra Claude Work/Stream/WoW Forever/nights",
+  "florra_export": "",
+  "cooldown_s": 5,
+  "pay_every_s": 30
+}

@@ -1,0 +1,4 @@
+__pycache__/
+engine/config.json
+engine/*state*.json
+engine/florra-hunt.json

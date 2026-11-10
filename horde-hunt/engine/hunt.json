@@ -1,0 +1,60 @@
+{
+ "name": "Example Hunt (replace me)",
+ "slug": "example-hunt-replace-me",
+ "door": "bounty-sounds",
+ "steps": [
+  {
+   "id": "h1",
+   "n": 1,
+   "title": "The First Mark",
+   "riddle": "EXAMPLE riddle one. Replace with clue 1 from the post.",
+   "verify": {
+    "kind": "loc",
+    "zone": "Durotar",
+    "x": 50.0,
+    "y": 50.0,
+    "r": 1.5
+   },
+   "answers": [
+    "e1ea845db73da1098680cd682dbed396ca2f3622f01c3568112183f11ac2a41d",
+    "7991cb30c27230aa9afebc013558192f406e51eef0583e71a016698693c15316"
+   ],
+   "bucks": 100,
+   "weight": 1,
+   "string": "the mark points west"
+  },
+  {
+   "id": "h2",
+   "n": 2,
+   "title": "The Second Mark",
+   "riddle": "EXAMPLE riddle two. Replace with clue 2 from the post.",
+   "verify": {
+    "kind": "npc",
+    "npc": "Example Npc"
+   },
+   "answers": [
+    "ac4b682ed1a0e302c000cc360fc69cb5b58d31ee28f6cc82b64f48d58cdf7429"
+   ],
+   "bucks": 150,
+   "weight": 2,
+   "string": "the voice names an item"
+  },
+  {
+   "id": "h3",
+   "n": 3,
+   "title": "The Last Mark",
+   "riddle": "EXAMPLE riddle three. Replace with clue 3 from the post.",
+   "verify": {
+    "kind": "loot",
+    "item": "Example Item"
+   },
+   "answers": [
+    "9027d6038fe02dc4c96b43f68101290fa56913ec535d87c11f8b9730ce1ded73"
+   ],
+   "bucks": 250,
+   "weight": 3,
+   "string": "the item opens the door"
+  }
+ ],
+ "door_hash": "836c4ef72659979b9cb00838af19ecd1c945e85f0207ccde571b0851b5399da1"
+}

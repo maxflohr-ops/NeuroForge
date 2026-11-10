@@ -1,0 +1,51 @@
+# Horde Hunt source. This file stays OFF stream: it holds the answers.
+# compile.py hashes the answers and the door code. Neither ships in plain text.
+#
+#   hunt: <name>            name of the hunt
+#   door: <petal-id>        florra.net petal the door code opens (bounty-sounds, redstring, ...)
+#   code: <word>            the door code, given out when the last clue is found
+#   = <id> | <title>        a clue card (ids: short, unique, never reused)
+#   ? <riddle>              what chat sees on the board (several ? lines join up)
+#   @ <zone> | <x> <y> [r]  verify: player stands within r map-% of x,y in zone (default r 1.0)
+#   $ <item name>           verify: the item is looted
+#   > <npc name>            verify: player talks to the npc
+#   ! manual                verify: Max types /hunt done
+#   a <answer> | <alt>      what chat must type after !clue to solve it
+#   b <n>                   Desk Bucks to the solver once the find is verified (default 100)
+#   w <n>                   purse weight for the bounty draft (default 1)
+#   s <text>                the red string: why this clue leads to the next
+#
+# ---------------------------------------------------------------------------
+# EXAMPLE HUNT. Everything below is a placeholder that shows the format.
+# The riddles, answers and coordinates are NOT real spots. Replace them
+# with the Reddit post's clues, checked in the WoW Forever client, before
+# the hunt goes on stream.
+# ---------------------------------------------------------------------------
+
+hunt: Example Hunt (replace me)
+door: bounty-sounds
+code: example door
+
+= h1 | The First Mark
+? EXAMPLE riddle one. Replace with clue 1 from the post.
+@ Durotar | 50.0 50.0 1.5
+a example one | first example
+b 100
+w 1
+s the mark points west
+
+= h2 | The Second Mark
+? EXAMPLE riddle two. Replace with clue 2 from the post.
+> Example Npc
+a example two
+b 150
+w 2
+s the voice names an item
+
+= h3 | The Last Mark
+? EXAMPLE riddle three. Replace with clue 3 from the post.
+$ Example Item
+a example three
+b 250
+w 3
+s the item opens the door
